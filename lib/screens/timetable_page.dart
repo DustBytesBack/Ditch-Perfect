@@ -33,12 +33,14 @@ class TimetablePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
-      body: SafeArea(
-        child: Column(
-          children: [
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
 
-            /// HEADER
-            Padding(
+                /// HEADER
+                Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
@@ -225,6 +227,16 @@ class TimetablePage extends StatelessWidget {
           ],
         ),
       ),
+
+      Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: MediaQuery.of(context).padding.bottom + 12,
+          color: scheme.surface,
+        ),
+      ),
+    ],
+  ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'services/database_service.dart';
@@ -14,33 +15,37 @@ import 'screens/main_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+    ),
+  );
+
   await DatabaseService.init();
 
   runApp(
     MultiProvider(
       providers: [
-
         ChangeNotifierProvider(
           create: (_) => SubjectProvider()..loadSubjects(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => TimetableProvider()..loadTimetable(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => SettingsProvider()..loadSettings(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => AttendanceProvider(),
         ),
-
-        /// ADD THIS
         ChangeNotifierProvider(
           create: (_) => ThemeProvider()..loadTheme(),
         ),
-
       ],
       child: const OutStanding(),
     ),
@@ -52,7 +57,6 @@ class OutStanding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
@@ -61,13 +65,13 @@ class OutStanding extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        colorSchemeSeed: Colors.indigo,
+        colorSchemeSeed: themeProvider.seedColor,
       ),
 
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorSchemeSeed: Colors.indigo,
+        colorSchemeSeed: themeProvider.seedColor,
       ),
 
       themeMode:

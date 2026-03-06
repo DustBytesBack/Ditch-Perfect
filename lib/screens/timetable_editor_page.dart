@@ -146,8 +146,10 @@ class TimetableEditorPage extends StatelessWidget {
           ),
         ),
 
-        body: TabBarView(
-          children: timetable.days.map((day) {
+        body: Stack(
+          children: [
+            TabBarView(
+              children: timetable.days.map((day) {
 
             final slots = timetable.getDaySlots(day);
 
@@ -274,6 +276,16 @@ class TimetableEditorPage extends StatelessWidget {
             );
           }).toList(),
         ),
+
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: MediaQuery.of(context).padding.bottom + 12,
+            color: scheme.surface,
+          ),
+        ),
+      ],
+    ),
       ),
     );
   }

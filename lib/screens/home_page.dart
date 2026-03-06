@@ -68,12 +68,14 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
-      body: SafeArea(
-        child: Column(
-          children: [
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
 
-            /// HEADER
-            Padding(
+                /// HEADER
+                Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
@@ -86,6 +88,14 @@ class HomePage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: .08),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                          offset: const Offset(0, -1),
+                        ),
+                      ],
                     ),
                     child: Text(
                       formatDate(today),
@@ -114,6 +124,13 @@ class HomePage extends StatelessWidget {
                     topLeft: Radius.circular(32),
                     topRight: Radius.circular(32),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
 
                 child: ListView.builder(
@@ -246,6 +263,16 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+
+      Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: MediaQuery.of(context).padding.bottom + 12,
+          color: scheme.surface,
+        ),
+      ),
+    ],
+  ),
     );
   }
 }

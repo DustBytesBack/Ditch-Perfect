@@ -149,197 +149,212 @@ class SubjectPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
-      body: SafeArea(
-        child: Column(
-          children: [
 
-            /// HEADER
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
+      body: Stack(
+        children: [
 
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 56, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: Text(
-                      "Subjects",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(
-                              color: scheme.onSurface,
-                              fontWeight: FontWeight.w600),
-                    ),
-                  ),
+          /// ORIGINAL PAGE CONTENT
+          SafeArea(
+            child: Column(
+              children: [
 
-                  const Spacer(),
+                /// HEADER
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
 
-                  Container(
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: IconButton(
-                      iconSize: 28,
-                      padding: const EdgeInsets.all(14),
-                      icon: Icon(Icons.add, color: scheme.onSurface),
-                      onPressed: () => showAddDialog(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 56, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          "Subjects",
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                  color: scheme.onSurface,
+                                  fontWeight: FontWeight.w600),
+                        ),
+                      ),
 
-            /// PANEL
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: scheme.surface,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
+                      const Spacer(),
+
+                      Container(
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: IconButton(
+                          iconSize: 28,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(Icons.add, color: scheme.onSurface),
+                          onPressed: () => showAddDialog(context),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                child: ListView.builder(
-                  itemCount: subjects.length,
-                  itemBuilder: (context, index) {
-
-                    final subject = subjects[index];
-
-                    final stats = calculateStats(
-                      subject.id,
-                      attendanceProvider.records.values,
-                    );
-
-                    double percent = stats.total == 0
-                        ? 100
-                        : (stats.attended / stats.total) * 100;
-
-                    bool lowAttendance = percent < minAttendance;
-
-                    return Dismissible(
-                      key: ValueKey(subject.id),
-                      direction: DismissDirection.horizontal,
-
-                      confirmDismiss: (_) async {
-                        showDeleteDialog(context, subject);
-                        return false;
-                      },
-
-                      background: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-                          decoration: BoxDecoration(
-                            color: scheme.errorContainer,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(18),
-                              bottomLeft: Radius.circular(18),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.delete,
-                            color: scheme.onErrorContainer,
-                          ),
-                        ),
+                /// PANEL
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
                       ),
+                    ),
 
-                      secondaryBackground: Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-                          decoration: BoxDecoration(
-                            color: scheme.errorContainer,
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(18),
-                              bottomRight: Radius.circular(18),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.delete,
-                            color: scheme.onErrorContainer,
-                          ),
-                        ),
-                      ),
+                    child: ListView.builder(
+                      itemCount: subjects.length,
+                      itemBuilder: (context, index) {
 
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: Row(
-                          children: [
+                        final subject = subjects[index];
 
-                            /// ATTENDANCE PILL
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 18, vertical: 20),
+                        final stats = calculateStats(
+                          subject.id,
+                          attendanceProvider.records.values,
+                        );
+
+                        double percent = stats.total == 0
+                            ? 100
+                            : (stats.attended / stats.total) * 100;
+
+                        bool lowAttendance = percent < minAttendance;
+
+                        return Dismissible(
+                          key: ValueKey(subject.id),
+                          direction: DismissDirection.horizontal,
+
+                          confirmDismiss: (_) async {
+                            showDeleteDialog(context, subject);
+                            return false;
+                          },
+
+                          background: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
                               decoration: BoxDecoration(
-                                color: scheme.secondaryContainer,
+                                color: scheme.errorContainer,
                                 borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(20),
-                                  bottomLeft: Radius.circular(20),
+                                  topLeft: Radius.circular(18),
+                                  bottomLeft: Radius.circular(18),
                                 ),
                               ),
-                              child: Text(
-                                "${stats.attended}/${stats.total}",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      color: lowAttendance
-                                          ? scheme.error
-                                          : scheme.onSecondaryContainer,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                              child: Icon(
+                                Icons.delete,
+                                color: scheme.onErrorContainer,
                               ),
                             ),
+                          ),
 
-                            const SizedBox(width: 8),
+                          secondaryBackground: Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                              decoration: BoxDecoration(
+                                color: scheme.errorContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(18),
+                                  bottomRight: Radius.circular(18),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.delete,
+                                color: scheme.onErrorContainer,
+                              ),
+                            ),
+                          ),
 
-                            /// SUBJECT PILL
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 20),
-                                decoration: BoxDecoration(
-                                  color: scheme.secondaryContainer,
-                                  borderRadius: const BorderRadius.only(
-                                    topRight: Radius.circular(20),
-                                    bottomRight: Radius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: Row(
+                              children: [
+
+                                /// ATTENDANCE PILL
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 18, vertical: 20),
+                                  decoration: BoxDecoration(
+                                    color: scheme.secondaryContainer,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      bottomLeft: Radius.circular(20),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "${stats.attended}/${stats.total}",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(
+                                          color: lowAttendance
+                                              ? scheme.error
+                                              : scheme.onSecondaryContainer,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
                                 ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  subject.name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: scheme.onSecondaryContainer,
-                                        fontWeight: FontWeight.w500,
+
+                                const SizedBox(width: 8),
+
+                                /// SUBJECT PILL
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20),
+                                    decoration: BoxDecoration(
+                                      color: scheme.secondaryContainer,
+                                      borderRadius: const BorderRadius.only(
+                                        topRight: Radius.circular(20),
+                                        bottomRight: Radius.circular(20),
                                       ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      subject.name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            color: scheme.onSecondaryContainer,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          /// FIX GESTURE NAV BAR COLOR
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).padding.bottom + 12,
+              color: scheme.surface,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-

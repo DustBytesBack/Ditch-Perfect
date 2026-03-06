@@ -32,135 +32,313 @@ class _SettingsPageState extends State<SettingsPage> {
     final scheme = Theme.of(context).colorScheme;
     final themeProvider = context.watch<ThemeProvider>();
 
+    final modeLabel =
+        themeProvider.isDark ? "Light Mode" : "Dark Mode";
+
+    final modeIcon =
+        themeProvider.isDark ? Icons.light_mode : Icons.dark_mode;
+
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
-      appBar: AppBar(
-        title: const Text("Settings"),
+      body: Stack(
+        children: [
 
-        actions: [
+          SafeArea(
+            child: Column(
+              children: [
 
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: "About",
-            onPressed: () {
-              showAboutDialog(
-                context: context,
-                applicationName: "Attendance Tracker",
-                applicationVersion: "1.0",
-                applicationLegalese: "Aint got no shit here",
-              );
-            },
-          ),
-        ],
-      ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
-          children: [
-
-            /// DARK MODE SETTING
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(28),
-              ),
-
-              child: Row(
-                children: [
-
-                  Icon(Icons.dark_mode, color: scheme.primary),
-
-                  const SizedBox(width: 18),
-
-                  const Expanded(
-                    child: Text(
-                      "Dark Mode",
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-
-                  Switch.adaptive(
-                    value: themeProvider.isDark,
-                    onChanged: (value) {
-                      context.read<ThemeProvider>().toggleTheme(value);
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// HOURS PER DAY
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(28),
-              ),
-
-              child: Column(
-                children: [
-
-                  Row(
+                /// HEADER
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
 
-                      Icon(Icons.schedule, color: scheme.primary),
-
-                      const SizedBox(width: 18),
-
-                      const Expanded(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 56, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(40),
+                        ),
                         child: Text(
-                          "Hours per Day",
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          "Settings",
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                  color: scheme.onSurface,
+                                  fontWeight: FontWeight.w600),
                         ),
                       ),
 
-                      Text(
-                        hours.toInt().toString(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: scheme.primary,
+                      const Spacer(),
+
+                      Container(
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: IconButton(
+                          iconSize: 28,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(Icons.info_outline,
+                              color: scheme.onSurface),
+                          onPressed: () {
+                            showAboutDialog(
+                              context: context,
+                              applicationName: "Attendance Tracker",
+                              applicationVersion: "1.0",
+                              applicationLegalese: "Aint got no shit here",
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
+                ),
 
-                  const SizedBox(height: 10),
+                /// PANEL
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                    ),
 
-                  Slider(
-                    year2023: false,
-                    min: 1,
-                    max: 12,
-                    divisions: 11,
-                    value: hours,
+                    child: ListView(
+                      children: [
 
-                    onChanged: (value) {
-                      setState(() {
-                        hours = value;
-                      });
-                    },
+                        /// DARK / LIGHT MODE
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
 
-                    onChangeEnd: (value) {
+                          child: Row(
+                            children: [
 
-                      final newHours = value.toInt();
+                              Icon(
+                                modeIcon,
+                                color: scheme.onSecondaryContainer,
+                              ),
 
-                      DatabaseService.settingsBox
-                          .put("hoursPerDay", newHours);
+                              const SizedBox(width: 18),
 
-                      context
-                          .read<TimetableProvider>()
-                          .updateHours(newHours);
-                    },
+                              Expanded(
+                                child: Text(
+                                  modeLabel,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+
+                              Switch.adaptive(
+                                value: themeProvider.isDark,
+                                onChanged: themeProvider.pookieMode
+                                    ? null
+                                    : (value) {
+                                        context
+                                            .read<ThemeProvider>()
+                                            .toggleTheme(value);
+                                      },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        /// POOKIE MODE
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+
+                          child: Row(
+                            children: [
+
+                              const Text("🎀",
+                                  style: TextStyle(fontSize: 20)),
+
+                              const SizedBox(width: 18),
+
+                              const Expanded(
+                                child: Text(
+                                  "Pookie Mode",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+
+                              Switch.adaptive(
+                                value: themeProvider.pookieMode,
+                                onChanged: (value) {
+                                  context
+                                      .read<ThemeProvider>()
+                                      .togglePookie(value);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        /// HOURS PER DAY
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+
+                          child: Column(
+                            children: [
+
+                              Row(
+                                children: [
+
+                                  Icon(Icons.schedule,
+                                      color: scheme.onSecondaryContainer),
+
+                                  const SizedBox(width: 18),
+
+                                  const Expanded(
+                                    child: Text(
+                                      "Hours per Day",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+
+                                  Text(
+                                    hours.toInt().toString(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Slider(
+                                year2023: false,
+                                min: 1,
+                                max: 12,
+                                divisions: 11,
+                                value: hours,
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    hours = value;
+                                  });
+                                },
+
+                                onChangeEnd: (value) {
+
+                                  final newHours = value.toInt();
+
+                                  DatabaseService.settingsBox
+                                      .put("hoursPerDay", newHours);
+
+                                  context
+                                      .read<TimetableProvider>()
+                                      .updateHours(newHours);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        /// COLOR SCHEME PICKER
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+
+                          child: Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+
+                              colorOption(context, Colors.indigo),
+                              colorOption(context, Colors.blue),
+                              colorOption(context, Colors.cyan),
+                              colorOption(context, Colors.teal),
+                              colorOption(context, Colors.green),
+                              colorOption(context, Colors.lime),
+                              colorOption(context, Colors.amber),
+                              colorOption(context, Colors.orange),
+                              colorOption(context, Colors.deepOrange),
+                              colorOption(context, Colors.red),
+                              colorOption(context, Colors.pink),
+                              colorOption(context, Colors.deepPurple),
+
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
+
+          /// GESTURE NAV BAR COLOR FIX
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).padding.bottom + 12,
+              color: scheme.surface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget colorOption(BuildContext context, Color color) {
+
+    final themeProvider = context.watch<ThemeProvider>();
+
+    final selected =
+        themeProvider.seedColor.value == color.value;
+
+    return GestureDetector(
+      onTap: () {
+        context.read<ThemeProvider>().setSeedColor(color);
+      },
+
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: selected
+              ? Border.all(color: Colors.white, width: 3)
+              : null,
         ),
       ),
     );
