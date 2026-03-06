@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../utils/calendar_stats.dart';
 import '../providers/timetable_provider.dart';
-import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/holiday_utils.dart';
-import '../models/subject.dart';
-import '../models/attendance.dart';
+import 'day_details_page.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -17,19 +16,23 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> {
+
   DateTime focusedDay = DateTime.now();
   DateTime selectedDay = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
+
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
-    final subjects = context.watch<SubjectProvider>().subjects;
     final attendance = context.watch<AttendanceProvider>();
 
-    final slots = timetable.getDaySlots(weekdayKey(selectedDay));
-    final selectedIsHoliday = isHoliday(selectedDay, attendance, timetable);
+    final stats = calculateMonthStats(
+      focusedDay,
+      attendance,
+      timetable,
+    );
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
@@ -37,15 +40,16 @@ class _CalendarPageState extends State<CalendarPage> {
       body: Stack(
         children: [
 
-          /// ORIGINAL PAGE CONTENT
           SafeArea(
             child: Column(
               children: [
+
                 /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
+
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 56,
@@ -57,7 +61,10 @@ class _CalendarPageState extends State<CalendarPage> {
                         ),
                         child: Text(
                           "Calendar",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -90,7 +97,12 @@ class _CalendarPageState extends State<CalendarPage> {
                 /// PANEL
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      20,
+                      20,
+                      MediaQuery.of(context).padding.bottom + 110,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: const BorderRadius.only(
@@ -99,237 +111,176 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                     ),
 
-                    child: Column(
-                      children: [
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
 
-                        /// CALENDAR
-                        TableCalendar(
-                          firstDay: DateTime(2020),
-                          lastDay: DateTime(2100),
-                          focusedDay: focusedDay,
+                          /// CALENDAR
+                          TableCalendar(
+                            firstDay: DateTime(2020),
+                            lastDay: DateTime(2100),
+                            focusedDay: focusedDay,
 
-                          selectedDayPredicate: (day) =>
-                              isSameDay(selectedDay, day),
+                            selectedDayPredicate: (day) =>
+                                isSameDay(selectedDay, day),
 
-                          onDaySelected: (selected, focused) {
-                            setState(() {
-                              selectedDay = selected;
-                              focusedDay = focused;
-                            });
+                            onDaySelected: (selected, focused) {
 
-                            context
-                                .read<AttendanceProvider>()
-                                .loadDayAttendance(selected);
-                          },
-
-                          calendarBuilders: CalendarBuilders(
-                            defaultBuilder: (context, day, focusedDay) {
-                              final color =
-                                  getDayColor(day, attendance, timetable);
-
-                              return Container(
-                                margin: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "${day.day}",
-                                  style: TextStyle(
-                                    color: color == null
-                                        ? scheme.onSurface
-                                        : Colors.white,
-                                  ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DayDetailsPage(date: selected),
                                 ),
                               );
                             },
 
-                            todayBuilder: (context, day, focusedDay) {
-                              final color =
-                                  getDayColor(day, attendance, timetable);
-
-                              return Container(
-                                margin: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: color ?? scheme.primaryContainer,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: scheme.primary,
-                                    width: 2,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "${day.day}",
-                                  style: TextStyle(
-                                    color: color != null
-                                        ? Colors.white
-                                        : scheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
+                            onPageChanged: (focused) {
+                              setState(() {
+                                focusedDay = focused;
+                              });
                             },
 
-                            selectedBuilder: (context, day, focusedDay) {
-                              final color =
-                                  getDayColor(day, attendance, timetable);
+                            calendarBuilders: CalendarBuilders(
 
-                              return Container(
-                                margin: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: color ?? scheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "${day.day}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                              defaultBuilder: (context, day, focusedDay) {
+
+                                final color =
+                                    getDayColor(day, attendance, timetable);
+
+                                return Container(
+                                  margin: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        /// DAY TIMETABLE
-                        Expanded(
-                          child: selectedIsHoliday
-                              ? Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 32,
-                                      vertical: 16,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "${day.day}",
+                                    style: TextStyle(
+                                      color: color == null
+                                          ? scheme.onSurface
+                                          : Colors.white,
                                     ),
+                                  ),
+                                );
+                              },
+
+                              todayBuilder: (context, day, focusedDay) {
+
+                                final color =
+                                    getDayColor(day, attendance, timetable);
+
+                                return Container(
+                                  margin: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: color ?? scheme.primaryContainer,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: scheme.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "${day.day}",
+                                    style: TextStyle(
+                                      color: color != null
+                                          ? Colors.white
+                                          : scheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+
+                              selectedBuilder: (context, day, focusedDay) {
+
+                                final color =
+                                    getDayColor(day, attendance, timetable);
+
+                                return Container(
+                                  margin: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: color ?? scheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "${day.day}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          /// STATS DASHBOARD CARD
+                          Card(
+                            elevation: 0,
+                            color: scheme.secondaryContainer,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16, horizontal: 16),
+                              child: Column(
+                                children: [
+
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+
+                                      statTile(context, stats.notMarked,
+                                          "Not marked", Colors.grey),
+
+                                      statTile(context, stats.cancelled,
+                                          "Off", Colors.orange),
+
+                                      statTile(context, stats.missed,
+                                          "Missed", Colors.red),
+
+                                      statTile(context, stats.attended,
+                                          "Attended", Colors.green),
+
+                                      statTile(context, stats.mixed,
+                                          "Mixed", Colors.purple),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  Container(
+                                    height: 36,
+                                    alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.withValues(alpha: .15),
-                                      borderRadius: BorderRadius.circular(20),
+                                      color: scheme.primary,
+                                      borderRadius:
+                                          const BorderRadius.only(
+                                        bottomLeft: Radius.circular(20),
+                                        bottomRight: Radius.circular(20),
+                                      ),
                                     ),
                                     child: Text(
-                                      "Holiday",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(
-                                            color: Colors.orange,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                      "Days",
+                                      style: TextStyle(
+                                        color: scheme.onPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
-                                )
-                              : ListView.builder(
-                                  itemCount: slots.length,
-                                  itemBuilder: (context, index) {
-                                    final subjectId = slots[index];
-
-                                    if (subjectId == null) {
-                                      return const SizedBox();
-                                    }
-
-                                    final subject = subjects.firstWhere(
-                                      (s) => s.id == subjectId,
-                                      orElse: () =>
-                                          Subject(id: "", name: "", shortName: ""),
-                                    );
-
-                                    final status =
-                                        attendance.getStatus(selectedDay, index);
-
-                                    Color statusColor;
-
-                                    if (status == AttendanceStatus.present) {
-                                      statusColor = Colors.green;
-                                    } else if (status ==
-                                        AttendanceStatus.absent) {
-                                      statusColor = Colors.red;
-                                    } else if (status ==
-                                        AttendanceStatus.cancelled) {
-                                      statusColor = Colors.orange;
-                                    } else {
-                                      statusColor =
-                                          scheme.secondaryContainer;
-                                    }
-
-                                    return Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 14),
-                                      child: Row(
-                                        children: [
-
-                                          /// STATUS PILL
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 18,
-                                              vertical: 20,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: statusColor,
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                topLeft: Radius.circular(20),
-                                                bottomLeft:
-                                                    Radius.circular(20),
-                                              ),
-                                            ),
-                                            child: Icon(
-                                              status ==
-                                                      AttendanceStatus.present
-                                                  ? Icons.check
-                                                  : status ==
-                                                          AttendanceStatus
-                                                              .absent
-                                                      ? Icons.close
-                                                      : Icons.block,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-
-                                          const SizedBox(width: 8),
-
-                                          /// SUBJECT PILL
-                                          Expanded(
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 20),
-                                              decoration: BoxDecoration(
-                                                color: scheme
-                                                    .secondaryContainer,
-                                                borderRadius:
-                                                    const BorderRadius.only(
-                                                  topRight:
-                                                      Radius.circular(20),
-                                                  bottomRight:
-                                                      Radius.circular(20),
-                                                ),
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                subject.name,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .titleMedium
-                                                    ?.copyWith(
-                                                      color: scheme
-                                                          .onSecondaryContainer,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -337,7 +288,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
 
-          /// FIX GESTURE NAV BAR COLOR
+          /// NAV BAR COLOR FIX
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -349,4 +300,56 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
   }
+
+Widget statTile(
+  BuildContext context,
+  int value,
+  String label,
+  Color dotColor,
+) {
+
+  final scheme = Theme.of(context).colorScheme;
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+    child: Column(
+      children: [
+
+        Text(
+          value.toString(),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: scheme.onSecondaryContainer,
+              ),
+        ),
+
+        const SizedBox(height: 4),
+
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: dotColor,
+            shape: BoxShape.circle,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Text(
+          label,
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(
+                color: scheme.onSecondaryContainer,
+              ),
+        ),
+      ],
+    ),
+  );
+}
 }

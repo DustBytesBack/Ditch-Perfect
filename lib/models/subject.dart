@@ -14,9 +14,13 @@ class Subject {
   @HiveField(2)
   final String shortName;
 
+  @HiveField(3)
+  double minAttendance;
+
   Subject({
     required this.id,
     required this.name,
     required this.shortName,
+    this.minAttendance = 75,
   });
 }

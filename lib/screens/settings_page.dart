@@ -15,15 +15,20 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
 
   late double hours;
+  late double minAttendance;
 
   @override
   void initState() {
     super.initState();
 
-    final stored =
+    final storedHours =
         DatabaseService.settingsBox.get("hoursPerDay", defaultValue: 8);
 
-    hours = stored.toDouble();
+    final storedAttendance =
+        DatabaseService.settingsBox.get("minAttendance", defaultValue: 75);
+
+    hours = storedHours.toDouble();
+    minAttendance = storedAttendance.toDouble();
   }
 
   @override
@@ -113,97 +118,19 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: ListView(
                       children: [
 
-                        /// DARK / LIGHT MODE
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-
-                          child: Row(
-                            children: [
-
-                              Icon(
-                                modeIcon,
-                                color: scheme.onSecondaryContainer,
-                              ),
-
-                              const SizedBox(width: 18),
-
-                              Expanded(
-                                child: Text(
-                                  modeLabel,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ),
-
-                              Switch.adaptive(
-                                value: themeProvider.isDark,
-                                onChanged: themeProvider.pookieMode
-                                    ? null
-                                    : (value) {
-                                        context
-                                            .read<ThemeProvider>()
-                                            .toggleTheme(value);
-                                      },
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        /// POOKIE MODE
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-
-                          child: Row(
-                            children: [
-
-                              const Text("🎀",
-                                  style: TextStyle(fontSize: 20)),
-
-                              const SizedBox(width: 18),
-
-                              const Expanded(
-                                child: Text(
-                                  "Pookie Mode",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ),
-
-                              Switch.adaptive(
-                                value: themeProvider.pookieMode,
-                                onChanged: (value) {
-                                  context
-                                      .read<ThemeProvider>()
-                                      .togglePookie(value);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
                         /// HOURS PER DAY
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 18, vertical: 18),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(28),
+                              topRight: Radius.circular(28),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10)
+                            ),
                           ),
-
                           child: Column(
                             children: [
 
@@ -232,8 +159,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ],
                               ),
-
-                              const SizedBox(height: 10),
 
                               Slider(
                                 year2023: false,
@@ -264,35 +189,219 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 8),
 
-                        /// COLOR SCHEME PICKER
+                        /// MIN ATTENDANCE
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 18, vertical: 18),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(28),
+                              bottomRight: Radius.circular(28),
+                            ),
                           ),
 
-                          child: Wrap(
-                            spacing: 16,
-                            runSpacing: 16,
+                          child: Column(
                             children: [
 
-                              colorOption(context, Colors.indigo),
-                              colorOption(context, Colors.blue),
-                              colorOption(context, Colors.cyan),
-                              colorOption(context, Colors.teal),
-                              colorOption(context, Colors.green),
-                              colorOption(context, Colors.lime),
-                              colorOption(context, Colors.amber),
-                              colorOption(context, Colors.orange),
-                              colorOption(context, Colors.deepOrange),
-                              colorOption(context, Colors.red),
-                              colorOption(context, Colors.pink),
-                              colorOption(context, Colors.deepPurple),
+                              Row(
+                                children: [
 
+                                  Icon(Icons.percent,
+                                      color: scheme.onSecondaryContainer),
+
+                                  const SizedBox(width: 18),
+
+                                  const Expanded(
+                                    child: Text(
+                                      "Minimum Attendance %",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+
+                                  Text(
+                                    "${minAttendance.toInt()}%",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              Slider(
+                                year2023: false,
+                                min: 50,
+                                max: 100,
+                                divisions: 50,
+                                value: minAttendance,
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    minAttendance = value;
+                                  });
+                                },
+
+                                onChangeEnd: (value) {
+
+                                  DatabaseService.settingsBox
+                                      .put("minAttendance", value.toInt());
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        /// DARK / LIGHT MODE
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(28),
+                              topRight: Radius.circular(28),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+
+                          child: Row(
+                            children: [
+
+                              Icon(modeIcon,
+                                  color: scheme.onSecondaryContainer),
+
+                              const SizedBox(width: 18),
+
+                              Expanded(
+                                child: Text(
+                                  modeLabel,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+
+                              Switch.adaptive(
+                                value: themeProvider.isDark,
+                                onChanged: themeProvider.pookieMode
+                                    ? null
+                                    : (value) {
+                                        context
+                                            .read<ThemeProvider>()
+                                            .toggleTheme(value);
+                                      },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        /// POOKIE MODE
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+
+                          child: Row(
+                            children: [
+
+                              const Text("🎀",
+                                  style: TextStyle(fontSize: 20)),
+
+                              const SizedBox(width: 18),
+
+                              const Expanded(
+                                child: Text(
+                                  "Pookie Mode",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+
+                              Switch.adaptive(
+                                value: themeProvider.pookieMode,
+                                onChanged: (value) {
+                                  context
+                                      .read<ThemeProvider>()
+                                      .togglePookie(value);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        /// COLOR SCHEME
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(28),
+                              bottomRight: Radius.circular(28),
+                            ),
+                          ),
+
+                          child:Column(
+                            children: [
+
+                              Row(
+                                children: [
+
+                                  Icon(
+                                    Icons.palette,
+                                    color: scheme.onSecondaryContainer,
+                                  ),
+
+                                  const SizedBox(width: 18),
+
+                                  const Text(
+                                    "Color Scheme",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 16,
+                                runSpacing: 16,
+                                children: [
+
+                                  colorOption(context, Colors.indigo),
+                                  colorOption(context, Colors.blue),
+                                  colorOption(context, Colors.cyan),
+                                  colorOption(context, Colors.teal),
+                                  colorOption(context, Colors.green),
+                                  colorOption(context, Colors.lime),
+                                  colorOption(context, Colors.amber),
+                                  colorOption(context, Colors.orange),
+                                  colorOption(context, Colors.deepOrange),
+                                  colorOption(context, Colors.red),
+                                  colorOption(context, Colors.pink),
+                                  colorOption(context, Colors.deepPurple),
+
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -304,7 +413,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
 
-          /// GESTURE NAV BAR COLOR FIX
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

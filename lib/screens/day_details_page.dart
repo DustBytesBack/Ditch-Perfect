@@ -3,18 +3,17 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
-import '../models/attendance.dart';
+import '../utils/holiday_utils.dart';
 import '../widgets/day_timetable.dart';
 
-enum BulkAction {
-  present,
-  absent,
-  cancelled,
-  clear
-}
+class DayDetailsPage extends StatelessWidget {
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final DateTime date;
+
+  const DayDetailsPage({
+    super.key,
+    required this.date,
+  });
 
   String formatDate(DateTime date) {
     const months = [
@@ -33,8 +32,7 @@ class HomePage extends StatelessWidget {
     final timetable = context.watch<TimetableProvider>();
     final attendance = context.watch<AttendanceProvider>();
 
-    final today = DateTime.now();
-    final slots = timetable.getTodaySlots();
+    final isHolidayDay = isHoliday(date, attendance, timetable);
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
@@ -54,7 +52,7 @@ class HomePage extends StatelessWidget {
 
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 56,
+                          horizontal: 40,
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
@@ -70,7 +68,7 @@ class HomePage extends StatelessWidget {
                           ],
                         ),
                         child: Text(
-                          formatDate(today),
+                          formatDate(date),
                           style: Theme.of(context)
                               .textTheme
                               .titleLarge
@@ -82,6 +80,21 @@ class HomePage extends StatelessWidget {
                       ),
 
                       const Spacer(),
+
+                      Container(
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: IconButton(
+                          iconSize: 26,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -105,83 +118,32 @@ class HomePage extends StatelessWidget {
                       ],
                     ),
 
-                    child: Column(
-                      children: [
-
-                        /// BULK ACTION BUTTONS
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.4,
-
-                            child: SegmentedButton<BulkAction>(
-                              segments: const [
-                                
-                                ButtonSegment(
-                                  value: BulkAction.cancelled,
-                                  icon: Icon(Icons.delete),
-                                ),
-
-                                ButtonSegment(
-                                  value: BulkAction.clear,
-                                  icon: Icon(Icons.block),
-                                ),
-
-                                ButtonSegment(
-                                  value: BulkAction.absent,
-                                  icon: Icon(Icons.close_rounded),
-                                ),
-
-                                ButtonSegment(
-                                  value: BulkAction.present,
-                                  icon: Icon(Icons.check),
-                                ),
-                              ],
-
-                              selected: const <BulkAction>{},
-                              emptySelectionAllowed: true,
-
-                              onSelectionChanged: (Set<BulkAction> selection) {
-
-                                if (selection.isEmpty) return;
-
-                                final action = selection.first;
-
-                                if (action == BulkAction.present) {
-                                  attendance.markAll(today, slots, AttendanceStatus.present);
-                                }
-
-                                if (action == BulkAction.absent) {
-                                  attendance.markAll(today, slots, AttendanceStatus.absent);
-                                }
-
-                                if (action == BulkAction.cancelled) {
-                                  attendance.markAll(today, slots, AttendanceStatus.cancelled);
-                                }
-
-                                if (action == BulkAction.clear) {
-
-                                  for (int i = 0; i < slots.length; i++) {
-                                    if (slots[i] == null) continue;
-
-                                    attendance.clearAttendance(today, i);
-                                  }
-                                }
-                              },
+                    child: isHolidayDay
+                        ? Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: .15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "Holiday",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
                           )
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        /// TIMETABLE
-                        Expanded(
-                          child: DayTimetable(
-                            date: today,
+                        : DayTimetable(
+                            date: date,
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],

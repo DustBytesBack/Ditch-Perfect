@@ -55,6 +55,17 @@ class SubjectProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateMinAttendance(String subjectId, double value) {
+
+    final subject = subjects.firstWhere((s) => s.id == subjectId);
+
+    subject.minAttendance = value;
+
+    DatabaseService.subjectsBox.put(subject.id, subject);
+
+    notifyListeners();
+  }
+
   /// DELETE SUBJECT COMPLETELY (PAST + FUTURE)
   void deleteSubjectCompletely(String id) {
     final subjectsBox = DatabaseService.subjectsBox;
