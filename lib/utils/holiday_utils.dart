@@ -63,7 +63,6 @@ bool isHoliday(
   // A day where every assigned slot is cancelled is also a holiday
   for (int i = 0; i < slots.length; i++) {
     final subjectId = slots[i];
-    if (subjectId == null) continue;
 
     final status = _getStatusFromBox(day, i);
 
@@ -93,7 +92,6 @@ Color? getDayColor(
 
   for (int i = 0; i < slots.length; i++) {
     final subjectId = slots[i];
-    if (subjectId == null) continue;
 
     final status = _getStatusFromBox(day, i);
 

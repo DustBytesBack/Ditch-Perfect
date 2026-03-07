@@ -45,8 +45,6 @@ CalendarStats calculateMonthStats(
     for (int i = 0; i < slots.length; i++) {
       final subjectId = slots[i];
 
-      if (subjectId == null) continue;
-
       totalSubjects++;
 
       final status = attendance.getStatus(day, i);

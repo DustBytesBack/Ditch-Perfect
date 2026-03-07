@@ -5,6 +5,8 @@ class TimetableProvider extends ChangeNotifier {
 
   final Map<String, List<String>> _week = {};
 
+  final Map<String, List<String>> _extraSlots = {};
+
   Map<String, List<String>> get week => _week;
 
   final List<String> days = [
@@ -16,6 +18,11 @@ class TimetableProvider extends ChangeNotifier {
     "sat",
     "sun",
   ];
+
+  String buildDateKey(DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    return d.toIso8601String();
+  }
 
   void loadTimetable() {
     final box = DatabaseService.timetableBox;
@@ -59,7 +66,14 @@ class TimetableProvider extends ChangeNotifier {
   }
 
   List<String> getSlotsForDate(DateTime date) {
-    return _week[days[date.weekday - 1]] ?? [];
+
+    final base = _week[days[date.weekday - 1]] ?? [];
+
+    final key = buildDateKey(date);
+
+    final extra = _extraSlots[key] ?? [];
+
+    return [...base, ...extra];
   }
 
   void addSubject(String day, String subjectId) {
@@ -135,7 +149,73 @@ class TimetableProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateHours(int hours) {
-    /// no longer used
+  void addSubjectToDate(DateTime date, String subjectId) {
+
+    final box = DatabaseService.timetableBox;
+
+    final key = buildDateKey(date);
+
+    final slots = _extraSlots[key] ?? [];
+
+    slots.add(subjectId);
+
+    _extraSlots[key] = slots;
+
+    box.put(key, slots);
+
+    notifyListeners();
   }
+
+  void removeExtraSubject(DateTime date, int index) {
+
+    final key = buildDateKey(date);
+
+    final slots = _extraSlots[key];
+
+    if (slots == null) return;
+
+    if (index < 0 || index >= slots.length) return;
+
+    slots.removeAt(index);
+
+    if (slots.isEmpty) {
+      _extraSlots.remove(key);
+    } else {
+      _extraSlots[key] = slots;
+    }
+
+    final attendanceBox = DatabaseService.attendanceBox;
+
+    final baseSlots = getDaySlots(days[date.weekday - 1]);
+    final baseCount = baseSlots.length;
+
+    final removedSlotIndex = baseCount + index;
+
+    final keys = attendanceBox.keys.toList();
+
+    for (var k in keys) {
+
+      final record = attendanceBox.get(k);
+
+      if (record == null) continue;
+
+      if (record.date.year == date.year &&
+          record.date.month == date.month &&
+          record.date.day == date.day) {
+
+        if (record.slotIndex == removedSlotIndex) {
+
+          attendanceBox.delete(k);
+
+        } else if (record.slotIndex > removedSlotIndex) {
+
+          record.slotIndex = record.slotIndex - 1;
+          attendanceBox.put(k, record);
+        }
+      }
+    }
+
+    notifyListeners();
+  }
+
 }

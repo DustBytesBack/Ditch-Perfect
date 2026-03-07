@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
+import '../models/subject.dart';
 import '../widgets/day_timetable.dart';
 
 enum BulkAction {
@@ -25,6 +27,84 @@ class HomePage extends StatelessWidget {
     return "${date.day} ${months[date.month - 1]} ${date.year}";
   }
 
+  void showSubjectPicker(BuildContext context, DateTime date) {
+
+    final subjects = context.read<SubjectProvider>().subjects;
+    final scheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Select Subject",
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: subjects.length,
+                    itemBuilder: (context, index) {
+
+                      final subject = subjects[index];
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        leading: CircleAvatar(
+                          backgroundColor: scheme.primaryContainer,
+                          child: Text(
+                            subject.shortName.isEmpty
+                                ? subject.name[0]
+                                : subject.shortName[0],
+                            style: TextStyle(
+                              color: scheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        title: Text(subject.name),
+                        subtitle: Text(subject.shortName),
+                        onTap: () {
+
+                          context
+                              .read<TimetableProvider>()
+                              .addSubjectToDate(date, subject.id);
+
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -34,7 +114,8 @@ class HomePage extends StatelessWidget {
     final attendance = context.watch<AttendanceProvider>();
 
     final today = DateTime.now();
-    final slots = timetable.getTodaySlots();
+
+    final slots = timetable.getSlotsForDate(today);
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
@@ -82,6 +163,21 @@ class HomePage extends StatelessWidget {
                       ),
 
                       const Spacer(),
+
+                      Container(
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: IconButton(
+                          iconSize: 28,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(Icons.add, color: scheme.onSurface),
+                          onPressed: () {
+                            showSubjectPicker(context, today);
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -116,7 +212,7 @@ class HomePage extends StatelessWidget {
 
                             child: SegmentedButton<BulkAction>(
                               segments: const [
-                                
+
                                 ButtonSegment(
                                   value: BulkAction.clear,
                                   icon: Icon(Icons.delete),
@@ -162,8 +258,6 @@ class HomePage extends StatelessWidget {
                                 if (action == BulkAction.clear) {
 
                                   for (int i = 0; i < slots.length; i++) {
-                                    if (slots[i] == null) continue;
-
                                     attendance.clearAttendance(today, i);
                                   }
                                 }
@@ -188,7 +282,7 @@ class HomePage extends StatelessWidget {
             ),
           ),
 
-          /// NAV BAR COLOR FIX
+          /// NAV BAR FIX
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

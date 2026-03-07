@@ -163,7 +163,7 @@ class TimetablePage extends StatelessWidget {
                             ),
                           );
 
-                        }).toList(),
+                        }),
                         const SizedBox(height: 60,)
                       ],
                     ),

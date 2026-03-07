@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
 import '../utils/holiday_utils.dart';
 import '../widgets/day_timetable.dart';
@@ -30,6 +31,40 @@ class DayDetailsPage extends StatelessWidget {
     ];
 
     return "${date.day} ${months[date.month - 1]} ${date.year}";
+  }
+
+  void showSubjectPicker(BuildContext context, DateTime date) {
+
+    final subjects = context.read<SubjectProvider>().subjects;
+    final scheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: ListView(
+            children: subjects.map((subject) {
+              return ListTile(
+                title: Text(subject.name),
+                onTap: () {
+
+                  context
+                      .read<TimetableProvider>()
+                      .addSubjectToDate(date, subject.id);
+
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -91,6 +126,8 @@ class DayDetailsPage extends StatelessWidget {
 
                       const Spacer(),
 
+                      const SizedBox(width: 12),
+
                       Container(
                         decoration: BoxDecoration(
                           color: scheme.surface,
@@ -99,9 +136,9 @@ class DayDetailsPage extends StatelessWidget {
                         child: IconButton(
                           iconSize: 26,
                           padding: const EdgeInsets.all(14),
-                          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+                          icon: Icon(Icons.add, color: scheme.onSurface),
                           onPressed: () {
-                            Navigator.pop(context);
+                            showSubjectPicker(context, date);
                           },
                         ),
                       ),
@@ -208,8 +245,6 @@ class DayDetailsPage extends StatelessWidget {
                                       if (action == BulkAction.clear) {
 
                                         for (int i = 0; i < slots.length; i++) {
-                                          if (slots[i] == null) continue;
-
                                           attendance.clearAttendance(date, i);
                                         }
                                       }

@@ -10,6 +10,26 @@ import '../models/subject.dart';
 class SubjectPage extends StatelessWidget {
   const SubjectPage({super.key});
 
+  int canBunk(int attended, int total, double minPercent) {
+    if (total == 0) return 0;
+
+    double p = minPercent / 100;
+    int bunk = ((attended / p) - total).floor();
+
+    if (bunk < 0) return 0;
+    return bunk;
+  }
+
+  int needToAttend(int attended, int total, double minPercent) {
+    if (total == 0) return 0;
+
+    double p = minPercent / 100;
+    int need = ((p * total - attended) / (1 - p)).ceil();
+
+    if (need < 0) return 0;
+    return need;
+  }
+
   void showAddDialog(BuildContext context) {
     final nameController = TextEditingController();
     final shortController = TextEditingController();
@@ -229,6 +249,10 @@ class SubjectPage extends StatelessWidget {
 
                         bool lowAttendance = percent < minAttendance;
 
+                        final tintedColor = lowAttendance
+                        ? Color.alphaBlend(scheme.error.withValues(alpha: .2), scheme.onError)
+                        : scheme.secondaryContainer;
+
                         return Dismissible(
                           key: ValueKey(subject.id),
                           direction: DismissDirection.horizontal,
@@ -242,13 +266,10 @@ class SubjectPage extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 38),
                               decoration: BoxDecoration(
                                 color: scheme.errorContainer,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(18),
-                                  bottomLeft: Radius.circular(18),
-                                ),
+                                borderRadius: BorderRadius.circular(28)
                               ),
                               child: Icon(
                                 Icons.delete,
@@ -261,13 +282,10 @@ class SubjectPage extends StatelessWidget {
                             alignment: Alignment.centerRight,
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 38),
                               decoration: BoxDecoration(
                                 color: scheme.errorContainer,
-                                borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(18),
-                                  bottomRight: Radius.circular(18),
-                                ),
+                                borderRadius: BorderRadius.circular(28)
                               ),
                               child: Icon(
                                 Icons.delete,
@@ -284,24 +302,29 @@ class SubjectPage extends StatelessWidget {
                                 /// ATTENDANCE PILL
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 20),
+                                      horizontal: 18, vertical: 42),
                                   decoration: BoxDecoration(
-                                    color: scheme.secondaryContainer,
+                                    color: tintedColor,
                                     borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(20),
+                                      topRight: Radius.circular(5),
                                       bottomLeft: Radius.circular(20),
+                                      bottomRight: Radius.circular(5)
                                     ),
                                   ),
                                   child: Text(
-                                    "${stats.attended}/${stats.total}",
+                                    stats.total == 0
+                                        ? "-%"
+                                        : "${percent.toStringAsFixed(0)}%",
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge
                                         ?.copyWith(
+                                          fontSize: 18,
                                           color: lowAttendance
                                               ? scheme.error
                                               : scheme.onSecondaryContainer,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                   ),
                                 ),
@@ -309,30 +332,79 @@ class SubjectPage extends StatelessWidget {
                                 const SizedBox(width: 8),
 
                                 /// SUBJECT PILL
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 20),
-                                    decoration: BoxDecoration(
-                                      color: scheme.secondaryContainer,
-                                      borderRadius: const BorderRadius.only(
-                                        topRight: Radius.circular(20),
-                                        bottomRight: Radius.circular(20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 20),
+                                      decoration: BoxDecoration(
+                                        color: tintedColor,
+                                        borderRadius: const BorderRadius.only(
+                                          topRight: Radius.circular(20),
+                                          topLeft: Radius.circular(5),
+                                          bottomLeft: Radius.circular(5),
+                                          bottomRight: Radius.circular(5)
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        subject.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              color: scheme.onSecondaryContainer,
+                                              fontWeight: FontWeight.w800,
+                                            ),
                                       ),
                                     ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      subject.name,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            color: scheme.onSecondaryContainer,
-                                            fontWeight: FontWeight.w500,
+
+                                    const SizedBox(height: 4),
+
+                                    Builder(
+                                      builder: (context) {
+
+                                        int attended = stats.attended;
+                                        int total = stats.total;
+
+                                        int bunk = canBunk(attended, total, minAttendance);
+                                        int need = needToAttend(attended, total, minAttendance);
+
+                                        bool lowAttendance = percent < minAttendance;
+
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          decoration: BoxDecoration(
+                                            color: tintedColor,
+                                            borderRadius: const BorderRadius.only(
+                                              topLeft: Radius.circular(5),
+                                              topRight: Radius.circular(5),
+                                              bottomLeft: Radius.circular(5),
+                                              bottomRight: Radius.circular(20),
+                                            ),
                                           ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            lowAttendance
+                                                ? "Needs to attend $need class${need == 1 ? "" : "es"}"
+                                                : "Can bunk $bunk class${bunk == 1 ? "" : "es"}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: lowAttendance
+                                                  ? scheme.error
+                                                  : scheme.onSecondaryContainer,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  ),
+                                  ],
                                 ),
+                              )
                               ],
                             ),
                           ),
