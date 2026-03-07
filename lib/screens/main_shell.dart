@@ -5,6 +5,7 @@ import 'calendar_page.dart';
 import 'subject_page.dart';
 import 'timetable_page.dart';
 import 'settings_page.dart';
+import '../utils/update_checker.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -23,6 +24,14 @@ class _MainShellState extends State<MainShell> {
     TimetablePage(),
     SettingsPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkForUpdate(context);
+    });
+  }
 
   final destinations = const [
     NavigationDestination(
@@ -81,13 +90,12 @@ class _MainShellState extends State<MainShell> {
                         color: scheme.shadow.withValues(alpha: .35),
                         blurRadius: 14,
                         offset: const Offset(0, 6),
-                      )
+                      ),
                     ],
                   ),
 
                   child: Stack(
                     children: [
-
                       /// SLIDING INDICATOR
                       AnimatedAlign(
                         duration: const Duration(milliseconds: 300),
@@ -146,7 +154,6 @@ class _MainShellState extends State<MainShell> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   transitionBuilder: (child, anim) =>
@@ -171,12 +178,11 @@ class _MainShellState extends State<MainShell> {
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 200),
                   style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                        color: selected
-                            ? scheme.onPrimaryContainer
-                            : scheme.onSurfaceVariant,
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.w400,
-                      ),
+                    color: selected
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
                   child: Text(destination.label),
                 ),
               ],

@@ -17,21 +17,21 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-
   late double minAttendance;
 
   @override
   void initState() {
     super.initState();
 
-    final storedAttendance =
-        DatabaseService.settingsBox.get("minAttendance", defaultValue: 75);
+    final storedAttendance = DatabaseService.settingsBox.get(
+      "minAttendance",
+      defaultValue: 75,
+    );
 
     minAttendance = storedAttendance.toDouble();
   }
 
   void showDeleteAllDialog(BuildContext context) {
-
     final scheme = Theme.of(context).colorScheme;
 
     showDialog(
@@ -43,7 +43,6 @@ class _SettingsPageState extends State<SettingsPage> {
             "This will permanently delete all subjects, timetable entries and attendance data. This action cannot be undone.",
           ),
           actions: [
-
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
@@ -51,7 +50,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
             TextButton(
               onPressed: () async {
-
                 await Hive.close();
                 await Hive.deleteFromDisk();
 
@@ -86,47 +84,42 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-
     final scheme = Theme.of(context).colorScheme;
     final themeProvider = context.watch<ThemeProvider>();
 
-    final modeLabel =
-        themeProvider.isDark ? "Light Mode" : "Dark Mode";
+    final modeLabel = themeProvider.isDark ? "Light Mode" : "Dark Mode";
 
-    final modeIcon =
-        themeProvider.isDark ? Icons.light_mode : Icons.dark_mode;
+    final modeIcon = themeProvider.isDark ? Icons.light_mode : Icons.dark_mode;
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
       body: Stack(
         children: [
-
           SafeArea(
             child: Column(
               children: [
-
                 /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 56, vertical: 16),
+                          horizontal: 56,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                         ),
                         child: Text(
                           "Settings",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
-                                  color: scheme.onSurface,
-                                  fontWeight: FontWeight.w600),
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -140,8 +133,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: IconButton(
                           iconSize: 28,
                           padding: const EdgeInsets.all(14),
-                          icon: Icon(Icons.info_outline,
-                              color: scheme.onSurface),
+                          icon: Icon(
+                            Icons.info_outline,
+                            color: scheme.onSurface,
+                          ),
                           onPressed: () {
                             showAboutDialog(
                               context: context,
@@ -170,13 +165,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     child: ListView(
                       children: [
-
                         /// GENERAL
                         sectionTitle(context, "General"),
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 18),
+                            horizontal: 18,
+                            vertical: 18,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(28),
@@ -184,12 +180,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
                           child: Column(
                             children: [
-
                               Row(
                                 children: [
-
-                                  Icon(Icons.percent,
-                                      color: scheme.onSecondaryContainer),
+                                  Icon(
+                                    Icons.percent,
+                                    color: scheme.onSecondaryContainer,
+                                  ),
 
                                   const SizedBox(width: 18),
 
@@ -197,7 +193,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                     child: Text(
                                       "Minimum Attendance %",
                                       style: TextStyle(
-                                          fontWeight: FontWeight.w600),
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
 
@@ -225,8 +222,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                 },
 
                                 onChangeEnd: (value) {
-                                  DatabaseService.settingsBox
-                                      .put("minAttendance", value.toInt());
+                                  DatabaseService.settingsBox.put(
+                                    "minAttendance",
+                                    value.toInt(),
+                                  );
                                 },
                               ),
                             ],
@@ -240,7 +239,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
                             borderRadius: const BorderRadius.only(
@@ -253,9 +254,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
                           child: Row(
                             children: [
-
-                              Icon(modeIcon,
-                                  color: scheme.onSecondaryContainer),
+                              Icon(
+                                modeIcon,
+                                color: scheme.onSecondaryContainer,
+                              ),
 
                               const SizedBox(width: 18),
 
@@ -263,7 +265,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 child: Text(
                                   modeLabel,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.w600),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
 
@@ -285,7 +288,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(10),
@@ -293,26 +298,23 @@ class _SettingsPageState extends State<SettingsPage> {
 
                           child: Row(
                             children: [
-
-                              const Text("🎀",
-                                  style: TextStyle(fontSize: 20)),
+                              const Text("🎀", style: TextStyle(fontSize: 20)),
 
                               const SizedBox(width: 18),
 
                               const Expanded(
                                 child: Text(
                                   "Pookie Mode",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w600),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                               ),
 
                               Switch.adaptive(
                                 value: themeProvider.pookieMode,
                                 onChanged: (value) {
-                                  context
-                                      .read<ThemeProvider>()
-                                      .togglePookie(value);
+                                  context.read<ThemeProvider>().togglePookie(
+                                    value,
+                                  );
                                 },
                               ),
                             ],
@@ -324,7 +326,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         /// COLOR SCHEME
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 18),
+                            horizontal: 18,
+                            vertical: 18,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
                             borderRadius: const BorderRadius.only(
@@ -337,10 +341,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
                           child: Column(
                             children: [
-
                               Row(
                                 children: [
-
                                   Icon(
                                     Icons.palette,
                                     color: scheme.onSecondaryContainer,
@@ -364,7 +366,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                 spacing: 16,
                                 runSpacing: 16,
                                 children: [
-
                                   colorOption(context, Colors.indigo),
                                   colorOption(context, Colors.blue),
                                   colorOption(context, Colors.cyan),
@@ -377,7 +378,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                   colorOption(context, Colors.red),
                                   colorOption(context, Colors.pink),
                                   colorOption(context, Colors.deepPurple),
-
                                 ],
                               ),
                             ],
@@ -391,10 +391,43 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(28),
+                              topRight: Radius.circular(28),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+
+                          child: ListTile(
+                            leading: const Icon(Icons.system_update),
+                            title: const Text("Check for Updates"),
+                            onTap: () {
+                              checkForUpdate(context);
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.errorContainer,
-                            borderRadius: BorderRadius.circular(28),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(28),
+                              bottomRight: Radius.circular(28),
+                            ),
                           ),
 
                           child: ListTile(
@@ -411,9 +444,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             subtitle: Text(
                               "Clear all subjects, timetable and attendance",
-                              style: TextStyle(
-                                color: scheme.onErrorContainer,
-                              ),
+                              style: TextStyle(color: scheme.onErrorContainer),
                             ),
                             onTap: () {
                               showDeleteAllDialog(context);
@@ -446,15 +477,14 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
 
   Widget colorOption(BuildContext context, Color color) {
-
     final themeProvider = context.watch<ThemeProvider>();
     final selected = themeProvider.seedColor.value == color.value;
 
@@ -480,7 +510,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: color.withValues(alpha: .6),
                     blurRadius: 8,
                     spreadRadius: 1,
-                  )
+                  ),
                 ]
               : [],
         ),
