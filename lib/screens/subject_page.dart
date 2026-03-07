@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
@@ -122,6 +123,7 @@ class SubjectPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
+                HapticFeedback.mediumImpact();
                 context.read<SubjectProvider>().deleteSubjectFuture(subject.id);
                 Navigator.pop(context);
               },
@@ -130,6 +132,7 @@ class SubjectPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
+                HapticFeedback.mediumImpact();
                 context.read<SubjectProvider>().deleteSubjectCompletely(
                   subject.id,
                 );

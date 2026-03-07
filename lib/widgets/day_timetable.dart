@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
@@ -11,13 +12,9 @@ import '../utils/attendance_utils.dart';
 import '../utils/holiday_utils.dart';
 
 class DayTimetable extends StatelessWidget {
-
   final DateTime date;
 
-  const DayTimetable({
-    super.key,
-    required this.date,
-  });
+  const DayTimetable({super.key, required this.date});
 
   int canBunk(int attended, int total, double minPercent) {
     if (total == 0) return 0;
@@ -45,7 +42,6 @@ class DayTimetable extends StatelessWidget {
     Color color,
     VoidCallback onTap,
   ) {
-
     final selected = status != AttendanceStatus.none && current == status;
 
     return GestureDetector(
@@ -57,18 +53,13 @@ class DayTimetable extends StatelessWidget {
           color: selected ? color : color.withValues(alpha: .25),
           borderRadius: BorderRadius.circular(selected ? 24 : 12),
         ),
-        child: Icon(
-          icon,
-          color: selected ? Colors.white : color,
-          size: 20,
-        ),
+        child: Icon(icon, color: selected ? Colors.white : color, size: 20),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
@@ -84,7 +75,6 @@ class DayTimetable extends StatelessWidget {
     return ListView.builder(
       itemCount: slots.length,
       itemBuilder: (context, index) {
-
         final subjectId = slots[index];
 
         final subject = subjects.firstWhere(
@@ -94,17 +84,12 @@ class DayTimetable extends StatelessWidget {
 
         final status = attendance.getStatus(date, index);
 
-        final stats = calculateStats(
-          subject.id,
-          attendance.records.values,
-        );
+        final stats = calculateStats(subject.id, attendance.records.values);
 
         int attended = stats.attended;
         int total = stats.total;
 
-        double percent = total == 0
-            ? 100
-            : (attended / total) * 100;
+        double percent = total == 0 ? 100 : (attended / total) * 100;
 
         bool lowAttendance = percent < minAttendance;
 
@@ -126,111 +111,109 @@ class DayTimetable extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-
               /// SUBJECT ROW
               Row(
                 children: [
-
-                Expanded(
-                  child: GestureDetector(
-                    onLongPress: isExtra
-                        ? () {
-                            showDialog(
-                              context: context,
-                              builder: (_) {
-                                return AlertDialog(
-                                  title: const Text("Remove Extra Subject"),
-                                  content: const Text(
-                                    "Do you want to remove this extra subject from this day?",
-                                  ),
-                                  actions: [
-
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text("Cancel"),
+                  Expanded(
+                    child: GestureDetector(
+                      onLongPress: isExtra
+                          ? () {
+                              showDialog(
+                                context: context,
+                                builder: (_) {
+                                  return AlertDialog(
+                                    title: const Text("Remove Extra Subject"),
+                                    content: const Text(
+                                      "Do you want to remove this extra subject from this day?",
                                     ),
-
-                                    TextButton(
-                                      onPressed: () {
-                                        timetable.removeExtraSubject(
-                                          date,
-                                          index - baseCount,
-                                        );
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(
-                                        "Remove",
-                                        style: TextStyle(color: scheme.error),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text("Cancel"),
                                       ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          }
-                        : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: tintedColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(5),
-                          bottomLeft: Radius.circular(5),
-                          bottomRight: Radius.circular(5),
+
+                                      TextButton(
+                                        onPressed: () {
+                                          HapticFeedback.mediumImpact();
+                                          timetable.removeExtraSubject(
+                                            date,
+                                            index - baseCount,
+                                          );
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text(
+                                          "Remove",
+                                          style: TextStyle(color: scheme.error),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
+                          : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 12,
                         ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-
-                          Flexible(
-                            child: Text(
-                              subject.shortName.isEmpty
-                                  ? subject.name
-                                  : subject.shortName,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: lowAttendance
-                                        ? scheme.error
-                                        : scheme.onSecondaryContainer,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
+                        decoration: BoxDecoration(
+                          color: tintedColor,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(5),
+                            bottomLeft: Radius.circular(5),
+                            bottomRight: Radius.circular(5),
                           ),
-
-                          if (isExtra) ...[
-                            const SizedBox(width: 8),
-
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: scheme.primary.withValues(alpha: .15),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
                               child: Text(
-                                "EXTRA",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: scheme.primary,
+                                subject.shortName.isEmpty
+                                    ? subject.name
+                                    : subject.shortName,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: lowAttendance
+                                          ? scheme.error
+                                          : scheme.onSecondaryContainer,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ),
+
+                            if (isExtra) ...[
+                              const SizedBox(width: 8),
+
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: scheme.primary.withValues(alpha: .15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  "EXTRA",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: scheme.primary,
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
                   const SizedBox(width: 6),
 
@@ -242,6 +225,7 @@ class DayTimetable extends StatelessWidget {
                     Icons.delete_outline,
                     Colors.grey,
                     () {
+                      HapticFeedback.lightImpact();
                       attendance.clearAttendance(date, index);
                     },
                   ),

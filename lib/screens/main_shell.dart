@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'home_page.dart';
 import 'calendar_page.dart';
@@ -145,6 +146,9 @@ class _MainShellState extends State<MainShell> {
           highlightColor: Colors.transparent,
           hoverColor: Colors.transparent,
           onTap: () {
+            if (currentIndex != index) {
+              HapticFeedback.lightImpact();
+            }
             setState(() {
               currentIndex = index;
             });

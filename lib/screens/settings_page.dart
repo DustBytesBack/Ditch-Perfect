@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -50,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
             TextButton(
               onPressed: () async {
+                HapticFeedback.mediumImpact();
                 await Hive.close();
                 await Hive.deleteFromDisk();
 
@@ -216,6 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 value: minAttendance,
 
                                 onChanged: (value) {
+                                  HapticFeedback.lightImpact();
                                   setState(() {
                                     minAttendance = value;
                                   });
@@ -275,6 +278,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 onChanged: themeProvider.pookieMode
                                     ? null
                                     : (value) {
+                                        HapticFeedback.lightImpact();
                                         context
                                             .read<ThemeProvider>()
                                             .toggleTheme(value);
@@ -312,6 +316,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               Switch.adaptive(
                                 value: themeProvider.pookieMode,
                                 onChanged: (value) {
+                                  HapticFeedback.lightImpact();
                                   context.read<ThemeProvider>().togglePookie(
                                     value,
                                   );
@@ -408,7 +413,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             leading: const Icon(Icons.system_update),
                             title: const Text("Check for Updates"),
                             onTap: () {
-                              checkForUpdate(context);
+                              checkForUpdateManual(context);
                             },
                           ),
                         ),

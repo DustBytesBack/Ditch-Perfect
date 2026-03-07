@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
@@ -37,7 +38,6 @@ class TimetableEditorPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -53,7 +53,6 @@ class TimetableEditorPage extends StatelessWidget {
                     shrinkWrap: true,
                     itemCount: subjects.length,
                     itemBuilder: (context, index) {
-
                       final subject = subjects[index];
 
                       return ListTile(
@@ -76,9 +75,10 @@ class TimetableEditorPage extends StatelessWidget {
                         title: Text(subject.name),
                         subtitle: Text(subject.shortName),
                         onTap: () {
-                          context
-                              .read<TimetableProvider>()
-                              .addSubject(day, subject.id);
+                          context.read<TimetableProvider>().addSubject(
+                            day,
+                            subject.id,
+                          );
 
                           Navigator.pop(context);
                         },
@@ -106,7 +106,6 @@ class TimetableEditorPage extends StatelessWidget {
             "Do you want to remove this subject only from this slot or from every week?",
           ),
           actions: [
-
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
@@ -114,6 +113,7 @@ class TimetableEditorPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
+                HapticFeedback.mediumImpact();
                 context.read<TimetableProvider>().removeSubjectAt(day, index);
                 Navigator.pop(context);
               },
@@ -122,7 +122,11 @@ class TimetableEditorPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
-                context.read<TimetableProvider>().removeSlotEverywhere(day, index);
+                HapticFeedback.mediumImpact();
+                context.read<TimetableProvider>().removeSlotEverywhere(
+                  day,
+                  index,
+                );
                 Navigator.pop(context);
               },
               child: Text(
@@ -138,7 +142,6 @@ class TimetableEditorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final scheme = Theme.of(context).colorScheme;
     final timetable = context.watch<TimetableProvider>();
     final subjects = context.watch<SubjectProvider>().subjects;
@@ -151,17 +154,14 @@ class TimetableEditorPage extends StatelessWidget {
 
         body: Stack(
           children: [
-
             SafeArea(
               child: Column(
                 children: [
-
                   /// HEADER
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 56,
@@ -173,9 +173,7 @@ class TimetableEditorPage extends StatelessWidget {
                           ),
                           child: Text(
                             "Edit Timetable",
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(
                                   color: scheme.onSurface,
                                   fontWeight: FontWeight.w600,
@@ -193,7 +191,10 @@ class TimetableEditorPage extends StatelessWidget {
                           child: IconButton(
                             iconSize: 26,
                             padding: const EdgeInsets.all(14),
-                            icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+                            icon: Icon(
+                              Icons.arrow_back,
+                              color: scheme.onSurface,
+                            ),
                             onPressed: () {
                               Navigator.pop(context);
                             },
@@ -217,7 +218,6 @@ class TimetableEditorPage extends StatelessWidget {
 
                       child: Column(
                         children: [
-
                           /// TAB BAR
                           TabBar(
                             isScrollable: true,
@@ -232,11 +232,9 @@ class TimetableEditorPage extends StatelessWidget {
                           Expanded(
                             child: TabBarView(
                               children: timetable.days.map((day) {
-
                                 final slots = timetable.getDaySlots(day);
 
                                 return ReorderableListView.builder(
-
                                   buildDefaultDragHandles: false,
 
                                   proxyDecorator: (child, index, animation) {
@@ -250,7 +248,6 @@ class TimetableEditorPage extends StatelessWidget {
                                   itemCount: slots.length,
 
                                   onReorder: (oldIndex, newIndex) {
-
                                     if (newIndex > oldIndex) newIndex--;
 
                                     final list = List<String>.from(slots);
@@ -264,7 +261,6 @@ class TimetableEditorPage extends StatelessWidget {
                                   },
 
                                   itemBuilder: (context, index) {
-
                                     final subjectId = slots[index];
 
                                     final subject = subjects.firstWhere(
@@ -278,31 +274,42 @@ class TimetableEditorPage extends StatelessWidget {
 
                                     return Padding(
                                       key: ValueKey("$day-$index"),
-                                      padding: const EdgeInsets.only(bottom: 12),
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
 
                                       child: Row(
                                         children: [
-
                                           Expanded(
                                             child: GestureDetector(
-
-                                              onTap: () => showSubjectPicker(context, day),
+                                              onTap: () => showSubjectPicker(
+                                                context,
+                                                day,
+                                              ),
 
                                               onLongPress: () {
-                                                showDeleteDialog(context, day, index);
+                                                showDeleteDialog(
+                                                  context,
+                                                  day,
+                                                  index,
+                                                );
                                               },
 
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 20,
-                                                  vertical: 16,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 16,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: scheme.onSecondary,
-                                                  borderRadius: const BorderRadius.only(
-                                                    topLeft: Radius.circular(18),
-                                                    bottomLeft: Radius.circular(18),
-                                                  ),
+                                                  borderRadius:
+                                                      const BorderRadius.only(
+                                                        topLeft:
+                                                            Radius.circular(18),
+                                                        bottomLeft:
+                                                            Radius.circular(18),
+                                                      ),
                                                 ),
                                                 child: Text(
                                                   subject.shortName.isEmpty
@@ -311,7 +318,8 @@ class TimetableEditorPage extends StatelessWidget {
                                                   style: TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
-                                                    color: scheme.onSecondaryContainer,
+                                                    color: scheme
+                                                        .onSecondaryContainer,
                                                   ),
                                                 ),
                                               ),
@@ -323,13 +331,20 @@ class TimetableEditorPage extends StatelessWidget {
                                             child: Container(
                                               padding: const EdgeInsets.all(16),
                                               decoration: BoxDecoration(
-                                                color: scheme.surfaceContainerHigh,
-                                                borderRadius: const BorderRadius.only(
-                                                  topRight: Radius.circular(18),
-                                                  bottomRight: Radius.circular(18),
-                                                ),
+                                                color:
+                                                    scheme.surfaceContainerHigh,
+                                                borderRadius:
+                                                    const BorderRadius.only(
+                                                      topRight: Radius.circular(
+                                                        18,
+                                                      ),
+                                                      bottomRight:
+                                                          Radius.circular(18),
+                                                    ),
                                               ),
-                                              child: const Icon(Icons.drag_handle),
+                                              child: const Icon(
+                                                Icons.drag_handle,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -337,7 +352,6 @@ class TimetableEditorPage extends StatelessWidget {
                                     );
                                   },
                                 );
-
                               }).toList(),
                             ),
                           ),
@@ -355,12 +369,11 @@ class TimetableEditorPage extends StatelessWidget {
               right: 24,
               child: Builder(
                 builder: (fabContext) {
-
                   return FloatingActionButton.extended(
                     onPressed: () {
-
                       final controller = DefaultTabController.of(fabContext);
-                      final day = timetable.days[controller.index];
+                      final dayIndex = controller.animation!.value.round();
+                      final day = timetable.days[dayIndex];
 
                       showSubjectPicker(fabContext, day);
                     },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
@@ -8,33 +9,33 @@ import '../models/attendance.dart';
 import '../utils/holiday_utils.dart';
 import '../widgets/day_timetable.dart';
 
-enum BulkAction {
-  present,
-  absent,
-  cancelled,
-  clear
-}
+enum BulkAction { present, absent, cancelled, clear }
 
 class DayDetailsPage extends StatelessWidget {
-
   final DateTime date;
 
-  const DayDetailsPage({
-    super.key,
-    required this.date,
-  });
+  const DayDetailsPage({super.key, required this.date});
 
   String formatDate(DateTime date) {
     const months = [
-      "January","February","March","April","May","June",
-      "July","August","September","October","November","December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     return "${date.day} ${months[date.month - 1]} ${date.year}";
   }
 
   void showSubjectPicker(BuildContext context, DateTime date) {
-
     final subjects = context.read<SubjectProvider>().subjects;
     final scheme = Theme.of(context).colorScheme;
 
@@ -52,10 +53,10 @@ class DayDetailsPage extends StatelessWidget {
               return ListTile(
                 title: Text(subject.name),
                 onTap: () {
-
-                  context
-                      .read<TimetableProvider>()
-                      .addSubjectToDate(date, subject.id);
+                  context.read<TimetableProvider>().addSubjectToDate(
+                    date,
+                    subject.id,
+                  );
 
                   Navigator.pop(context);
                 },
@@ -69,7 +70,6 @@ class DayDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
@@ -78,23 +78,21 @@ class DayDetailsPage extends StatelessWidget {
     final slots = timetable.getSlotsForDate(date);
 
     final isHolidayDay = isHoliday(date, attendance, timetable);
+    final noSlots = hasNoSlots(date, timetable);
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
       body: Stack(
         children: [
-
           SafeArea(
             child: Column(
               children: [
-
                 /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 56,
@@ -114,9 +112,7 @@ class DayDetailsPage extends StatelessWidget {
                         ),
                         child: Text(
                           formatDate(date),
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
@@ -178,9 +174,7 @@ class DayDetailsPage extends StatelessWidget {
                               ),
                               child: Text(
                                 "Holiday",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: Colors.orange,
                                       fontWeight: FontWeight.w600,
@@ -188,18 +182,28 @@ class DayDetailsPage extends StatelessWidget {
                               ),
                             ),
                           )
+                        : noSlots
+                        ? Center(
+                            child: Text(
+                              "No timetable created",
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          )
                         : Column(
                             children: [
-
                               /// BULK ACTION BUTTONS
                               Align(
                                 alignment: Alignment.topRight,
                                 child: SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.4,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.4,
 
                                   child: SegmentedButton<BulkAction>(
                                     segments: const [
-
                                       ButtonSegment(
                                         value: BulkAction.clear,
                                         icon: Icon(Icons.delete),
@@ -224,31 +228,50 @@ class DayDetailsPage extends StatelessWidget {
                                     selected: const <BulkAction>{},
                                     emptySelectionAllowed: true,
 
-                                    onSelectionChanged: (Set<BulkAction> selection) {
+                                    onSelectionChanged:
+                                        (Set<BulkAction> selection) {
+                                          if (selection.isEmpty) return;
 
-                                      if (selection.isEmpty) return;
+                                          final action = selection.first;
 
-                                      final action = selection.first;
+                                          if (action == BulkAction.present) {
+                                            attendance.markAll(
+                                              date,
+                                              slots,
+                                              AttendanceStatus.present,
+                                            );
+                                          }
 
-                                      if (action == BulkAction.present) {
-                                        attendance.markAll(date, slots, AttendanceStatus.present);
-                                      }
+                                          if (action == BulkAction.absent) {
+                                            attendance.markAll(
+                                              date,
+                                              slots,
+                                              AttendanceStatus.absent,
+                                            );
+                                          }
 
-                                      if (action == BulkAction.absent) {
-                                        attendance.markAll(date, slots, AttendanceStatus.absent);
-                                      }
+                                          if (action == BulkAction.cancelled) {
+                                            attendance.markAll(
+                                              date,
+                                              slots,
+                                              AttendanceStatus.cancelled,
+                                            );
+                                          }
 
-                                      if (action == BulkAction.cancelled) {
-                                        attendance.markAll(date, slots, AttendanceStatus.cancelled);
-                                      }
-
-                                      if (action == BulkAction.clear) {
-
-                                        for (int i = 0; i < slots.length; i++) {
-                                          attendance.clearAttendance(date, i);
-                                        }
-                                      }
-                                    },
+                                          if (action == BulkAction.clear) {
+                                            HapticFeedback.mediumImpact();
+                                            for (
+                                              int i = 0;
+                                              i < slots.length;
+                                              i++
+                                            ) {
+                                              attendance.clearAttendance(
+                                                date,
+                                                i,
+                                              );
+                                            }
+                                          }
+                                        },
                                   ),
                                 ),
                               ),
@@ -256,11 +279,7 @@ class DayDetailsPage extends StatelessWidget {
                               const SizedBox(height: 16),
 
                               /// TIMETABLE
-                              Expanded(
-                                child: DayTimetable(
-                                  date: date,
-                                ),
-                              ),
+                              Expanded(child: DayTimetable(date: date)),
                             ],
                           ),
                   ),

@@ -29,9 +29,12 @@ CalendarStats calculateMonthStats(
 
     final slots = timetable.getSlotsForDate(day);
 
-    // Days with no subjects — treat as holiday/off day
+    // Days with no subjects
     if (slots.isEmpty) {
-      stats.cancelled++;
+      // Only Sat/Sun count as cancelled (holiday). Weekdays are ignored.
+      if (day.weekday == 6 || day.weekday == 7) {
+        stats.cancelled++;
+      }
       continue;
     }
 

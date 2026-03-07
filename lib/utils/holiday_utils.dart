@@ -24,30 +24,20 @@ bool isHoliday(
 ) {
   final slots = timetable.getSlotsForDate(day);
 
-  // A day with no subjects assigned is a holiday
-  if (slots.isEmpty) return true;
-
-  // Check if all non-null slots are cancelled
-  bool hasSubject = false;
-
-  for (int i = 0; i < slots.length; i++) {
-    final subjectId = slots[i];
-    if (subjectId.isEmpty) continue;
-
-    hasSubject = true;
-
-    final status = attendance.getStatus(day, i);
-
-    if (status != AttendanceStatus.cancelled) {
-      return false;
-    }
+  // Only Saturday (6) and Sunday (7) with no slots are holidays.
+  // Weekdays with no slots are just "no timetable created".
+  // Days with slots are never holidays, even if all cancelled.
+  if (slots.isEmpty) {
+    return day.weekday == 6 || day.weekday == 7;
   }
 
-  // If no real subjects, it's a holiday
-  if (!hasSubject) return true;
+  return false;
+}
 
-  // All subjects are cancelled
-  return true;
+/// Returns true when a day has no timetable slots at all
+/// (regardless of weekday). Used to show "No timetable created".
+bool hasNoSlots(DateTime day, TimetableProvider timetable) {
+  return timetable.getSlotsForDate(day).isEmpty;
 }
 
 Color? getDayColor(
@@ -57,9 +47,13 @@ Color? getDayColor(
 ) {
   final slots = timetable.getSlotsForDate(day);
 
-  // Days with no subjects assigned are holidays — show orange
+  // No slots assigned
   if (slots.isEmpty) {
-    return const Color(0xFFFF9800); // orange for holidays
+    // Only Sat/Sun get orange (holiday). Weekdays get no color.
+    if (day.weekday == 6 || day.weekday == 7) {
+      return const Color(0xFFFF9800); // orange
+    }
+    return null;
   }
 
   int present = 0;
