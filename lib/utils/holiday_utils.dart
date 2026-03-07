@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/timetable_provider.dart';
 import '../models/attendance.dart';
-import '../services/database_service.dart';
 
 String weekdayKey(DateTime date) {
   const map = {
@@ -18,59 +17,36 @@ String weekdayKey(DateTime date) {
   return map[date.weekday]!;
 }
 
-/// Build a key matching AttendanceProvider._key format
-String _attendanceKey(DateTime date, int slotIndex) {
-  final d = DateTime(date.year, date.month, date.day);
-  return "${d.toIso8601String()}_$slotIndex";
-}
-
-/// Read attendance status for a specific day+slot directly from Hive,
-/// so we don't depend on the provider's single-day in-memory cache.
-AttendanceStatus _getStatusFromBox(DateTime day, int slotIndex) {
-  final box = DatabaseService.attendanceBox;
-  final key = _attendanceKey(day, slotIndex);
-  final record = box.get(key);
-
-  if (record != null && record is Attendance) {
-    return record.status;
-  }
-
-  return AttendanceStatus.none;
-}
-
-/// Check if a day has no subjects assigned in the timetable
-/// (all slots are null or the slot list is empty).
-bool _hasNoSubjects(List<String?> slots) {
-  if (slots.isEmpty) return true;
-
-  for (final subjectId in slots) {
-    if (subjectId != null) return false;
-  }
-
-  return true;
-}
-
 bool isHoliday(
   DateTime day,
   AttendanceProvider attendance,
   TimetableProvider timetable,
 ) {
-  final slots = timetable.getDaySlots(weekdayKey(day));
+  final slots = timetable.getSlotsForDate(day);
 
   // A day with no subjects assigned is a holiday
-  if (_hasNoSubjects(slots)) return true;
+  if (slots.isEmpty) return true;
 
-  // A day where every assigned slot is cancelled is also a holiday
+  // Check if all non-null slots are cancelled
+  bool hasSubject = false;
+
   for (int i = 0; i < slots.length; i++) {
     final subjectId = slots[i];
+    if (subjectId.isEmpty) continue;
 
-    final status = _getStatusFromBox(day, i);
+    hasSubject = true;
+
+    final status = attendance.getStatus(day, i);
 
     if (status != AttendanceStatus.cancelled) {
       return false;
     }
   }
 
+  // If no real subjects, it's a holiday
+  if (!hasSubject) return true;
+
+  // All subjects are cancelled
   return true;
 }
 
@@ -79,21 +55,20 @@ Color? getDayColor(
   AttendanceProvider attendance,
   TimetableProvider timetable,
 ) {
-  final slots = timetable.getDaySlots(weekdayKey(day));
+  final slots = timetable.getSlotsForDate(day);
 
   // Days with no subjects assigned are holidays — show orange
-  if (_hasNoSubjects(slots)) {
+  if (slots.isEmpty) {
     return const Color(0xFFFF9800); // orange for holidays
   }
 
   int present = 0;
   int absent = 0;
   int cancelled = 0;
+  int none = 0;
 
   for (int i = 0; i < slots.length; i++) {
-    final subjectId = slots[i];
-
-    final status = _getStatusFromBox(day, i);
+    final status = attendance.getStatus(day, i);
 
     if (status == AttendanceStatus.present) {
       present++;
@@ -101,16 +76,25 @@ Color? getDayColor(
       absent++;
     } else if (status == AttendanceStatus.cancelled) {
       cancelled++;
+    } else {
+      none++;
     }
   }
 
-  final total = present + absent + cancelled;
+  final total = slots.length;
 
-  if (total == 0) return null;
+  // All unmarked — no color
+  if (none == total) return null;
 
+  // All present
   if (present == total) return const Color(0xFF4CAF50); // green
+
+  // All absent
   if (absent == total) return const Color(0xFFF44336); // red
+
+  // All cancelled (or no subjects + all cancelled)
   if (cancelled == total) return const Color(0xFFFF9800); // orange
 
+  // Mixed (combination of present, absent, cancelled, and possibly unmarked)
   return const Color(0xFF9C27B0); // purple
 }

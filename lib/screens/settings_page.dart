@@ -7,6 +7,7 @@ import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../utils/update_checker.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

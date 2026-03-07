@@ -43,12 +43,9 @@ class SubjectPage extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: "Subject Name",
-                ),
+                decoration: const InputDecoration(labelText: "Subject Name"),
               ),
 
               TextField(
@@ -61,7 +58,6 @@ class SubjectPage extends StatelessWidget {
             ],
           ),
           actions: [
-
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
@@ -69,24 +65,19 @@ class SubjectPage extends StatelessWidget {
 
             FilledButton(
               onPressed: () {
-
                 final name = nameController.text.trim();
                 final short = shortController.text.trim();
 
                 if (name.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Subject name is required"),
-                    ),
+                    const SnackBar(content: Text("Subject name is required")),
                   );
                   return;
                 }
 
                 if (short.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Short name is required"),
-                    ),
+                    const SnackBar(content: Text("Short name is required")),
                   );
                   return;
                 }
@@ -121,9 +112,9 @@ class SubjectPage extends StatelessWidget {
         return AlertDialog(
           title: const Text("Delete Subject"),
           content: const Text(
-              "Do you want to remove this subject from past entries or only future timetable entries?"),
+            "Do you want to remove this subject from past entries or only future timetable entries?",
+          ),
           actions: [
-
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
@@ -131,9 +122,7 @@ class SubjectPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
-                context
-                    .read<SubjectProvider>()
-                    .deleteSubjectFuture(subject.id);
+                context.read<SubjectProvider>().deleteSubjectFuture(subject.id);
                 Navigator.pop(context);
               },
               child: const Text("Future Only"),
@@ -141,9 +130,9 @@ class SubjectPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
-                context
-                    .read<SubjectProvider>()
-                    .deleteSubjectCompletely(subject.id);
+                context.read<SubjectProvider>().deleteSubjectCompletely(
+                  subject.id,
+                );
                 Navigator.pop(context);
               },
               child: Text(
@@ -161,7 +150,6 @@ class SubjectPage extends StatelessWidget {
   }
 
   void showSubjectInfo(BuildContext context, Subject subject) {
-
     final scheme = Theme.of(context).colorScheme;
 
     final attendanceProvider = context.read<AttendanceProvider>();
@@ -173,7 +161,6 @@ class SubjectPage extends StatelessWidget {
     int cancelled = 0;
 
     for (final r in records) {
-
       if (r.subjectId != subject.id) continue;
 
       if (r.status == AttendanceStatus.present) attended++;
@@ -183,7 +170,7 @@ class SubjectPage extends StatelessWidget {
       if (r.status == AttendanceStatus.cancelled) cancelled++;
     }
 
-    final total = attended + missed + cancelled;
+    final total = attended + missed;
 
     showModalBottomSheet(
       context: context,
@@ -193,24 +180,18 @@ class SubjectPage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) {
-
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
-              Text(
-                subject.name,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text(subject.name, style: Theme.of(context).textTheme.titleLarge),
 
               const SizedBox(height: 24),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-
                   statTile("Total", total, Colors.blue),
 
                   statTile("Attended", attended, Colors.green),
@@ -218,7 +199,6 @@ class SubjectPage extends StatelessWidget {
                   statTile("Missed", missed, Colors.red),
 
                   statTile("Cancelled", cancelled, Colors.orange),
-
                 ],
               ),
             ],
@@ -229,10 +209,8 @@ class SubjectPage extends StatelessWidget {
   }
 
   Widget statTile(String label, int value, Color color) {
-
     return Column(
       children: [
-
         Container(
           width: 48,
           height: 48,
@@ -243,10 +221,7 @@ class SubjectPage extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             value.toString(),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: color),
           ),
         ),
 
@@ -270,33 +245,31 @@ class SubjectPage extends StatelessWidget {
 
       body: Stack(
         children: [
-
           /// ORIGINAL PAGE CONTENT
           SafeArea(
             child: Column(
               children: [
-
                 /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 56, vertical: 16),
+                          horizontal: 56,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                         ),
                         child: Text(
                           "Subjects",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
-                                  color: scheme.onSurface,
-                                  fontWeight: FontWeight.w600),
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -333,7 +306,6 @@ class SubjectPage extends StatelessWidget {
                     child: ListView.builder(
                       itemCount: subjects.length,
                       itemBuilder: (context, index) {
-
                         final subject = subjects[index];
 
                         final stats = calculateStats(
@@ -348,8 +320,11 @@ class SubjectPage extends StatelessWidget {
                         bool lowAttendance = percent < minAttendance;
 
                         final tintedColor = lowAttendance
-                        ? Color.alphaBlend(scheme.error.withValues(alpha: .2), scheme.onError)
-                        : scheme.secondaryContainer;
+                            ? Color.alphaBlend(
+                                scheme.error.withValues(alpha: .2),
+                                scheme.onError,
+                              )
+                            : scheme.secondaryContainer;
 
                         return Dismissible(
                           key: ValueKey(subject.id),
@@ -364,10 +339,13 @@ class SubjectPage extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 38),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 38,
+                              ),
                               decoration: BoxDecoration(
                                 color: scheme.errorContainer,
-                                borderRadius: BorderRadius.circular(28)
+                                borderRadius: BorderRadius.circular(28),
                               ),
                               child: Icon(
                                 Icons.delete,
@@ -380,10 +358,13 @@ class SubjectPage extends StatelessWidget {
                             alignment: Alignment.centerRight,
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 38),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 38,
+                              ),
                               decoration: BoxDecoration(
                                 color: scheme.errorContainer,
-                                borderRadius: BorderRadius.circular(28)
+                                borderRadius: BorderRadius.circular(28),
                               ),
                               child: Icon(
                                 Icons.delete,
@@ -396,27 +377,26 @@ class SubjectPage extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 14),
                             child: Row(
                               children: [
-
                                 /// ATTENDANCE PILL
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 42),
+                                    horizontal: 18,
+                                    vertical: 42,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: tintedColor,
                                     borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(20),
                                       topRight: Radius.circular(5),
                                       bottomLeft: Radius.circular(20),
-                                      bottomRight: Radius.circular(5)
+                                      bottomRight: Radius.circular(5),
                                     ),
                                   ),
                                   child: Text(
                                     stats.total == 0
                                         ? "-%"
                                         : "${percent.toStringAsFixed(0)}%",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
+                                    style: Theme.of(context).textTheme.bodyLarge
                                         ?.copyWith(
                                           fontSize: 18,
                                           color: lowAttendance
@@ -430,84 +410,109 @@ class SubjectPage extends StatelessWidget {
                                 const SizedBox(width: 8),
 
                                 /// SUBJECT PILL
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    
-                                    GestureDetector(
-                                      onTap: (){
-                                        showSubjectInfo(context, subject);
-                                      },
-                                    child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 20),
-                                        decoration: BoxDecoration(
-                                          color: tintedColor,
-                                          borderRadius: const BorderRadius.only(
-                                            topRight: Radius.circular(20),
-                                            topLeft: Radius.circular(5),
-                                            bottomLeft: Radius.circular(5),
-                                            bottomRight: Radius.circular(5)
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          showSubjectInfo(context, subject);
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 20,
                                           ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          subject.name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge
-                                              ?.copyWith(
-                                                color: scheme.onSecondaryContainer,
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 4),
-
-                                    Builder(
-                                      builder: (context) {
-
-                                        int attended = stats.attended;
-                                        int total = stats.total;
-
-                                        int bunk = canBunk(attended, total, minAttendance);
-                                        int need = needToAttend(attended, total, minAttendance);
-
-                                        bool lowAttendance = percent < minAttendance;
-
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 10),
                                           decoration: BoxDecoration(
                                             color: tintedColor,
-                                            borderRadius: const BorderRadius.only(
-                                              topLeft: Radius.circular(5),
-                                              topRight: Radius.circular(5),
-                                              bottomLeft: Radius.circular(5),
-                                              bottomRight: Radius.circular(20),
-                                            ),
+                                            borderRadius:
+                                                const BorderRadius.only(
+                                                  topRight: Radius.circular(20),
+                                                  topLeft: Radius.circular(5),
+                                                  bottomLeft: Radius.circular(
+                                                    5,
+                                                  ),
+                                                  bottomRight: Radius.circular(
+                                                    5,
+                                                  ),
+                                                ),
                                           ),
                                           alignment: Alignment.center,
                                           child: Text(
-                                            lowAttendance
-                                                ? "Needs to attend $need class${need == 1 ? "" : "es"}"
-                                                : "Can bunk $bunk class${bunk == 1 ? "" : "es"}",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              color: lowAttendance
-                                                  ? scheme.error
-                                                  : scheme.onSecondaryContainer,
-                                            ),
+                                            subject.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleLarge
+                                                ?.copyWith(
+                                                  color: scheme
+                                                      .onSecondaryContainer,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 4),
+
+                                      Builder(
+                                        builder: (context) {
+                                          int attended = stats.attended;
+                                          int total = stats.total;
+
+                                          int bunk = canBunk(
+                                            attended,
+                                            total,
+                                            minAttendance,
+                                          );
+                                          int need = needToAttend(
+                                            attended,
+                                            total,
+                                            minAttendance,
+                                          );
+
+                                          bool lowAttendance =
+                                              percent < minAttendance;
+
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: tintedColor,
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                    topLeft: Radius.circular(5),
+                                                    topRight: Radius.circular(
+                                                      5,
+                                                    ),
+                                                    bottomLeft: Radius.circular(
+                                                      5,
+                                                    ),
+                                                    bottomRight:
+                                                        Radius.circular(20),
+                                                  ),
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              lowAttendance
+                                                  ? "Needs to attend $need class${need == 1 ? "" : "es"}"
+                                                  : "Can bunk $bunk class${bunk == 1 ? "" : "es"}",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: lowAttendance
+                                                    ? scheme.error
+                                                    : scheme
+                                                          .onSecondaryContainer,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              )
                               ],
                             ),
                           ),

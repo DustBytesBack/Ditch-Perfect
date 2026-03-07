@@ -20,19 +20,24 @@ class SubjectAdapter extends TypeAdapter<Subject> {
       id: fields[0] as String,
       name: fields[1] as String,
       shortName: fields[2] as String,
+      minAttendance: fields.containsKey(3)
+          ? (fields[3] as num?)?.toDouble() ?? 75.0
+          : 75.0,
     );
   }
 
   @override
   void write(BinaryWriter writer, Subject obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.shortName);
+      ..write(obj.shortName)
+      ..writeByte(3)
+      ..write(obj.minAttendance);
   }
 
   @override

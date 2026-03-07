@@ -15,7 +15,7 @@ import 'screens/main_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService.init();
-  
+
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -27,24 +27,28 @@ void main() async {
     ),
   );
 
+  // Create providers before runApp so we can wire cross-references.
+  final attendanceProvider = AttendanceProvider()..loadAllAttendance();
+  final timetableProvider = TimetableProvider()..loadTimetable();
+  final subjectProvider = SubjectProvider()..loadSubjects();
+  final settingsProvider = SettingsProvider()..loadSettings();
+  final themeProvider = ThemeProvider()..loadTheme();
+
+  // Wire cross-provider references for cache invalidation.
+  subjectProvider.setProviders(
+    attendanceProvider: attendanceProvider,
+    timetableProvider: timetableProvider,
+  );
+  timetableProvider.setAttendanceProvider(attendanceProvider);
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => SubjectProvider()..loadSubjects(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => TimetableProvider()..loadTimetable(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => SettingsProvider()..loadSettings(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => AttendanceProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ThemeProvider()..loadTheme(),
-        ),
+        ChangeNotifierProvider.value(value: subjectProvider),
+        ChangeNotifierProvider.value(value: timetableProvider),
+        ChangeNotifierProvider.value(value: settingsProvider),
+        ChangeNotifierProvider.value(value: attendanceProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: const OutStanding(),
     ),
@@ -73,10 +77,7 @@ class OutStanding extends StatelessWidget {
         colorSchemeSeed: themeProvider.seedColor,
       ),
 
-      themeMode:
-          themeProvider.isDark
-              ? ThemeMode.dark
-              : ThemeMode.light,
+      themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
 
       home: const MainShell(),
     );
