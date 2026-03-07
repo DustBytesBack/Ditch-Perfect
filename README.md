@@ -1,187 +1,83 @@
 # Attendance Tracker
 
-A Flutter-based attendance tracking application designed for students to manage and monitor their class attendance without requiring any user authentication. All data is stored locally on the device for privacy and offline access.
+A simple Flutter app for tracking subject attendance using a weekly timetable.  
+It helps students monitor attendance percentage and determine how many classes they can miss or must attend to stay within the required attendance criteria.
 
-## Overview
+---
 
-This app helps students track their attendance across multiple subjects throughout the academic week. Users can create a personalized timetable, mark attendance daily, view attendance statistics, and review historical data through a calendar interface.
+## Screenshots
+
+| Home | Calendar | Time Table | Subjects | Settings |
+|------|----------|------------|----------|----------|
+| <p align="center"><img src="https://github.com/user-attachments/assets/ff110a8c-b7cf-42d8-9746-3f72f6d60367" width="270"></p> | <p align="center"><img src="https://github.com/user-attachments/assets/7f2c1ec1-e885-4636-a4b0-2206b07feb90" width="270"></p> | <p align="center"><img src="https://github.com/user-attachments/assets/8b434ad7-25fe-4ccb-9bd9-48593bb54d5a" width="270"></p> | <p align="center"><img src="https://github.com/user-attachments/assets/066f82d4-cec7-4331-aa32-dd2d34d0948a" width="270"></p> | <p align="center"><img src="https://github.com/user-attachments/assets/44214749-a8bc-41aa-ad14-625850efd2a4" width="270"></p> |
+
+---
 
 ## Features
 
-### Local Storage
-- No user login required - single user per device
-- All data stored locally using Hive database
-- Complete privacy with no cloud sync
+- Weekly timetable based attendance tracking
+- Mark classes as **Present / Absent / Cancelled**
+- Add **extra subjects** for a day
+- Automatic **attendance percentage calculation**
+- **Bunk prediction** (classes you can miss or must attend)
+- Monthly **calendar visualization**
+- Flexible **timetable editor**
+- Custom **themes and color schemes**
+- **GitHub APK update system**
 
-### Core Functionality
-- **Dynamic Timetable Management**: Create and modify your weekly schedule
-- **Subject Management**: Add subjects with full names and short codes
-- **Attendance Tracking**: Mark classes as Present, Absent, Cancelled, or Clear
-- **Percentage Calculation**: Real-time attendance percentage for each subject
-- **Calendar View**: Review and modify past attendance records
-- **Bulk Actions**: Mark all subjects for a day with one tap
-- **Flexible Scheduling**: Add subjects on short notice outside the regular timetable
+---
 
-## Pages
+## Application Pages
 
-### 1. Home Page
-The main interface for daily attendance tracking.
+| Page | Description |
+|-----|-------------|
+| **Home** | Shows today's timetable and allows marking attendance |
+| **Calendar** | Monthly attendance visualization |
+| **Day Timetable** | View and mark attendance for a selected day |
+| **Subjects** | Manage subjects and view attendance statistics |
+| **Timetable** | Weekly subject schedule |
+| **Timetable Editor** | Add, reorder, or remove subjects |
+| **Settings** | Attendance criteria, themes, color schemes, and data reset |
 
-**Features:**
-- Displays current day's subjects based on the timetable
-- Four action buttons per subject:
-  - **Present**: Mark attendance as present
-  - **Absent**: Mark attendance as absent
-  - **Cancelled**: Mark class as not taken (doesn't count toward total)
-  - **Clear**: Remove any marking
-- Shows current attendance percentage for each subject
-- Bulk action buttons to mark all subjects at once
-- Option to add additional subjects for the day
 
-### 2. Subject Page
-Manage all subjects in your curriculum.
+---
 
-**Features:**
-- Add new subjects with full name and short code
-- View attendance statistics for each subject
-- Delete subjects with options:
-  - Remove from future timetable only
-  - Delete all past entries completely
-- Display attendance percentage highlighting low attendance
+## Attendance Rules
 
-### 3. Timetable Page
-Configure your weekly class schedule.
+- **Total Classes = Present + Absent**
+- **Cancelled classes are ignored**
+- Minimum attendance requirement defaults to **75%** (configurable)
 
-**Features:**
-- Visual grid layout showing all days and time slots
-- Assign subjects to specific slots
-- Mark slots as free periods
-- Edit button to access the timetable editor
-- Reorder time slots via drag-and-drop
+The app calculates:
 
-### 4. Calendar Page
-Historical view and management of attendance records.
+- Attendance percentage
+- Classes you can **bunk**
+- Classes you must **attend to recover**
 
-**Features:**
-- Interactive calendar interface
-- Click any date to view that day's subjects
-- Mark or modify attendance for any past or future date
-- Visual indicators for holidays and special days
-- "Today" button for quick navigation
+---
 
-### 5. Settings Page
-Customize app behavior and preferences.
+## Calendar Color Indicators
 
-**Features:**
-- Set number of hours/slots per day
-- Configure minimum attendance threshold
-- Toggle dark/light theme
-- View app information
+| Color | Meaning |
+|------|--------|
+| 🟢 Green | All classes marked **Present** |
+| 🔴 Red | All classes marked **Absent** |
+| 🟠 Orange | All classes **Cancelled** or **No subjects scheduled** |
+| 🟣 Purple | Mixed attendance statuses |
+| ⚪ None | All classes **Unmarked** |
 
-## First-Time Setup
+---
 
-1. **Launch the app** - You'll be prompted to enter the number of class hours per day
-2. **Configure timetable** - An empty timetable (Monday-Friday) is created with the specified slots
-3. **Add subjects** - Navigate to Subject Page and add all your subjects
-4. **Assign subjects** - Go to Timetable Page and assign subjects to time slots
-5. **Start tracking** - Return to Home Page to begin marking attendance
 
-## How It Works
+## Installation
 
-### Attendance Marking
-- **Present**: Counts as attended class
-- **Absent**: Counts as missed class
-- **Cancelled**: Class didn't occur - excluded from calculations
-- **Clear**: Removes any marking - treated as unmarked
+Download the latest APK from the **Releases** section and install it on your Android device.
 
-### Percentage Calculation
-```
-Attendance % = (Present Classes / Total Classes Held) × 100
-Total Classes Held = Present + Absent (excludes Cancelled and Cleared)
-```
+---
 
-### Subject Deletion Options
-When removing a subject from a specific day's slot:
-- **Future Only**: Removes the subject from that day slot for all upcoming weeks only
-- **Delete All Entries**: Removes the subject from that slot and deletes all historical attendance records for that subject on that day
+## Build From Source
 
-### Adding Subjects On-the-Fly
-For classes scheduled outside the regular timetable (makeup classes, extra lectures), use the add button on Home Page to include additional subjects for that specific day without modifying the base timetable.
+Install dependencies:
 
-## Technical Stack
-
-- **Framework**: Flutter
-- **Database**: Hive (Local NoSQL)
-- **State Management**: Provider
-- **Calendar**: table_calendar package
-- **Platform**: Android, iOS
-
-## Project Structure
-
-```
-lib/
-├── main.dart                 # App entry point
-├── models/                   # Data models
-│   ├── subject.dart
-│   ├── attendance.dart
-│   ├── timetable.dart
-│   └── settings.dart
-├── providers/                # State management
-│   ├── subject_provider.dart
-│   ├── attendance_provider.dart
-│   ├── timetable_provider.dart
-│   ├── theme_provider.dart
-│   └── settings_provider.dart
-├── screens/                  # UI pages
-│   ├── home_page.dart
-│   ├── subject_page.dart
-│   ├── timetable_page.dart
-│   ├── timetable_editor_page.dart
-│   ├── calendar_page.dart
-│   ├── settings_page.dart
-│   └── day_page.dart
-├── services/                 # Backend services
-│   └── database_service.dart
-├── utils/                    # Helper functions
-│   ├── attendance_utils.dart
-│   └── holiday_utils.dart
-└── widgets/                  # Reusable components
-```
-
-## Getting Started
-
-### Prerequisites
-- Flutter SDK (latest stable version)
-- Dart SDK
-- Android Studio / VS Code with Flutter extensions
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd flutter_test_app
-```
-
-2. Install dependencies
 ```bash
 flutter pub get
-```
-
-3. Run the app
-```bash
-flutter run
-```
-
-## Future Enhancements
-
-- Export attendance data as PDF/CSV
-- Backup and restore functionality
-- Multiple semester support
-- Attendance alerts and notifications
-- Widget for quick home screen access
-- Holiday calendar integration
-
-## License
-
-This project is open source and available for educational purposes.

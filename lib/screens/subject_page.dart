@@ -304,8 +304,12 @@ class SubjectPage extends StatelessWidget {
                     ),
 
                     child: ListView.builder(
-                      itemCount: subjects.length,
+                      itemCount: subjects.length + 1,
                       itemBuilder: (context, index) {
+                        if (index == subjects.length) {
+                          return const SizedBox(height: 90);
+                        }
+
                         final subject = subjects[index];
 
                         final stats = calculateStats(
