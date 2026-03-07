@@ -6,6 +6,7 @@ import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/attendance_utils.dart';
 import '../models/subject.dart';
+import '../models/attendance.dart';
 
 class SubjectPage extends StatelessWidget {
   const SubjectPage({super.key});
@@ -156,6 +157,103 @@ class SubjectPage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void showSubjectInfo(BuildContext context, Subject subject) {
+
+    final scheme = Theme.of(context).colorScheme;
+
+    final attendanceProvider = context.read<AttendanceProvider>();
+
+    final records = attendanceProvider.records.values;
+
+    int attended = 0;
+    int missed = 0;
+    int cancelled = 0;
+
+    for (final r in records) {
+
+      if (r.subjectId != subject.id) continue;
+
+      if (r.status == AttendanceStatus.present) attended++;
+
+      if (r.status == AttendanceStatus.absent) missed++;
+
+      if (r.status == AttendanceStatus.cancelled) cancelled++;
+    }
+
+    final total = attended + missed + cancelled;
+
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) {
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+
+              Text(
+                subject.name,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+
+                  statTile("Total", total, Colors.blue),
+
+                  statTile("Attended", attended, Colors.green),
+
+                  statTile("Missed", missed, Colors.red),
+
+                  statTile("Cancelled", cancelled, Colors.orange),
+
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget statTile(String label, int value, Color color) {
+
+    return Column(
+      children: [
+
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .15),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            value.toString(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Text(label),
+      ],
     );
   }
 
@@ -336,30 +434,35 @@ class SubjectPage extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 20),
-                                      decoration: BoxDecoration(
-                                        color: tintedColor,
-                                        borderRadius: const BorderRadius.only(
-                                          topRight: Radius.circular(20),
-                                          topLeft: Radius.circular(5),
-                                          bottomLeft: Radius.circular(5),
-                                          bottomRight: Radius.circular(5)
+                                    
+                                    GestureDetector(
+                                      onTap: (){
+                                        showSubjectInfo(context, subject);
+                                      },
+                                    child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 20),
+                                        decoration: BoxDecoration(
+                                          color: tintedColor,
+                                          borderRadius: const BorderRadius.only(
+                                            topRight: Radius.circular(20),
+                                            topLeft: Radius.circular(5),
+                                            bottomLeft: Radius.circular(5),
+                                            bottomRight: Radius.circular(5)
+                                          ),
                                         ),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        subject.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                              color: scheme.onSecondaryContainer,
-                                              fontWeight: FontWeight.w800,
-                                            ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          subject.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(
+                                                color: scheme.onSecondaryContainer,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                        ),
                                       ),
                                     ),
 
