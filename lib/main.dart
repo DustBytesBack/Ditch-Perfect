@@ -14,7 +14,8 @@ import 'screens/main_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await DatabaseService.init();
+  
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -25,8 +26,6 @@ void main() async {
       systemNavigationBarContrastEnforced: false,
     ),
   );
-
-  await DatabaseService.init();
 
   runApp(
     MultiProvider(

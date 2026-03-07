@@ -3,8 +3,16 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../models/attendance.dart';
 import '../utils/holiday_utils.dart';
 import '../widgets/day_timetable.dart';
+
+enum BulkAction {
+  present,
+  absent,
+  cancelled,
+  clear
+}
 
 class DayDetailsPage extends StatelessWidget {
 
@@ -32,6 +40,8 @@ class DayDetailsPage extends StatelessWidget {
     final timetable = context.watch<TimetableProvider>();
     final attendance = context.watch<AttendanceProvider>();
 
+    final slots = timetable.getSlotsForDate(date);
+
     final isHolidayDay = isHoliday(date, attendance, timetable);
 
     return Scaffold(
@@ -52,7 +62,7 @@ class DayDetailsPage extends StatelessWidget {
 
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
+                          horizontal: 56,
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
@@ -141,8 +151,82 @@ class DayDetailsPage extends StatelessWidget {
                               ),
                             ),
                           )
-                        : DayTimetable(
-                            date: date,
+                        : Column(
+                            children: [
+
+                              /// BULK ACTION BUTTONS
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: SizedBox(
+                                  width: MediaQuery.of(context).size.width * 0.4,
+
+                                  child: SegmentedButton<BulkAction>(
+                                    segments: const [
+
+                                      ButtonSegment(
+                                        value: BulkAction.clear,
+                                        icon: Icon(Icons.delete),
+                                      ),
+
+                                      ButtonSegment(
+                                        value: BulkAction.cancelled,
+                                        icon: Icon(Icons.block),
+                                      ),
+
+                                      ButtonSegment(
+                                        value: BulkAction.absent,
+                                        icon: Icon(Icons.close_rounded),
+                                      ),
+
+                                      ButtonSegment(
+                                        value: BulkAction.present,
+                                        icon: Icon(Icons.check),
+                                      ),
+                                    ],
+
+                                    selected: const <BulkAction>{},
+                                    emptySelectionAllowed: true,
+
+                                    onSelectionChanged: (Set<BulkAction> selection) {
+
+                                      if (selection.isEmpty) return;
+
+                                      final action = selection.first;
+
+                                      if (action == BulkAction.present) {
+                                        attendance.markAll(date, slots, AttendanceStatus.present);
+                                      }
+
+                                      if (action == BulkAction.absent) {
+                                        attendance.markAll(date, slots, AttendanceStatus.absent);
+                                      }
+
+                                      if (action == BulkAction.cancelled) {
+                                        attendance.markAll(date, slots, AttendanceStatus.cancelled);
+                                      }
+
+                                      if (action == BulkAction.clear) {
+
+                                        for (int i = 0; i < slots.length; i++) {
+                                          if (slots[i] == null) continue;
+
+                                          attendance.clearAttendance(date, i);
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              /// TIMETABLE
+                              Expanded(
+                                child: DayTimetable(
+                                  date: date,
+                                ),
+                              ),
+                            ],
                           ),
                   ),
                 ),

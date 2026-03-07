@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/subject_provider.dart';
-import '../models/subject.dart';
 import 'timetable_editor_page.dart';
 
 const dayNames = {
@@ -21,222 +20,169 @@ class TimetablePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
     final subjects = context.watch<SubjectProvider>().subjects;
-
-    final hours = timetable.days.isEmpty
-        ? 0
-        : timetable.getDaySlots(timetable.days.first).length;
 
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
       body: Stack(
         children: [
+
+          /// MAIN PAGE
           SafeArea(
             child: Column(
               children: [
 
                 /// HEADER
                 Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-
-                  /// TITLE PILL
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 56,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: Text(
-                      "Timetable",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(
-                            color: scheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  /// EDIT BUTTON (same style as add button)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: IconButton(
-                      iconSize: 28,
-                      padding: const EdgeInsets.all(14),
-                      icon: Icon(Icons.edit, color: scheme.onSurface),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const TimetableEditorPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            /// PANEL
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: scheme.surface,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
-                ),
-
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
 
-                      /// PERIOD HEADER
-                      Row(
-                        children: [
-
-                          const SizedBox(width: 110),
-
-                          ...List.generate(
-                            hours,
-                            (index) => Container(
-                              width: 80,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 56,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Text(
+                          "Timetable",
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
                               ),
-                              child: Text(
-                                "${index + 1}",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
 
-                      const SizedBox(height: 12),
+                      const Spacer(),
 
-                      /// DAY ROWS
-                      ...timetable.days.map((day) {
-
-                        final slots = timetable.getDaySlots(day);
-
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            children: [
-
-                              /// DAY LABEL
-                              SizedBox(
-                                width: 110,
-                                child: Text(
-                                  dayNames[day] ?? day,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium,
-                                ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: IconButton(
+                          iconSize: 28,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(Icons.edit, color: scheme.onSurface),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const TimetableEditorPage(),
                               ),
-
-                              /// SLOT CELLS
-                              ...List.generate(
-                                slots.length,
-                                (index) {
-
-                                  final subjectId =
-                                      slots[index];
-
-                                  Subject? subject;
-
-                                  if (subjectId != null) {
-                                    subject =
-                                        subjects.firstWhere(
-                                      (s) =>
-                                          s.id == subjectId,
-                                      orElse: () =>
-                                          Subject(
-                                        id: "",
-                                        name: "Unknown",
-                                        shortName: "",
-                                      ),
-                                    );
-                                  }
-
-                                  final label =
-                                      subject?.shortName ?? "-";
-
-                                  return Container(
-                                    width: 80,
-                                    height: 55,
-                                    margin:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 4),
-                                    decoration: BoxDecoration(
-                                      color: scheme
-                                          .secondaryContainer,
-                                      borderRadius:
-                                          BorderRadius
-                                              .circular(12),
-                                    ),
-                                    alignment:
-                                        Alignment.center,
-                                    child: Text(
-                                      label,
-                                      style: TextStyle(
-                                        color: scheme
-                                            .onSecondaryContainer,
-                                        fontWeight:
-                                            FontWeight.w600,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                            );
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
 
-      Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          height: MediaQuery.of(context).padding.bottom + 12,
-          color: scheme.surface,
-        ),
+                /// PANEL
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                    ),
+
+                    child: ListView(
+                      children: [
+                        ...timetable.days.map((day) {
+
+                          final slots = timetable.getDaySlots(day);
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+
+                                /// DAY TITLE
+                                Text(
+                                  dayNames[day] ?? day,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                /// SUBJECT CHIPS
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+
+                                  children: slots.map((subjectId) {
+
+                                    final subject = subjects.where((s) => s.id == subjectId).isNotEmpty
+                                        ? subjects.firstWhere((s) => s.id == subjectId)
+                                        : null;
+
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 14,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: scheme.secondaryContainer,
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                        child: Text(
+                                          subject?.shortName ?? "?",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: scheme.onSecondaryContainer,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      );
+
+                                  }).toList(),
+                                ),
+                              ],
+                            ),
+                          );
+
+                        }).toList(),
+                        const SizedBox(height: 60,)
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          /// NAV BAR COLOR FIX (same as SubjectPage)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).padding.bottom + 12,
+              color: scheme.surface,
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
     );
   }
 }

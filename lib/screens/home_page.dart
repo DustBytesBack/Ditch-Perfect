@@ -118,12 +118,12 @@ class HomePage extends StatelessWidget {
                               segments: const [
                                 
                                 ButtonSegment(
-                                  value: BulkAction.cancelled,
+                                  value: BulkAction.clear,
                                   icon: Icon(Icons.delete),
                                 ),
 
                                 ButtonSegment(
-                                  value: BulkAction.clear,
+                                  value: BulkAction.cancelled,
                                   icon: Icon(Icons.block),
                                 ),
 

@@ -121,6 +121,11 @@ class _CalendarPageState extends State<CalendarPage> {
                             lastDay: DateTime(2100),
                             focusedDay: focusedDay,
 
+                            headerStyle: const HeaderStyle(
+                              formatButtonVisible: false,
+                              titleCentered: true,
+                            ),
+
                             selectedDayPredicate: (day) =>
                                 isSameDay(selectedDay, day),
 
@@ -167,26 +172,25 @@ class _CalendarPageState extends State<CalendarPage> {
 
                               todayBuilder: (context, day, focusedDay) {
 
-                                final color =
-                                    getDayColor(day, attendance, timetable);
+                                final color = getDayColor(day, attendance, timetable);
 
                                 return Container(
                                   margin: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: color ?? scheme.primaryContainer,
+                                    color: color,
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: scheme.primary,
-                                      width: 2,
+                                      width: 2.5,
                                     ),
                                   ),
                                   alignment: Alignment.center,
                                   child: Text(
                                     "${day.day}",
                                     style: TextStyle(
-                                      color: color != null
-                                          ? Colors.white
-                                          : scheme.primary,
+                                      color: color == null
+                                          ? scheme.onSurface
+                                          : Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

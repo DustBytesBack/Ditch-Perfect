@@ -55,6 +55,10 @@ class SubjectProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void reload() {
+    notifyListeners();
+  }
+
   void updateMinAttendance(String subjectId, double value) {
 
     final subject = subjects.firstWhere((s) => s.id == subjectId);

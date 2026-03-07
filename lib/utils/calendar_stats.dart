@@ -51,8 +51,9 @@ CalendarStats calculateMonthStats(
 
       final status = attendance.getStatus(day, i);
 
-      if (status == AttendanceStatus.present) present++;
-      else if (status == AttendanceStatus.absent) absent++;
+      if (status == AttendanceStatus.present) {
+        present++;
+      } else if (status == AttendanceStatus.absent) absent++;
       else if (status == AttendanceStatus.cancelled) cancelled++;
       else none++;
     }

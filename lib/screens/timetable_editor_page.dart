@@ -18,63 +18,83 @@ const dayNames = {
 class TimetableEditorPage extends StatelessWidget {
   const TimetableEditorPage({super.key});
 
-  void showSubjectPicker(BuildContext context, String day, int slotIndex) {
+  void showSubjectPicker(BuildContext context, String day) {
     final subjects = context.read<SubjectProvider>().subjects;
     final scheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
       backgroundColor: scheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: ListView(
-            children: [
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
 
-              const Text(
-                "Select Subject",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Select Subject",
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              ...subjects.map((subject) {
-                return ListTile(
-                  title: Text(subject.name),
-                  onTap: () {
-                    context.read<TimetableProvider>().assignSubject(
-                      day,
-                      slotIndex,
-                      subject.id,
-                    );
-                    Navigator.pop(context);
-                  },
-                );
-              }),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: subjects.length,
+                    itemBuilder: (context, index) {
 
-              ListTile(
-                title: const Text("Free Slot"),
-                onTap: () {
-                  context.read<TimetableProvider>()
-                      .removeSubject(day, slotIndex);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+                      final subject = subjects[index];
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        leading: CircleAvatar(
+                          backgroundColor: scheme.primaryContainer,
+                          child: Text(
+                            subject.shortName.isEmpty
+                                ? subject.name[0]
+                                : subject.shortName[0],
+                            style: TextStyle(
+                              color: scheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        title: Text(subject.name),
+                        subtitle: Text(subject.shortName),
+                        onTap: () {
+                          context
+                              .read<TimetableProvider>()
+                              .addSubject(day, subject.id);
+
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  void showDeleteDialog(
-    BuildContext context,
-    String day,
-    int slotIndex,
-  ) {
+  void showDeleteDialog(BuildContext context, String day, int index) {
     final scheme = Theme.of(context).colorScheme;
 
     showDialog(
@@ -94,11 +114,7 @@ class TimetableEditorPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
-
-                context
-                    .read<TimetableProvider>()
-                    .removeSubject(day, slotIndex);
-
+                context.read<TimetableProvider>().removeSubjectAt(day, index);
                 Navigator.pop(context);
               },
               child: const Text("Future Only"),
@@ -106,11 +122,7 @@ class TimetableEditorPage extends StatelessWidget {
 
             TextButton(
               onPressed: () {
-
-                context
-                    .read<TimetableProvider>()
-                    .removeSlotEverywhere(day, slotIndex);
-
+                context.read<TimetableProvider>().removeSlotEverywhere(day, index);
                 Navigator.pop(context);
               },
               child: Text(
@@ -133,159 +145,242 @@ class TimetableEditorPage extends StatelessWidget {
 
     return DefaultTabController(
       length: timetable.days.length,
+
       child: Scaffold(
         backgroundColor: scheme.primaryContainer,
 
-        appBar: AppBar(
-          title: const Text("Edit Timetable"),
-          bottom: TabBar(
-            isScrollable: true,
-            tabs: timetable.days
-                .map((d) => Tab(text: dayNames[d]))
-                .toList(),
-          ),
-        ),
-
         body: Stack(
           children: [
-            TabBarView(
-              children: timetable.days.map((day) {
 
-            final slots = timetable.getDaySlots(day);
+            SafeArea(
+              child: Column(
+                children: [
 
-            return Padding(
-              padding: const EdgeInsets.all(20),
-
-              child: ReorderableListView.builder(
-                buildDefaultDragHandles: false,
-                proxyDecorator: (child, index, animation) {
-                  return Material(
-                    elevation: 8,
-                    borderRadius: BorderRadius.circular(18),
-                    
-                    child: child,
-                  );
-                },
-
-                itemCount: slots.length,
-
-                onReorder: (oldIndex, newIndex) {
-
-                  if (newIndex > oldIndex) newIndex--;
-
-                  final list = List<String?>.from(slots);
-
-                  final item = list.removeAt(oldIndex);
-                  list.insert(newIndex, item);
-
-                  Future.microtask(() {
-                    context.read<TimetableProvider>().updateDaySlots(day, list);
-                  });
-                },
-
-                itemBuilder: (context, index) {
-
-                  final subjectId = slots[index];
-
-                  Subject? subject;
-
-                  if (subjectId != null) {
-                    subject = subjects.firstWhere(
-                      (s) => s.id == subjectId,
-                      orElse: () => Subject(
-                        id: "",
-                        name: "Unknown",
-                        shortName: "",
-                      ),
-                    );
-                  }
-
-                  final label = subject?.shortName ?? "-";
-
-                  return Padding(
-                    key: ValueKey(index),
-                    padding: const EdgeInsets.only(bottom: 12),
-
+                  /// HEADER
+                  Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
 
-                        /// SUBJECT PILL
-                        Expanded(
-                          child: GestureDetector(
-
-                            onTap: () =>
-                                showSubjectPicker(context, day, index),
-
-                            onLongPress: () {
-                              if (subjectId != null) {
-                                showDeleteDialog(
-                                  context,
-                                  day,
-                                  index,
-                                );
-                              }
-                            },
-
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: scheme.onSecondary,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(18),
-                                  bottomLeft: Radius.circular(18),
-                                ),
-                              ),
-                              child: Text(
-                                label,
-                                style: TextStyle(
-                                  fontSize: 16,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 56,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            borderRadius: BorderRadius.circular(40),
+                          ),
+                          child: Text(
+                            "Edit Timetable",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: scheme.onSurface,
                                   fontWeight: FontWeight.w600,
-                                  color: scheme.onSecondaryContainer,
                                 ),
-                              ),
-                            ),
                           ),
                         ),
 
-                        /// DRAG HANDLE
-                        ReorderableDragStartListener(
-                          index: index,
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: scheme.surfaceContainerHigh,
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(18),
-                                bottomRight: Radius.circular(18),
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.drag_handle,
-                              size: 22,
-                            ),
+                        const Spacer(),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: IconButton(
+                            iconSize: 26,
+                            padding: const EdgeInsets.all(14),
+                            icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  /// PANEL
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: scheme.surface,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(32),
+                          topRight: Radius.circular(32),
+                        ),
+                      ),
+
+                      child: Column(
+                        children: [
+
+                          /// TAB BAR
+                          TabBar(
+                            isScrollable: true,
+                            tabs: timetable.days
+                                .map((d) => Tab(text: dayNames[d]))
+                                .toList(),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          /// TAB CONTENT
+                          Expanded(
+                            child: TabBarView(
+                              children: timetable.days.map((day) {
+
+                                final slots = timetable.getDaySlots(day);
+
+                                return ReorderableListView.builder(
+
+                                  buildDefaultDragHandles: false,
+
+                                  proxyDecorator: (child, index, animation) {
+                                    return Material(
+                                      elevation: 8,
+                                      borderRadius: BorderRadius.circular(18),
+                                      child: child,
+                                    );
+                                  },
+
+                                  itemCount: slots.length,
+
+                                  onReorder: (oldIndex, newIndex) {
+
+                                    if (newIndex > oldIndex) newIndex--;
+
+                                    final list = List<String>.from(slots);
+
+                                    final item = list.removeAt(oldIndex);
+                                    list.insert(newIndex, item);
+
+                                    context
+                                        .read<TimetableProvider>()
+                                        .updateDaySlots(day, list);
+                                  },
+
+                                  itemBuilder: (context, index) {
+
+                                    final subjectId = slots[index];
+
+                                    final subject = subjects.firstWhere(
+                                      (s) => s.id == subjectId,
+                                      orElse: () => Subject(
+                                        id: "",
+                                        name: "Unknown",
+                                        shortName: "",
+                                      ),
+                                    );
+
+                                    return Padding(
+                                      key: ValueKey("$day-$index"),
+                                      padding: const EdgeInsets.only(bottom: 12),
+
+                                      child: Row(
+                                        children: [
+
+                                          Expanded(
+                                            child: GestureDetector(
+
+                                              onTap: () => showSubjectPicker(context, day),
+
+                                              onLongPress: () {
+                                                showDeleteDialog(context, day, index);
+                                              },
+
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                  vertical: 16,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: scheme.onSecondary,
+                                                  borderRadius: const BorderRadius.only(
+                                                    topLeft: Radius.circular(18),
+                                                    bottomLeft: Radius.circular(18),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  subject.shortName.isEmpty
+                                                      ? subject.name
+                                                      : subject.shortName,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: scheme.onSecondaryContainer,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          ReorderableDragStartListener(
+                                            index: index,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                color: scheme.surfaceContainerHigh,
+                                                borderRadius: const BorderRadius.only(
+                                                  topRight: Radius.circular(18),
+                                                  bottomRight: Radius.circular(18),
+                                                ),
+                                              ),
+                                              child: const Icon(Icons.drag_handle),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            /// FAB
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 24,
+              right: 24,
+              child: Builder(
+                builder: (fabContext) {
+
+                  return FloatingActionButton.extended(
+                    onPressed: () {
+
+                      final controller = DefaultTabController.of(fabContext);
+                      final day = timetable.days[controller.index];
+
+                      showSubjectPicker(fabContext, day);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Subject"),
                   );
                 },
               ),
-            );
-          }).toList(),
-        ),
+            ),
 
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            height: MediaQuery.of(context).padding.bottom + 12,
-            color: scheme.surface,
-          ),
+            /// NAV BAR FIX
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                height: MediaQuery.of(context).padding.bottom + 12,
+                color: scheme.surface,
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
       ),
     );
   }

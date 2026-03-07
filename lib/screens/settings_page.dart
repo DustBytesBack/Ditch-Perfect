@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../services/database_service.dart';
-import '../providers/timetable_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/subject_provider.dart';
+import '../providers/timetable_provider.dart';
+import '../providers/attendance_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,21 +17,70 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
 
-  late double hours;
   late double minAttendance;
 
   @override
   void initState() {
     super.initState();
 
-    final storedHours =
-        DatabaseService.settingsBox.get("hoursPerDay", defaultValue: 8);
-
     final storedAttendance =
         DatabaseService.settingsBox.get("minAttendance", defaultValue: 75);
 
-    hours = storedHours.toDouble();
     minAttendance = storedAttendance.toDouble();
+  }
+
+  void showDeleteAllDialog(BuildContext context) {
+
+    final scheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("Delete All Data"),
+          content: const Text(
+            "This will permanently delete all subjects, timetable entries and attendance data. This action cannot be undone.",
+          ),
+          actions: [
+
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+
+            TextButton(
+              onPressed: () async {
+
+                await Hive.close();
+                await Hive.deleteFromDisk();
+
+                await DatabaseService.init();
+
+                if (!context.mounted) return;
+
+                context.read<SubjectProvider>().reload();
+                context.read<TimetableProvider>().reload();
+                context.read<AttendanceProvider>().records.clear();
+                context.read<AttendanceProvider>().clearAll();
+
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("All data deleted")),
+                );
+              },
+              child: Text(
+                "Delete Everything",
+                style: TextStyle(
+                  color: scheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -118,91 +170,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: ListView(
                       children: [
 
-                        /// HOURS PER DAY
+                        /// GENERAL
+                        sectionTitle(context, "General"),
+
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 18, vertical: 18),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(28),
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10)
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-
-                              Row(
-                                children: [
-
-                                  Icon(Icons.schedule,
-                                      color: scheme.onSecondaryContainer),
-
-                                  const SizedBox(width: 18),
-
-                                  const Expanded(
-                                    child: Text(
-                                      "Hours per Day",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-
-                                  Text(
-                                    hours.toInt().toString(),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: scheme.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              Slider(
-                                year2023: false,
-                                min: 1,
-                                max: 12,
-                                divisions: 11,
-                                value: hours,
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    hours = value;
-                                  });
-                                },
-
-                                onChangeEnd: (value) {
-
-                                  final newHours = value.toInt();
-
-                                  DatabaseService.settingsBox
-                                      .put("hoursPerDay", newHours);
-
-                                  context
-                                      .read<TimetableProvider>()
-                                      .updateHours(newHours);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        /// MIN ATTENDANCE
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 18),
-                          decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                              bottomLeft: Radius.circular(28),
-                              bottomRight: Radius.circular(28),
-                            ),
+                            borderRadius: BorderRadius.circular(28),
                           ),
 
                           child: Column(
@@ -248,7 +224,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                 },
 
                                 onChangeEnd: (value) {
-
                                   DatabaseService.settingsBox
                                       .put("minAttendance", value.toInt());
                                 },
@@ -259,13 +234,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         const SizedBox(height: 28),
 
-                        /// DARK / LIGHT MODE
+                        /// APPEARANCE
+                        sectionTitle(context, "Appearance"),
+
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 18, vertical: 14),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(28),
                               topRight: Radius.circular(28),
                               bottomLeft: Radius.circular(10),
@@ -305,7 +282,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         const SizedBox(height: 8),
 
-                        /// POOKIE MODE
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 18, vertical: 14),
@@ -350,7 +326,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               horizontal: 18, vertical: 18),
                           decoration: BoxDecoration(
                             color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(10),
                               topRight: Radius.circular(10),
                               bottomLeft: Radius.circular(28),
@@ -358,7 +334,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
 
-                          child:Column(
+                          child: Column(
                             children: [
 
                               Row(
@@ -381,6 +357,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
 
                               const SizedBox(height: 16),
+
                               Wrap(
                                 alignment: WrapAlignment.center,
                                 spacing: 16,
@@ -405,6 +382,44 @@ class _SettingsPageState extends State<SettingsPage> {
                             ],
                           ),
                         ),
+
+                        const SizedBox(height: 28),
+
+                        /// RESOURCES
+                        sectionTitle(context, "Resources"),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: scheme.errorContainer,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.delete_forever,
+                              color: scheme.onErrorContainer,
+                            ),
+                            title: Text(
+                              "Delete All Data",
+                              style: TextStyle(
+                                color: scheme.onErrorContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              "Clear all subjects, timetable and attendance",
+                              style: TextStyle(
+                                color: scheme.onErrorContainer,
+                              ),
+                            ),
+                            onTap: () {
+                              showDeleteAllDialog(context);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 90),
                       ],
                     ),
                   ),
@@ -425,12 +440,22 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget sectionTitle(BuildContext context, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+    );
+  }
+
   Widget colorOption(BuildContext context, Color color) {
 
     final themeProvider = context.watch<ThemeProvider>();
-
-    final selected =
-        themeProvider.seedColor.value == color.value;
+    final selected = themeProvider.seedColor.value == color.value;
 
     return GestureDetector(
       onTap: () {
@@ -439,15 +464,28 @@ class _SettingsPageState extends State<SettingsPage> {
 
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 36,
-        height: 36,
+        width: 38,
+        height: 38,
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
-          border: selected
-              ? Border.all(color: Colors.white, width: 3)
-              : null,
+          border: Border.all(
+            color: selected ? Colors.white : Colors.transparent,
+            width: 3,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: .6),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  )
+                ]
+              : [],
         ),
+        child: selected
+            ? const Icon(Icons.check, size: 18, color: Colors.white)
+            : null,
       ),
     );
   }
