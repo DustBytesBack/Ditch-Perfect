@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -224,6 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 },
 
                                 onChangeEnd: (value) {
+                                  HapticFeedback.lightImpact();
                                   DatabaseService.settingsBox.put(
                                     "minAttendance",
                                     value.toInt(),
@@ -277,6 +279,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               Switch.adaptive(
                                 value: settingsProvider.notificationsEnabled,
                                 onChanged: (value) {
+                                  HapticFeedback.lightImpact();
                                   context
                                       .read<SettingsProvider>()
                                       .setNotificationsEnabled(value);
@@ -395,6 +398,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 onChanged: themeProvider.pookieMode
                                     ? null
                                     : (value) {
+                                        HapticFeedback.lightImpact();
                                         context
                                             .read<ThemeProvider>()
                                             .toggleTheme(value);
@@ -432,6 +436,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               Switch.adaptive(
                                 value: themeProvider.pookieMode,
                                 onChanged: (value) {
+                                  HapticFeedback.lightImpact();
                                   context.read<ThemeProvider>().togglePookie(
                                     value,
                                   );
@@ -528,6 +533,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             leading: const Icon(Icons.system_update),
                             title: const Text("Check for Updates"),
                             onTap: () {
+                              HapticFeedback.lightImpact();
                               checkForUpdateManual(context);
                             },
                           ),
@@ -567,6 +573,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               style: TextStyle(color: scheme.onErrorContainer),
                             ),
                             onTap: () {
+                              HapticFeedback.mediumImpact();
                               showDeleteAllDialog(context);
                             },
                           ),
@@ -610,6 +617,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return GestureDetector(
       onTap: () {
+        HapticFeedback.lightImpact();
         context.read<ThemeProvider>().setSeedColor(color);
       },
 

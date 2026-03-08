@@ -17,37 +17,23 @@ String weekdayKey(DateTime date) {
   return map[date.weekday]!;
 }
 
-bool isHoliday(
-  DateTime day,
-  AttendanceProvider attendance,
-  TimetableProvider timetable,
-) {
+bool isHoliday(DateTime day, TimetableProvider timetable) {
+  final isWeekend =
+      day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
   final slots = timetable.getSlotsForDate(day);
 
-  // A day with no subjects assigned is a holiday
-  if (slots.isEmpty) return true;
+  // A holiday is ONLY a Saturday/Sunday with no timetable slots assigned.
+  // All-cancelled days are NOT holidays — they still show the normal timetable.
+  return isWeekend && slots.isEmpty;
+}
 
-  // Check if all non-null slots are cancelled
-  bool hasSubject = false;
+/// Returns true if this is a weekday with no timetable slots assigned.
+bool isNoTimetable(DateTime day, TimetableProvider timetable) {
+  final isWeekend =
+      day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+  final slots = timetable.getSlotsForDate(day);
 
-  for (int i = 0; i < slots.length; i++) {
-    final subjectId = slots[i];
-    if (subjectId.isEmpty) continue;
-
-    hasSubject = true;
-
-    final status = attendance.getStatus(day, i);
-
-    if (status != AttendanceStatus.cancelled) {
-      return false;
-    }
-  }
-
-  // If no real subjects, it's a holiday
-  if (!hasSubject) return true;
-
-  // All subjects are cancelled
-  return true;
+  return !isWeekend && slots.isEmpty;
 }
 
 Color? getDayColor(
@@ -57,9 +43,14 @@ Color? getDayColor(
 ) {
   final slots = timetable.getSlotsForDate(day);
 
-  // Days with no subjects assigned are holidays — show orange
+  // Days with no subjects assigned
   if (slots.isEmpty) {
-    return const Color(0xFFFF9800); // orange for holidays
+    // Sat/Sun with no slots = holiday = orange
+    final isWeekend =
+        day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+    if (isWeekend) return const Color(0xFFFF9800); // orange for holidays
+    // Weekdays with no slots = no timetable created = no color
+    return null;
   }
 
   int present = 0;

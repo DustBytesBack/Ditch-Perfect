@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
@@ -281,6 +282,8 @@ class HomePage extends StatelessWidget {
                                     onSelectionChanged:
                                         (Set<BulkAction> selection) {
                                           if (selection.isEmpty) return;
+
+                                          HapticFeedback.mediumImpact();
 
                                           final action = selection.first;
 

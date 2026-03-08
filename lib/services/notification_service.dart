@@ -20,30 +20,54 @@ class NotificationService {
 
   static const int _dailyNotificationId = 0;
 
+  static bool _initialized = false;
+
   /// Initialise the plugin and timezone data. Call once at app startup.
+  /// Wrapped in try-catch so a notification init failure never prevents
+  /// the app from launching.
   static Future<void> init() async {
-    tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation(_localTimezoneName()));
+    try {
+      tz.initializeTimeZones();
+      final tzName = _localTimezoneName();
+      tz.setLocalLocation(tz.getLocation(tzName));
+    } catch (_) {
+      // Fallback — ensure timezone is at least UTC.
+      try {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } catch (_) {}
+    }
 
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+    try {
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
 
-    const initSettings = InitializationSettings(android: androidSettings);
+      const initSettings = InitializationSettings(android: androidSettings);
 
-    await _plugin.initialize(initSettings);
+      await _plugin.initialize(initSettings);
+      _initialized = true;
+    } catch (_) {
+      // Plugin init failed — notifications won't work but app still runs.
+      _initialized = false;
+    }
   }
 
   /// Request notification permission (Android 13+).
   static Future<bool> requestPermission() async {
-    final android = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    if (!_initialized) return false;
 
-    if (android != null) {
-      final granted = await android.requestNotificationsPermission();
-      return granted ?? false;
+    try {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      if (android != null) {
+        final granted = await android.requestNotificationsPermission();
+        return granted ?? false;
+      }
+    } catch (_) {
+      return false;
     }
 
     return true;
@@ -59,57 +83,69 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
-    // Cancel any previous notification first.
-    await _plugin.cancel(_dailyNotificationId);
+    if (!_initialized) return;
 
-    // Compute the notification message for today.
-    final message = _computeTodayMessage();
+    try {
+      // Cancel any previous notification first.
+      await _plugin.cancel(_dailyNotificationId);
 
-    // Nothing to notify about (weekend / no timetable).
-    if (message == null) return;
+      // Compute the notification message for today.
+      final message = _computeTodayMessage();
 
-    // Build the scheduled time.
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      hour,
-      minute,
-    );
+      // Nothing to notify about (weekend / no timetable).
+      if (message == null) return;
 
-    // If the time has already passed today, schedule for tomorrow.
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
+      // Build the scheduled time.
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledDate = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      );
+
+      // If the time has already passed today, schedule for tomorrow.
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
+
+      const androidDetails = AndroidNotificationDetails(
+        'daily_attendance',
+        'Daily Attendance',
+        channelDescription: 'Daily notification about attendance status',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+
+      const details = NotificationDetails(android: androidDetails);
+
+      await _plugin.zonedSchedule(
+        _dailyNotificationId,
+        message.title,
+        message.body,
+        scheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: null, // one-shot, re-scheduled on each launch
+      );
+    } catch (_) {
+      // Scheduling failed — don't crash the app.
     }
-
-    const androidDetails = AndroidNotificationDetails(
-      'daily_attendance',
-      'Daily Attendance',
-      channelDescription: 'Daily notification about attendance status',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const details = NotificationDetails(android: androidDetails);
-
-    await _plugin.zonedSchedule(
-      _dailyNotificationId,
-      message.title,
-      message.body,
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: null, // one-shot, re-scheduled on each launch
-    );
   }
 
   /// Cancel the daily notification (when user disables notifications).
   static Future<void> cancelDailyNotification() async {
-    await _plugin.cancel(_dailyNotificationId);
+    if (!_initialized) return;
+
+    try {
+      await _plugin.cancel(_dailyNotificationId);
+    } catch (_) {
+      // Non-critical.
+    }
   }
 
   // ── Private helpers ────────────────────────────────────────────

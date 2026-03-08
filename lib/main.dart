@@ -44,7 +44,11 @@ void main() async {
   timetableProvider.setAttendanceProvider(attendanceProvider);
 
   // Re-schedule notification on every app launch with fresh data.
-  await settingsProvider.rescheduleNotificationIfEnabled();
+  try {
+    await settingsProvider.rescheduleNotificationIfEnabled();
+  } catch (_) {
+    // Don't let notification scheduling prevent the app from launching.
+  }
 
   runApp(
     MultiProvider(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
@@ -412,8 +413,10 @@ class SubjectPage extends StatelessWidget {
 
                           confirmDismiss: (direction) async {
                             if (direction == DismissDirection.startToEnd) {
+                              HapticFeedback.mediumImpact();
                               showDeleteDialog(context, subject);
                             } else {
+                              HapticFeedback.lightImpact();
                               showRenameDialog(context, subject);
                             }
                             return false;

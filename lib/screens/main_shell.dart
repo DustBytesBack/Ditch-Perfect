@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'home_page.dart';
@@ -189,6 +190,7 @@ class _MainShellState extends State<MainShell> {
           highlightColor: Colors.transparent,
           hoverColor: Colors.transparent,
           onTap: () {
+            HapticFeedback.lightImpact();
             setState(() {
               currentIndex = index;
             });
