@@ -215,7 +215,7 @@ class HomePage extends StatelessWidget {
 
                                 ButtonSegment(
                                   value: BulkAction.clear,
-                                  icon: Icon(Icons.delete),
+                                  icon: Icon(Icons.clear_all_outlined),
                                 ),
 
                                 ButtonSegment(

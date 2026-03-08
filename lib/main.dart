@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'services/database_service.dart';
+import 'services/notification_service.dart';
 
 import 'providers/subject_provider.dart';
 import 'providers/timetable_provider.dart';
@@ -15,6 +16,7 @@ import 'screens/main_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService.init();
+  await NotificationService.init();
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
@@ -40,6 +42,9 @@ void main() async {
     timetableProvider: timetableProvider,
   );
   timetableProvider.setAttendanceProvider(attendanceProvider);
+
+  // Re-schedule notification on every app launch with fresh data.
+  await settingsProvider.rescheduleNotificationIfEnabled();
 
   runApp(
     MultiProvider(

@@ -239,7 +239,7 @@ class DayTimetable extends StatelessWidget {
                     context,
                     status,
                     AttendanceStatus.none,
-                    Icons.delete_outline,
+                    Icons.clear_all_outlined,
                     Colors.grey,
                     () {
                       attendance.clearAttendance(date, index);

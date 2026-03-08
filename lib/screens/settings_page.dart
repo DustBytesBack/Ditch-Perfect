@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
+import '../providers/settings_provider.dart';
 import '../providers/subject_provider.dart';
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
@@ -86,6 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final themeProvider = context.watch<ThemeProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
 
     final modeLabel = themeProvider.isDark ? "Light Mode" : "Dark Mode";
 
@@ -231,6 +233,124 @@ class _SettingsPageState extends State<SettingsPage> {
                             ],
                           ),
                         ),
+
+                        const SizedBox(height: 28),
+
+                        /// NOTIFICATION
+                        sectionTitle(context, "Notification"),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(28),
+                              topRight: const Radius.circular(28),
+                              bottomLeft: Radius.circular(
+                                settingsProvider.notificationsEnabled ? 10 : 28,
+                              ),
+                              bottomRight: Radius.circular(
+                                settingsProvider.notificationsEnabled ? 10 : 28,
+                              ),
+                            ),
+                          ),
+
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.notifications_outlined,
+                                color: scheme.onSecondaryContainer,
+                              ),
+
+                              const SizedBox(width: 18),
+
+                              const Expanded(
+                                child: Text(
+                                  "Daily Reminder",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+
+                              Switch.adaptive(
+                                value: settingsProvider.notificationsEnabled,
+                                onChanged: (value) {
+                                  context
+                                      .read<SettingsProvider>()
+                                      .setNotificationsEnabled(value);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        if (settingsProvider.notificationsEnabled) ...[
+                          const SizedBox(height: 8),
+
+                          GestureDetector(
+                            onTap: () async {
+                              final current = settingsProvider.notificationTime;
+
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: current,
+                              );
+
+                              if (picked != null && context.mounted) {
+                                context
+                                    .read<SettingsProvider>()
+                                    .setNotificationTime(picked);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 18,
+                              ),
+                              decoration: BoxDecoration(
+                                color: scheme.secondaryContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  topRight: Radius.circular(10),
+                                  bottomLeft: Radius.circular(28),
+                                  bottomRight: Radius.circular(28),
+                                ),
+                              ),
+
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    color: scheme.onSecondaryContainer,
+                                  ),
+
+                                  const SizedBox(width: 18),
+
+                                  const Expanded(
+                                    child: Text(
+                                      "Notification Time",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+
+                                  Text(
+                                    settingsProvider.notificationTime.format(
+                                      context,
+                                    ),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 28),
 

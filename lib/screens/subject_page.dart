@@ -149,6 +149,82 @@ class SubjectPage extends StatelessWidget {
     );
   }
 
+  void showRenameDialog(BuildContext context, Subject subject) {
+    final nameController = TextEditingController(text: subject.name);
+    final shortController = TextEditingController(text: subject.shortName);
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("Rename Subject"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Subject Name"),
+              ),
+
+              TextField(
+                controller: shortController,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: "Short Name (max 8 letters)",
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+
+            FilledButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                final short = shortController.text.trim();
+
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Subject name is required")),
+                  );
+                  return;
+                }
+
+                if (short.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Short name is required")),
+                  );
+                  return;
+                }
+
+                if (short.length > 8) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Short name must be ≤ 8 characters"),
+                    ),
+                  );
+                  return;
+                }
+
+                context.read<SubjectProvider>().renameSubject(
+                  subject.id,
+                  name,
+                  short,
+                );
+
+                Navigator.pop(context);
+              },
+              child: const Text("Rename"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void showSubjectInfo(BuildContext context, Subject subject) {
     final scheme = Theme.of(context).colorScheme;
 
@@ -334,8 +410,12 @@ class SubjectPage extends StatelessWidget {
                           key: ValueKey(subject.id),
                           direction: DismissDirection.horizontal,
 
-                          confirmDismiss: (_) async {
-                            showDeleteDialog(context, subject);
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              showDeleteDialog(context, subject);
+                            } else {
+                              showRenameDialog(context, subject);
+                            }
                             return false;
                           },
 
@@ -367,12 +447,12 @@ class SubjectPage extends StatelessWidget {
                                 vertical: 38,
                               ),
                               decoration: BoxDecoration(
-                                color: scheme.errorContainer,
+                                color: scheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(28),
                               ),
                               child: Icon(
-                                Icons.delete,
-                                color: scheme.onErrorContainer,
+                                Icons.edit,
+                                color: scheme.onPrimaryContainer,
                               ),
                             ),
                           ),

@@ -4,15 +4,14 @@ part 'subject.g.dart';
 
 @HiveType(typeId: 0)
 class Subject {
-
   @HiveField(0)
   final String id;
 
   @HiveField(1)
-  final String name;
+  String name;
 
   @HiveField(2)
-  final String shortName;
+  String shortName;
 
   @HiveField(3)
   double minAttendance;

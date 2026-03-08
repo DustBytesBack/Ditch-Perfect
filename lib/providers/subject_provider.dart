@@ -50,6 +50,19 @@ class SubjectProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void renameSubject(String id, String newName, String newShortName) {
+    final index = _subjects.indexWhere((s) => s.id == id);
+    if (index == -1) return;
+
+    final subject = _subjects[index];
+    subject.name = newName;
+    subject.shortName = newShortName;
+
+    DatabaseService.subjectsBox.put(id, subject);
+
+    notifyListeners();
+  }
+
   /// DELETE SUBJECT FROM FUTURE TIMETABLE ONLY
   /// Removes the subject from the weekly timetable going forward, but
   /// past dates still show the subject and its attendance is preserved.
