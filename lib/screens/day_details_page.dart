@@ -11,10 +11,23 @@ import '../widgets/day_timetable.dart';
 
 enum BulkAction { present, absent, cancelled, clear }
 
-class DayDetailsPage extends StatelessWidget {
+class DayDetailsPage extends StatefulWidget {
   final DateTime date;
 
   const DayDetailsPage({super.key, required this.date});
+
+  @override
+  State<DayDetailsPage> createState() => _DayDetailsPageState();
+}
+
+class _DayDetailsPageState extends State<DayDetailsPage> {
+  late DateTime _currentDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentDate = widget.date;
+  }
 
   String formatDate(DateTime date) {
     const months = [
@@ -75,6 +88,8 @@ class DayDetailsPage extends StatelessWidget {
     final timetable = context.watch<TimetableProvider>();
     final attendance = context.watch<AttendanceProvider>();
 
+    final date = _currentDate;
+
     final slots = timetable.getSlotsForDate(date);
 
     final isHolidayDay = isHoliday(date, timetable);
@@ -93,30 +108,52 @@ class DayDetailsPage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 56,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: scheme.surface,
-                          borderRadius: BorderRadius.circular(40),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: .08),
-                              blurRadius: 12,
-                              spreadRadius: 1,
-                              offset: const Offset(0, -1),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          formatDate(date),
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: scheme.onSurface,
-                                fontWeight: FontWeight.w600,
+                      GestureDetector(
+                        onHorizontalDragEnd: (details) {
+                          final velocity = details.primaryVelocity ?? 0;
+                          if (velocity == 0) return;
+
+                          HapticFeedback.lightImpact();
+
+                          setState(() {
+                            if (velocity < 0) {
+                              // Swipe left → next day
+                              _currentDate = _currentDate.add(
+                                const Duration(days: 1),
+                              );
+                            } else {
+                              // Swipe right → previous day
+                              _currentDate = _currentDate.subtract(
+                                const Duration(days: 1),
+                              );
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 56,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            borderRadius: BorderRadius.circular(40),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: .08),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                                offset: const Offset(0, -1),
                               ),
+                            ],
+                          ),
+                          child: Text(
+                            formatDate(date),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: scheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
                         ),
                       ),
 
