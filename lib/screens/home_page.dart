@@ -5,7 +5,6 @@ import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
-import '../models/subject.dart';
 import '../widgets/day_timetable.dart';
 import 'ranked_bunking_page.dart';
 

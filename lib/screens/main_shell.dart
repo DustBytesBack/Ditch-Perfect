@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'home_page.dart';
 import 'calendar_page.dart';
 import 'subject_page.dart';
 import 'timetable_page.dart';
 import 'settings_page.dart';
+import '../services/database_service.dart';
+import '../services/update_service.dart';
 import '../utils/update_checker.dart';
 
 class MainShell extends StatefulWidget {
@@ -29,8 +32,49 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkForUpdate(context);
+      _onLaunchChecks();
     });
+  }
+
+  Future<void> _onLaunchChecks() async {
+    // Show release notes first if the app was just updated.
+    // If notes were shown, skip the update check (user just updated).
+    final wasJustUpdated = await _wasAppJustUpdated();
+
+    if (wasJustUpdated) {
+      if (mounted) await checkForPostUpdateNotes(context);
+    } else {
+      // Seed lastSeenVersion so future updates can be detected.
+      await _saveCurrentVersion();
+      if (mounted) await checkForUpdate(context);
+    }
+  }
+
+  /// Returns true if the running version is newer than lastSeenVersion.
+  Future<bool> _wasAppJustUpdated() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final current = packageInfo.version;
+      final lastSeen =
+          DatabaseService.settingsBox.get("lastSeenVersion") as String?;
+      if (lastSeen == null) return false; // First ever launch
+      return UpdateService.isVersionNewer(current, lastSeen);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Writes the current app version to Hive so we can detect upgrades later.
+  Future<void> _saveCurrentVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      await DatabaseService.settingsBox.put(
+        "lastSeenVersion",
+        packageInfo.version,
+      );
+    } catch (_) {
+      // Non-critical — don't block the app.
+    }
   }
 
   final destinations = const [

@@ -528,7 +528,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             leading: const Icon(Icons.system_update),
                             title: const Text("Check for Updates"),
                             onTap: () {
-                              checkForUpdate(context);
+                              checkForUpdateManual(context);
                             },
                           ),
                         ),
