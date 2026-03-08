@@ -118,6 +118,10 @@ class HomePage extends StatelessWidget {
 
     final slots = timetable.getSlotsForDate(today);
 
+    final isWeekend =
+        today.weekday == DateTime.saturday || today.weekday == DateTime.sunday;
+    final isHoliday = isWeekend && slots.isEmpty;
+
     return Scaffold(
       backgroundColor: scheme.primaryContainer,
 
@@ -222,85 +226,111 @@ class HomePage extends StatelessWidget {
                       ],
                     ),
 
-                    child: Column(
-                      children: [
-                        /// BULK ACTION BUTTONS
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.4,
-
-                            child: SegmentedButton<BulkAction>(
-                              segments: const [
-                                ButtonSegment(
-                                  value: BulkAction.clear,
-                                  icon: Icon(Icons.clear_all_outlined),
-                                ),
-
-                                ButtonSegment(
-                                  value: BulkAction.cancelled,
-                                  icon: Icon(Icons.block),
-                                ),
-
-                                ButtonSegment(
-                                  value: BulkAction.absent,
-                                  icon: Icon(Icons.close_rounded),
-                                ),
-
-                                ButtonSegment(
-                                  value: BulkAction.present,
-                                  icon: Icon(Icons.check),
-                                ),
-                              ],
-
-                              selected: const <BulkAction>{},
-                              emptySelectionAllowed: true,
-
-                              onSelectionChanged: (Set<BulkAction> selection) {
-                                if (selection.isEmpty) return;
-
-                                final action = selection.first;
-
-                                if (action == BulkAction.present) {
-                                  attendance.markAll(
-                                    today,
-                                    slots,
-                                    AttendanceStatus.present,
-                                  );
-                                }
-
-                                if (action == BulkAction.absent) {
-                                  attendance.markAll(
-                                    today,
-                                    slots,
-                                    AttendanceStatus.absent,
-                                  );
-                                }
-
-                                if (action == BulkAction.cancelled) {
-                                  attendance.markAll(
-                                    today,
-                                    slots,
-                                    AttendanceStatus.cancelled,
-                                  );
-                                }
-
-                                if (action == BulkAction.clear) {
-                                  for (int i = 0; i < slots.length; i++) {
-                                    attendance.clearAttendance(today, i);
-                                  }
-                                }
-                              },
+                    child: isHoliday
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                              ),
+                              child: Text(
+                                "Its holiday bruv go waste yo life",
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
+                          )
+                        : Column(
+                            children: [
+                              /// BULK ACTION BUTTONS
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.4,
+
+                                  child: SegmentedButton<BulkAction>(
+                                    segments: const [
+                                      ButtonSegment(
+                                        value: BulkAction.clear,
+                                        icon: Icon(Icons.clear_all_outlined),
+                                      ),
+
+                                      ButtonSegment(
+                                        value: BulkAction.cancelled,
+                                        icon: Icon(Icons.block),
+                                      ),
+
+                                      ButtonSegment(
+                                        value: BulkAction.absent,
+                                        icon: Icon(Icons.close_rounded),
+                                      ),
+
+                                      ButtonSegment(
+                                        value: BulkAction.present,
+                                        icon: Icon(Icons.check),
+                                      ),
+                                    ],
+
+                                    selected: const <BulkAction>{},
+                                    emptySelectionAllowed: true,
+
+                                    onSelectionChanged:
+                                        (Set<BulkAction> selection) {
+                                          if (selection.isEmpty) return;
+
+                                          final action = selection.first;
+
+                                          if (action == BulkAction.present) {
+                                            attendance.markAll(
+                                              today,
+                                              slots,
+                                              AttendanceStatus.present,
+                                            );
+                                          }
+
+                                          if (action == BulkAction.absent) {
+                                            attendance.markAll(
+                                              today,
+                                              slots,
+                                              AttendanceStatus.absent,
+                                            );
+                                          }
+
+                                          if (action == BulkAction.cancelled) {
+                                            attendance.markAll(
+                                              today,
+                                              slots,
+                                              AttendanceStatus.cancelled,
+                                            );
+                                          }
+
+                                          if (action == BulkAction.clear) {
+                                            for (
+                                              int i = 0;
+                                              i < slots.length;
+                                              i++
+                                            ) {
+                                              attendance.clearAttendance(
+                                                today,
+                                                i,
+                                              );
+                                            }
+                                          }
+                                        },
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              /// TIMETABLE
+                              Expanded(child: DayTimetable(date: today)),
+                            ],
                           ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        /// TIMETABLE
-                        Expanded(child: DayTimetable(date: today)),
-                      ],
-                    ),
                   ),
                 ),
               ],
