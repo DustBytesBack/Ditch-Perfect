@@ -201,15 +201,15 @@ class NotificationService {
 
     if (allSafeToBunk) {
       return _NotificationMessage(
-        title: 'You can bunk today!',
+        title: 'BUNK SAFE !!!',
         body:
-            'All ${uniqueSubjectIds.length} subjects today are safe to skip. Enjoy your day off!',
+            'All ${uniqueSubjectIds.length} subjects today are safe to bunk. Bunk you aah off!',
       );
     } else {
       return _NotificationMessage(
-        title: 'You need to attend today',
+        title: 'Goofed around too much :(',
         body:
-            'At least one subject today requires your attendance to stay above ${minAttendance.toInt()}%.',
+            'Sorry homie there\'s one subject that need your attendance to stay above ${minAttendance.toInt()}%.',
       );
     }
   }
