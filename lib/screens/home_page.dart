@@ -7,28 +7,33 @@ import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
 import '../models/subject.dart';
 import '../widgets/day_timetable.dart';
+import 'ranked_bunking_page.dart';
 
-enum BulkAction {
-  present,
-  absent,
-  cancelled,
-  clear
-}
+enum BulkAction { present, absent, cancelled, clear }
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   String formatDate(DateTime date) {
     const months = [
-      "January","February","March","April","May","June",
-      "July","August","September","October","November","December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     return "${date.day} ${months[date.month - 1]} ${date.year}";
   }
 
   void showSubjectPicker(BuildContext context, DateTime date) {
-
     final subjects = context.read<SubjectProvider>().subjects;
     final scheme = Theme.of(context).colorScheme;
 
@@ -47,7 +52,6 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -63,7 +67,6 @@ class HomePage extends StatelessWidget {
                     shrinkWrap: true,
                     itemCount: subjects.length,
                     itemBuilder: (context, index) {
-
                       final subject = subjects[index];
 
                       return ListTile(
@@ -86,10 +89,10 @@ class HomePage extends StatelessWidget {
                         title: Text(subject.name),
                         subtitle: Text(subject.shortName),
                         onTap: () {
-
-                          context
-                              .read<TimetableProvider>()
-                              .addSubjectToDate(date, subject.id);
+                          context.read<TimetableProvider>().addSubjectToDate(
+                            date,
+                            subject.id,
+                          );
 
                           Navigator.pop(context);
                         },
@@ -107,7 +110,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
@@ -122,17 +124,14 @@ class HomePage extends StatelessWidget {
 
       body: Stack(
         children: [
-
           SafeArea(
             child: Column(
               children: [
-
                 /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 56,
@@ -152,9 +151,7 @@ class HomePage extends StatelessWidget {
                         ),
                         child: Text(
                           formatDate(today),
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
@@ -163,6 +160,31 @@ class HomePage extends StatelessWidget {
                       ),
 
                       const Spacer(),
+
+                      Container(
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: IconButton(
+                          iconSize: 28,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(
+                            Icons.emoji_events_outlined,
+                            color: scheme.onSurface,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RankedBunkingPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
 
                       Container(
                         decoration: BoxDecoration(
@@ -203,7 +225,6 @@ class HomePage extends StatelessWidget {
 
                     child: Column(
                       children: [
-
                         /// BULK ACTION BUTTONS
                         Align(
                           alignment: Alignment.topRight,
@@ -212,7 +233,6 @@ class HomePage extends StatelessWidget {
 
                             child: SegmentedButton<BulkAction>(
                               segments: const [
-
                                 ButtonSegment(
                                   value: BulkAction.clear,
                                   icon: Icon(Icons.clear_all_outlined),
@@ -238,42 +258,48 @@ class HomePage extends StatelessWidget {
                               emptySelectionAllowed: true,
 
                               onSelectionChanged: (Set<BulkAction> selection) {
-
                                 if (selection.isEmpty) return;
 
                                 final action = selection.first;
 
                                 if (action == BulkAction.present) {
-                                  attendance.markAll(today, slots, AttendanceStatus.present);
+                                  attendance.markAll(
+                                    today,
+                                    slots,
+                                    AttendanceStatus.present,
+                                  );
                                 }
 
                                 if (action == BulkAction.absent) {
-                                  attendance.markAll(today, slots, AttendanceStatus.absent);
+                                  attendance.markAll(
+                                    today,
+                                    slots,
+                                    AttendanceStatus.absent,
+                                  );
                                 }
 
                                 if (action == BulkAction.cancelled) {
-                                  attendance.markAll(today, slots, AttendanceStatus.cancelled);
+                                  attendance.markAll(
+                                    today,
+                                    slots,
+                                    AttendanceStatus.cancelled,
+                                  );
                                 }
 
                                 if (action == BulkAction.clear) {
-
                                   for (int i = 0; i < slots.length; i++) {
                                     attendance.clearAttendance(today, i);
                                   }
                                 }
                               },
                             ),
-                          )
+                          ),
                         ),
 
                         const SizedBox(height: 16),
 
                         /// TIMETABLE
-                        Expanded(
-                          child: DayTimetable(
-                            date: today,
-                          ),
-                        ),
+                        Expanded(child: DayTimetable(date: today)),
                       ],
                     ),
                   ),
