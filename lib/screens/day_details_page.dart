@@ -48,6 +48,25 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
     return "${date.day} ${months[date.month - 1]} ${date.year}";
   }
 
+  void _changeDay(int offset) {
+    HapticFeedback.lightImpact();
+
+    setState(() {
+      _currentDate = _currentDate.add(Duration(days: offset));
+    });
+  }
+
+  void _handleDaySwitcherSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity == 0) return;
+
+    if (velocity < 0) {
+      _changeDay(1);
+    } else {
+      _changeDay(-1);
+    }
+  }
+
   void showSubjectPicker(BuildContext context, DateTime date) {
     final subjects = context.read<SubjectProvider>().subjects;
     final scheme = Theme.of(context).colorScheme;
@@ -108,52 +127,30 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onHorizontalDragEnd: (details) {
-                          final velocity = details.primaryVelocity ?? 0;
-                          if (velocity == 0) return;
-
-                          HapticFeedback.lightImpact();
-
-                          setState(() {
-                            if (velocity < 0) {
-                              // Swipe left → next day
-                              _currentDate = _currentDate.add(
-                                const Duration(days: 1),
-                              );
-                            } else {
-                              // Swipe right → previous day
-                              _currentDate = _currentDate.subtract(
-                                const Duration(days: 1),
-                              );
-                            }
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 56,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.surface,
-                            borderRadius: BorderRadius.circular(40),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: .08),
-                                blurRadius: 12,
-                                spreadRadius: 1,
-                                offset: const Offset(0, -1),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 56,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(40),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: .08),
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                              offset: const Offset(0, -1),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          formatDate(date),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            formatDate(date),
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: scheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
                         ),
                       ),
 
@@ -191,7 +188,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(.12),
+                          color: Colors.black.withValues(alpha: .12),
                           blurRadius: 12,
                           offset: const Offset(0, -4),
                         ),
@@ -342,6 +339,64 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
             child: Container(
               height: MediaQuery.of(context).padding.bottom + 12,
               color: scheme.surface,
+            ),
+          ),
+
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
+            child: Center(
+              child: GestureDetector(
+                onHorizontalDragEnd: _handleDaySwitcherSwipe,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: .12),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => _changeDay(-1),
+                        icon: Icon(
+                          Icons.chevron_left_rounded,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          'Swipe or tap',
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _changeDay(1),
+                        icon: Icon(
+                          Icons.chevron_right_rounded,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
