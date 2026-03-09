@@ -8,6 +8,7 @@ import '../providers/attendance_provider.dart';
 import '../providers/settings_provider.dart';
 import '../models/attendance.dart';
 import '../models/subject.dart';
+import '../services/tutorial_service.dart';
 import '../utils/attendance_utils.dart';
 import '../utils/holiday_utils.dart';
 
@@ -110,6 +111,9 @@ class DayTimetable extends StatelessWidget {
         final isExtra = index >= baseCount;
 
         return Padding(
+          key: index == 0
+              ? TutorialService.keyFor(TutorialTargets.homeFirstSubjectRow)
+              : null,
           padding: const EdgeInsets.only(bottom: 14),
 
           child: Column(

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../services/tutorial_service.dart';
 import '../utils/attendance_utils.dart';
 import '../models/subject.dart';
 import '../models/attendance.dart';
@@ -353,6 +354,7 @@ class SubjectPage extends StatelessWidget {
                       const Spacer(),
 
                       Container(
+                        key: TutorialService.keyFor(TutorialTargets.subjectAdd),
                         decoration: BoxDecoration(
                           color: scheme.surface,
                           borderRadius: BorderRadius.circular(18),
@@ -461,6 +463,11 @@ class SubjectPage extends StatelessWidget {
                           ),
 
                           child: Padding(
+                            key: index == 0
+                                ? TutorialService.keyFor(
+                                    TutorialTargets.subjectFirstCard,
+                                  )
+                                : null,
                             padding: const EdgeInsets.only(bottom: 14),
                             child: Row(
                               children: [

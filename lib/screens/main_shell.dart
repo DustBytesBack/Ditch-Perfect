@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../services/tutorial_service.dart';
 import 'home_page.dart';
 import 'calendar_page.dart';
 import 'subject_page.dart';
@@ -11,6 +12,7 @@ import 'ranked_bunking_page.dart';
 import '../services/database_service.dart';
 import '../services/update_service.dart';
 import '../utils/update_checker.dart';
+import '../widgets/tutorial_overlay.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -26,6 +28,80 @@ class _MainShellState extends State<MainShell> {
   int currentIndex = 0;
   int previousIndex = 0;
   bool isNavExpanded = false;
+  bool _tutorialActive = false;
+  int _tutorialStepIndex = 0;
+  Rect? _currentTutorialRect;
+  Rect? _previousTutorialRect;
+
+  List<_TutorialStep> get _tutorialSteps => const [
+    _TutorialStep(
+      title: 'Home Dashboard',
+      description:
+          'This home screen is your day-at-a-glance dashboard. It shows today\'s classes.',
+      targetIds: [TutorialTargets.homeOverview],
+      pageIndex: 0,
+    ),
+    _TutorialStep(
+      title: 'Quick Add',
+      description:
+          'Tap this add button to insert an extra subject into today\'s schedule.',
+      targetIds: [TutorialTargets.homeQuickAdd],
+      pageIndex: 0,
+    ),
+    _TutorialStep(
+      title: 'Attendance Controls',
+      description:
+          'Tap these controls to update attendance in bulk. Subject rows also support tap actions for present, absent, cancelled, and clear.',
+      targetIds: [
+        TutorialTargets.homeFirstSubjectRow,
+        TutorialTargets.homeBulkActions,
+      ],
+      pageIndex: 0,
+    ),
+    _TutorialStep(
+      title: 'Subjects',
+      description:
+          'Manage your courses here. Tap add to create a subject, tap a card for details, and swipe subject cards left or right to rename or remove them.',
+      targetIds: [TutorialTargets.subjectFirstCard, TutorialTargets.subjectAdd],
+      pageIndex: 2,
+    ),
+    _TutorialStep(
+      title: 'Navigation Bar',
+      description:
+          'Tap these floating pills to switch sections. Long-press the nav bar to expand a second row with more shortcuts.',
+      targetIds: [TutorialTargets.navBar],
+      pageIndex: 2,
+    ),
+    _TutorialStep(
+      title: 'Rank Shortcut',
+      description:
+          'After a long press, the Rank button appears here. Tap it to open the ranking screen, and any nav tap collapses the bar again.',
+      targetIds: [TutorialTargets.navRank],
+      pageIndex: 2,
+      expandNav: true,
+    ),
+    _TutorialStep(
+      title: 'Calendar History',
+      description:
+          'Use the calendar to review attendance by date. Tap a day to open details, then use the bottom arrows or swipe on the day switcher to move across dates.',
+      targetIds: [TutorialTargets.calendarMain],
+      pageIndex: 1,
+    ),
+    _TutorialStep(
+      title: 'Monthly Stats',
+      description:
+          'This summary card shows your monthly picture: attended, missed, off, mixed, and not-marked days.',
+      targetIds: [TutorialTargets.calendarStats],
+      pageIndex: 1,
+    ),
+    _TutorialStep(
+      title: 'Settings And Replay',
+      description:
+          'Settings is where you tune preferences and manage app data. You can restart this tutorial anytime from this Replay Tutorial tile.',
+      targetIds: [TutorialTargets.settingsTutorialRestart],
+      pageIndex: 4,
+    ),
+  ];
 
   List<Widget> get pages => [
     const HomePage(),
@@ -39,9 +115,16 @@ class _MainShellState extends State<MainShell> {
   @override
   void initState() {
     super.initState();
+    TutorialService.restartListenable.addListener(_handleTutorialRestart);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onLaunchChecks();
     });
+  }
+
+  @override
+  void dispose() {
+    TutorialService.restartListenable.removeListener(_handleTutorialRestart);
+    super.dispose();
   }
 
   Future<void> _onLaunchChecks() async {
@@ -55,6 +138,10 @@ class _MainShellState extends State<MainShell> {
       // Seed lastSeenVersion so future updates can be detected.
       await _saveCurrentVersion();
       if (mounted) await checkForUpdate(context);
+    }
+
+    if (mounted) {
+      await _maybeStartTutorial();
     }
   }
 
@@ -121,6 +208,9 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final currentStep = _tutorialActive
+        ? _tutorialSteps[_tutorialStepIndex]
+        : null;
 
     return Scaffold(
       body: Stack(
@@ -149,6 +239,7 @@ class _MainShellState extends State<MainShell> {
                     });
                   },
                   child: AnimatedContainer(
+                    key: TutorialService.keyFor(TutorialTargets.navBar),
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeOutCubic,
                     height: isNavExpanded ? 164 : 90,
@@ -238,6 +329,25 @@ class _MainShellState extends State<MainShell> {
               },
             ),
           ),
+          if (_tutorialActive &&
+              _currentTutorialRect != null &&
+              currentStep != null)
+            Positioned.fill(
+              child: TutorialOverlay(
+                targetRect: _currentTutorialRect!,
+                previousTargetRect:
+                    _previousTutorialRect ?? _currentTutorialRect!,
+                title: currentStep.title,
+                description: currentStep.description,
+                stepIndex: _tutorialStepIndex,
+                totalSteps: _tutorialSteps.length,
+                canGoBack: _tutorialStepIndex > 0,
+                allowTapOutside: true,
+                onNext: _goToNextTutorialStep,
+                onPrevious: _goToPreviousTutorialStep,
+                onSkip: _skipTutorial,
+              ),
+            ),
         ],
       ),
     );
@@ -313,6 +423,9 @@ class _MainShellState extends State<MainShell> {
     final selected = currentIndex == index;
 
     return Material(
+      key: index == _rankPageIndex
+          ? TutorialService.keyFor(TutorialTargets.navRank)
+          : null,
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(32),
@@ -388,4 +501,120 @@ class _MainShellState extends State<MainShell> {
       isNavExpanded = false;
     });
   }
+
+  Future<void> _maybeStartTutorial() async {
+    if (TutorialService.isCompleted) return;
+    await _startTutorial();
+  }
+
+  Future<void> _startTutorial() async {
+    if (!mounted) return;
+
+    setState(() {
+      _tutorialActive = true;
+      _tutorialStepIndex = 0;
+      _currentTutorialRect = null;
+      _previousTutorialRect = null;
+      currentIndex = 0;
+      previousIndex = 0;
+      isNavExpanded = false;
+    });
+
+    await _showTutorialStep(0);
+  }
+
+  Future<void> _showTutorialStep(int index) async {
+    if (!mounted) return;
+
+    final step = _tutorialSteps[index];
+
+    setState(() {
+      _tutorialStepIndex = index;
+      currentIndex = step.pageIndex;
+      isNavExpanded = step.expandNav;
+      if (step.pageIndex != _rankPageIndex) {
+        previousIndex = step.pageIndex;
+      }
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    await WidgetsBinding.instance.endOfFrame;
+
+    final rect = _resolveTutorialRect(step.targetIds);
+    if (rect == null) {
+      if (index >= _tutorialSteps.length - 1) {
+        await _completeTutorial();
+      } else {
+        await _showTutorialStep(index + 1);
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _previousTutorialRect = _currentTutorialRect ?? rect;
+      _currentTutorialRect = rect;
+      _tutorialActive = true;
+    });
+  }
+
+  Rect? _resolveTutorialRect(List<String> targetIds) {
+    for (final targetId in targetIds) {
+      final rect = TutorialService.rectFor(targetId);
+      if (rect != null) return rect;
+    }
+    return null;
+  }
+
+  Future<void> _goToNextTutorialStep() async {
+    if (_tutorialStepIndex >= _tutorialSteps.length - 1) {
+      await _completeTutorial();
+      return;
+    }
+
+    await _showTutorialStep(_tutorialStepIndex + 1);
+  }
+
+  Future<void> _goToPreviousTutorialStep() async {
+    if (_tutorialStepIndex == 0) return;
+    await _showTutorialStep(_tutorialStepIndex - 1);
+  }
+
+  Future<void> _skipTutorial() async {
+    await _completeTutorial();
+  }
+
+  Future<void> _completeTutorial() async {
+    await TutorialService.markCompleted();
+    if (!mounted) return;
+
+    setState(() {
+      _tutorialActive = false;
+      _currentTutorialRect = null;
+      _previousTutorialRect = null;
+      isNavExpanded = false;
+    });
+  }
+
+  void _handleTutorialRestart() {
+    if (!mounted) return;
+    _startTutorial();
+  }
+}
+
+class _TutorialStep {
+  final String title;
+  final String description;
+  final List<String> targetIds;
+  final int pageIndex;
+  final bool expandNav;
+
+  const _TutorialStep({
+    required this.title,
+    required this.description,
+    required this.targetIds,
+    required this.pageIndex,
+    this.expandNav = false,
+  });
 }

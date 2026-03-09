@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../services/database_service.dart';
+import '../services/tutorial_service.dart';
 import '../providers/theme_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/subject_provider.dart';
@@ -233,6 +234,42 @@ class _SettingsPageState extends State<SettingsPage> {
                                 },
                               ),
                             ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        sectionTitle(context, "Tutorial"),
+
+                        Container(
+                          key: TutorialService.keyFor(
+                            TutorialTargets.settingsTutorialRestart,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.play_circle_outline,
+                              color: scheme.onSecondaryContainer,
+                            ),
+                            title: const Text(
+                              "Replay Tutorial",
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              "Don't skip it again. Read, for once in your life.",
+                            ),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              TutorialService.requestRestart();
+                            },
                           ),
                         ),
 
