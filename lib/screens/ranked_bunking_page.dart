@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class RankedBunkingPage extends StatelessWidget {
-  const RankedBunkingPage({super.key});
+  final VoidCallback? onBack;
+
+  const RankedBunkingPage({super.key, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +63,8 @@ class RankedBunkingPage extends StatelessWidget {
                             Icons.arrow_back_rounded,
                             color: scheme.onSurface,
                           ),
-                          onPressed: () => Navigator.pop(context),
+                          onPressed:
+                              onBack ?? () => Navigator.maybePop(context),
                         ),
                       ),
                     ],

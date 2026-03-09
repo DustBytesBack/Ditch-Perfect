@@ -173,31 +173,6 @@ class HomePage extends StatelessWidget {
                         child: IconButton(
                           iconSize: 28,
                           padding: const EdgeInsets.all(14),
-                          icon: Icon(
-                            Icons.emoji_events_outlined,
-                            color: scheme.onSurface,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RankedBunkingPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      Container(
-                        decoration: BoxDecoration(
-                          color: scheme.surface,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: IconButton(
-                          iconSize: 28,
-                          padding: const EdgeInsets.all(14),
                           icon: Icon(Icons.add, color: scheme.onSurface),
                           onPressed: () {
                             showSubjectPicker(context, today);
