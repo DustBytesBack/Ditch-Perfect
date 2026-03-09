@@ -76,6 +76,7 @@ class DayTimetable extends StatelessWidget {
     final baseCount = baseSlots.length;
 
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 90),
       itemCount: slots.length,
       itemBuilder: (context, index) {
         final subjectId = slots[index];

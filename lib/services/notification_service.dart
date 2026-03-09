@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/widgets.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -18,9 +21,16 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static const int _dailyNotificationId = 0;
+  static const int _notificationIdBase = 1000;
+  static const int _scheduleWindowDays = 60;
 
   static bool _initialized = false;
+  static bool _appInForeground = false;
+  static int? _lastScheduledHour;
+  static int? _lastScheduledMinute;
+  static final Map<int, Timer> _foregroundBridgeTimers = {};
+  static final _NotificationLifecycleObserver _lifecycleObserver =
+      _NotificationLifecycleObserver();
 
   /// Initialise the plugin and timezone data. Call once at app startup.
   /// Wrapped in try-catch so a notification init failure never prevents
@@ -45,6 +55,10 @@ class NotificationService {
       const initSettings = InitializationSettings(android: androidSettings);
 
       await _plugin.initialize(initSettings);
+      WidgetsBinding.instance.addObserver(_lifecycleObserver);
+      _appInForeground =
+          WidgetsBinding.instance.lifecycleState == null ||
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
       _initialized = true;
     } catch (_) {
       // Plugin init failed — notifications won't work but app still runs.
@@ -86,30 +100,12 @@ class NotificationService {
     if (!_initialized) return;
 
     try {
-      // Cancel any previous notification first.
-      await _plugin.cancel(_dailyNotificationId);
+      _lastScheduledHour = hour;
+      _lastScheduledMinute = minute;
 
-      // Compute the notification message for today.
-      final message = _computeTodayMessage();
+      await cancelDailyNotification();
 
-      // Nothing to notify about (weekend / no timetable).
-      if (message == null) return;
-
-      // Build the scheduled time.
       final now = tz.TZDateTime.now(tz.local);
-      var scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        hour,
-        minute,
-      );
-
-      // If the time has already passed today, schedule for tomorrow.
-      if (scheduledDate.isBefore(now)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }
 
       const androidDetails = AndroidNotificationDetails(
         'daily_attendance',
@@ -121,17 +117,49 @@ class NotificationService {
 
       const details = NotificationDetails(android: androidDetails);
 
-      await _plugin.zonedSchedule(
-        _dailyNotificationId,
-        message.title,
-        message.body,
-        scheduledDate,
-        details,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: null, // one-shot, re-scheduled on each launch
-      );
+      final bridgeSchedules = <_ForegroundBridgeSchedule>[];
+
+      for (int offset = 0; offset < _scheduleWindowDays; offset++) {
+        final target = DateTime(now.year, now.month, now.day + offset);
+        final message = _computeMessageForDate(target);
+        if (message == null) continue;
+
+        final scheduledDate = tz.TZDateTime(
+          tz.local,
+          target.year,
+          target.month,
+          target.day,
+          hour,
+          minute,
+        );
+
+        if (!scheduledDate.isAfter(now)) {
+          continue;
+        }
+
+        await _plugin.zonedSchedule(
+          _notificationIdBase + offset,
+          message.title,
+          message.body,
+          scheduledDate,
+          details,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: null,
+        );
+
+        bridgeSchedules.add(
+          _ForegroundBridgeSchedule(
+            id: _notificationIdBase + offset,
+            scheduledDate: scheduledDate,
+            title: message.title,
+            body: message.body,
+          ),
+        );
+      }
+
+      _armForegroundBridge(bridgeSchedules, details);
     } catch (_) {
       // Scheduling failed — don't crash the app.
     }
@@ -142,7 +170,11 @@ class NotificationService {
     if (!_initialized) return;
 
     try {
-      await _plugin.cancel(_dailyNotificationId);
+      _clearForegroundBridgeTimers();
+
+      for (int offset = 0; offset < _scheduleWindowDays; offset++) {
+        await _plugin.cancel(_notificationIdBase + offset);
+      }
     } catch (_) {
       // Non-critical.
     }
@@ -153,9 +185,9 @@ class NotificationService {
   /// Compute whether the user can bunk today or needs to attend.
   ///
   /// Returns `null` if today has no timetable slots (holiday / empty).
-  static _NotificationMessage? _computeTodayMessage() {
-    final now = DateTime.now();
-    final weekday = now.weekday; // 1=Mon..7=Sun
+  static _NotificationMessage? _computeMessageForDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    final weekday = day.weekday; // 1=Mon..7=Sun
 
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     final dayKey = days[weekday - 1];
@@ -172,8 +204,7 @@ class NotificationService {
     }
 
     // Get extra date-specific slots.
-    final todayDate = DateTime(now.year, now.month, now.day);
-    final dateKey = todayDate.toIso8601String();
+    final dateKey = day.toIso8601String();
     final extraStored = timetableBox.get(dateKey);
 
     List<String> extraSlots = [];
@@ -184,11 +215,14 @@ class NotificationService {
     }
 
     final allSlots = [...baseSlots, ...extraSlots];
+    final occurrencesBySubject = <String, int>{};
 
-    // De-duplicate subject IDs for today (we care per-subject, not per-slot).
-    final uniqueSubjectIds = allSlots.toSet();
+    for (final subjectId in allSlots) {
+      occurrencesBySubject[subjectId] =
+          (occurrencesBySubject[subjectId] ?? 0) + 1;
+    }
 
-    if (uniqueSubjectIds.isEmpty) return null;
+    if (occurrencesBySubject.isEmpty) return null;
 
     // Get min attendance from settings.
     final settingsBox = DatabaseService.settingsBox;
@@ -208,7 +242,7 @@ class NotificationService {
       if (record == null || record is! Attendance) continue;
 
       final sid = record.subjectId;
-      if (!uniqueSubjectIds.contains(sid)) continue;
+      if (!occurrencesBySubject.containsKey(sid)) continue;
 
       if (record.status == AttendanceStatus.present) {
         attended[sid] = (attended[sid] ?? 0) + 1;
@@ -222,14 +256,15 @@ class NotificationService {
     // Check if every subject today can be safely bunked (canBunk >= 1).
     bool allSafeToBunk = true;
 
-    for (var sid in uniqueSubjectIds) {
+    for (var sid in occurrencesBySubject.keys) {
       final a = attended[sid] ?? 0;
       final t = total[sid] ?? 0;
+      final requiredBunks = occurrencesBySubject[sid] ?? 0;
 
       // canBunk = floor(attended / p) - total
       final bunk = t == 0 ? 0 : ((a / p) - t).floor();
 
-      if (bunk < 1) {
+      if (bunk < requiredBunks) {
         allSafeToBunk = false;
         break;
       }
@@ -239,15 +274,37 @@ class NotificationService {
       return _NotificationMessage(
         title: 'BUNK SAFE !!!',
         body:
-            'All ${uniqueSubjectIds.length} subjects today are safe to bunk. Bunk you aah off!',
+            'All ${allSlots.length} classes on ${_labelForDate(day)} are safe to bunk. Bunk you aah off!',
       );
     } else {
       return _NotificationMessage(
         title: 'Goofed around too much :(',
         body:
-            'Sorry homie there\'s one subject that need your attendance to stay above ${minAttendance.toInt()}%.',
+            'Sorry homie, at least one class on ${_labelForDate(day)} needs your attendance to stay above ${minAttendance.toInt()}%.',
       );
     }
+  }
+
+  static String _labelForDate(DateTime date) {
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+
+    if (normalizedDate == normalizedToday) return 'today';
+    if (normalizedDate == normalizedToday.add(const Duration(days: 1))) {
+      return 'tomorrow';
+    }
+
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return days[normalizedDate.weekday - 1];
   }
 
   /// Get the local timezone name. Falls back to UTC if unavailable.
@@ -275,6 +332,58 @@ class NotificationService {
 
     return 'UTC';
   }
+
+  static void _armForegroundBridge(
+    List<_ForegroundBridgeSchedule> schedules,
+    NotificationDetails details,
+  ) {
+    _clearForegroundBridgeTimers();
+
+    if (!_appInForeground) return;
+
+    final now = tz.TZDateTime.now(tz.local);
+
+    for (final schedule in schedules) {
+      final delay = schedule.scheduledDate.difference(now);
+      if (delay.isNegative || delay == Duration.zero) continue;
+
+      _foregroundBridgeTimers[schedule.id] = Timer(delay, () async {
+        if (!_appInForeground) return;
+
+        try {
+          await _plugin.show(
+            schedule.id,
+            schedule.title,
+            schedule.body,
+            details,
+          );
+        } catch (_) {}
+
+        _foregroundBridgeTimers.remove(schedule.id);
+      });
+    }
+  }
+
+  static void _clearForegroundBridgeTimers() {
+    for (final timer in _foregroundBridgeTimers.values) {
+      timer.cancel();
+    }
+    _foregroundBridgeTimers.clear();
+  }
+
+  static void _handleLifecycleChanged(AppLifecycleState state) {
+    _appInForeground = state == AppLifecycleState.resumed;
+
+    if (_appInForeground) {
+      final hour = _lastScheduledHour;
+      final minute = _lastScheduledMinute;
+      if (hour != null && minute != null) {
+        unawaited(scheduleDailyNotification(hour: hour, minute: minute));
+      }
+    } else {
+      _clearForegroundBridgeTimers();
+    }
+  }
 }
 
 class _NotificationMessage {
@@ -282,4 +391,25 @@ class _NotificationMessage {
   final String body;
 
   const _NotificationMessage({required this.title, required this.body});
+}
+
+class _ForegroundBridgeSchedule {
+  final int id;
+  final tz.TZDateTime scheduledDate;
+  final String title;
+  final String body;
+
+  const _ForegroundBridgeSchedule({
+    required this.id,
+    required this.scheduledDate,
+    required this.title,
+    required this.body,
+  });
+}
+
+class _NotificationLifecycleObserver with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    NotificationService._handleLifecycleChanged(state);
+  }
 }
