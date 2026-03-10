@@ -78,14 +78,16 @@ Color? getDayColor(
   if (none == total) return null;
 
   // All present
-  if (present == total) return const Color(0xFF4CAF50); // green
+  if ((present > 0) && absent == 0 && none == 0) return const Color(0xFF4CAF50); // green
 
   // All absent
-  if (absent == total) return const Color(0xFFF44336); // red
+  if ((absent > 0) && present == 0 && none == 0) return const Color(0xFFF44336); // red
 
   // All cancelled (or no subjects + all cancelled)
   if (cancelled == total) return const Color(0xFFFF9800); // orange
 
   // Mixed (combination of present, absent, cancelled, and possibly unmarked)
-  return const Color(0xFF9C27B0); // purple
+  if (present > 0 && absent > 0 && none == 0) return const Color(0xFF9C27B0); // purple
+
+  return null;
 }
