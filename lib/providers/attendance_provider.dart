@@ -118,6 +118,65 @@ class AttendanceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void replaceSubjectAttendanceBaseline(
+    String subjectId, {
+    required int attended,
+    required int total,
+  }) {
+    final box = DatabaseService.attendanceBox;
+
+    final keysToDelete = <String>[];
+
+    for (final entry in _records.entries) {
+      if (entry.value.subjectId == subjectId) {
+        keysToDelete.add(entry.key);
+      }
+    }
+
+    for (final key in keysToDelete) {
+      box.delete(key);
+      _records.remove(key);
+    }
+
+    if (total <= 0) {
+      notifyListeners();
+      return;
+    }
+
+    final absent = total - attended;
+    final baseDate = DateTime(2000, 1, 1);
+
+    for (int i = 0; i < attended; i++) {
+      final recordDate = baseDate.add(Duration(days: i));
+      final key = buildKey(recordDate, 0);
+      final record = Attendance(
+        date: recordDate,
+        subjectId: subjectId,
+        slotIndex: 0,
+        status: AttendanceStatus.present,
+      );
+
+      box.put(key, record);
+      _records[key] = record;
+    }
+
+    for (int i = 0; i < absent; i++) {
+      final recordDate = baseDate.add(Duration(days: attended + i));
+      final key = buildKey(recordDate, 0);
+      final record = Attendance(
+        date: recordDate,
+        subjectId: subjectId,
+        slotIndex: 0,
+        status: AttendanceStatus.absent,
+      );
+
+      box.put(key, record);
+      _records[key] = record;
+    }
+
+    notifyListeners();
+  }
+
   /// Notify listeners externally (e.g. when TimetableProvider modifies
   /// the in-memory records map directly during extra-subject removal).
   void notifyIfChanged() {

@@ -13,6 +13,11 @@ import '../models/attendance.dart';
 class SubjectPage extends StatelessWidget {
   const SubjectPage({super.key});
 
+  static const List<(String, String)> _attendanceInputModes = [
+    ('total', 'I know total classes'),
+    ('attended', 'I know attended classes'),
+  ];
+
   int canBunk(int attended, int total, double minPercent) {
     if (total == 0) return 0;
 
@@ -222,6 +227,178 @@ class SubjectPage extends StatelessWidget {
               child: const Text("Rename"),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void showAttendanceEditDialog(
+    BuildContext context,
+    Subject subject,
+    AttendanceStats stats,
+  ) {
+    final percentController = TextEditingController(
+      text: stats.total == 0 ? '' : stats.percentage.toStringAsFixed(1),
+    );
+    final totalController = TextEditingController(
+      text: stats.total == 0 ? '' : stats.total.toString(),
+    );
+    final attendedController = TextEditingController(
+      text: stats.attended == 0 ? '' : stats.attended.toString(),
+    );
+    String inputMode = 'total';
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final currentController = inputMode == 'total'
+                ? totalController
+                : attendedController;
+
+            return AlertDialog(
+              title: Text('Edit ${subject.shortName} Attendance'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: percentController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Current attendance %',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: inputMode,
+                    decoration: const InputDecoration(labelText: 'Known value'),
+                    items: _attendanceInputModes.map((mode) {
+                      return DropdownMenuItem<String>(
+                        value: mode.$1,
+                        child: Text(mode.$2),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      HapticFeedback.lightImpact();
+                      setDialogState(() {
+                        inputMode = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: currentController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: inputMode == 'total'
+                          ? 'Total classes'
+                          : 'Attended classes',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final percent = double.tryParse(
+                      percentController.text.trim(),
+                    );
+                    final knownValue = int.tryParse(
+                      currentController.text.trim(),
+                    );
+
+                    if (percent == null || percent < 0 || percent > 100) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Enter a valid attendance percentage'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (knownValue == null || knownValue < 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Enter a valid class count'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    int attended;
+                    int total;
+
+                    if (inputMode == 'total') {
+                      total = knownValue;
+                      attended = ((percent / 100) * total).round();
+                    } else {
+                      attended = knownValue;
+                      if (percent == 0) {
+                        if (attended > 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                '0% attendance cannot have attended classes',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        total = 0;
+                      } else {
+                        total = (attended / (percent / 100)).round();
+                      }
+                    }
+
+                    if (attended > total) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Attended classes cannot be greater than total classes',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final computedPercent = total == 0
+                        ? 0.0
+                        : (attended / total) * 100;
+
+                    if ((computedPercent - percent).abs() > 0.6) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Those values do not produce a close enough attendance percentage',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    context
+                        .read<AttendanceProvider>()
+                        .replaceSubjectAttendanceBaseline(
+                          subject.id,
+                          attended: attended,
+                          total: total,
+                        );
+
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -512,6 +689,14 @@ class SubjectPage extends StatelessWidget {
                                       GestureDetector(
                                         onTap: () {
                                           showSubjectInfo(context, subject);
+                                        },
+                                        onLongPress: () {
+                                          HapticFeedback.mediumImpact();
+                                          showAttendanceEditDialog(
+                                            context,
+                                            subject,
+                                            stats,
+                                          );
                                         },
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(

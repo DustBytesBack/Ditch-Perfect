@@ -488,7 +488,7 @@ class _CalendarPageState extends State<CalendarPage> {
             Positioned(
               left: 16,
               right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 28,
+              bottom: MediaQuery.of(context).padding.bottom + 120,
               child: SafeArea(
                 top: false,
                 child: Container(
@@ -521,7 +521,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: _selectionActionButton(
                           icon: Icons.cancel,
@@ -534,12 +534,12 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: _selectionActionButton(
                           icon: Icons.remove_circle,
                           color: Colors.orange,
-                          label: 'Cancelled',
+                          label: 'Cancel',
                           onTap: selectedDates.isEmpty
                               ? null
                               : () => _applySelectionMarking(
@@ -547,7 +547,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: _selectionActionButton(
                           icon: Icons.layers_clear,
@@ -558,7 +558,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               : () => _applySelectionMarking(null),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: _selectionActionButton(
                           icon: Icons.close,
@@ -588,9 +588,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Material(
       color: enabled ? color.withValues(alpha: .12) : scheme.surfaceContainer,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         onTap: enabled
             ? () {
                 HapticFeedback.lightImpact();
@@ -598,23 +598,25 @@ class _CalendarPageState extends State<CalendarPage> {
               }
             : null,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                size: 20,
+                size: 18,
                 color: enabled ? color : scheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: enabled ? scheme.onSurface : scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(height: 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: enabled ? scheme.onSurface : scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

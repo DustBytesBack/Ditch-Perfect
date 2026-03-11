@@ -69,31 +69,304 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
 
   void showSubjectPicker(BuildContext context, DateTime date) {
     final subjects = context.read<SubjectProvider>().subjects;
+    final timetable = context.read<TimetableProvider>();
     final scheme = Theme.of(context).colorScheme;
+    const weekdays = [
+      ('mon', 'Monday'),
+      ('tue', 'Tuesday'),
+      ('wed', 'Wednesday'),
+      ('thu', 'Thursday'),
+      ('fri', 'Friday'),
+      ('sat', 'Saturday'),
+      ('sun', 'Sunday'),
+    ];
+    final weekdayNames = <String, String>{
+      'mon': 'Monday',
+      'tue': 'Tuesday',
+      'wed': 'Wednesday',
+      'thu': 'Thursday',
+      'fri': 'Friday',
+      'sat': 'Saturday',
+      'sun': 'Sunday',
+    };
+
+    String shortLabel(String subjectId) {
+      final subjectIndex = subjects.indexWhere((item) => item.id == subjectId);
+      if (subjectIndex < 0) return '?';
+      final subject = subjects[subjectIndex];
+      if (subject.shortName.isNotEmpty) return subject.shortName;
+      if (subject.name.isNotEmpty) return subject.name[0];
+      return '?';
+    }
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
       backgroundColor: scheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: ListView(
-            children: subjects.map((subject) {
-              return ListTile(
-                title: Text(subject.name),
-                onTap: () {
-                  context.read<TimetableProvider>().addSubjectToDate(
-                    date,
-                    subject.id,
-                  );
+        String? selectedDayKey;
 
-                  Navigator.pop(context);
-                },
+        return DefaultTabController(
+          length: 2,
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Add Subjects',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const TabBar(
+                            dividerColor: Colors.transparent,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            tabs: [
+                              Tab(text: 'Single'),
+                              Tab(text: 'From Day'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: subjects.length,
+                                itemBuilder: (context, index) {
+                                  final subject = subjects[index];
+
+                                  return ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    leading: CircleAvatar(
+                                      backgroundColor: scheme.primaryContainer,
+                                      child: Text(
+                                        subject.shortName.isEmpty
+                                            ? subject.name[0]
+                                            : subject.shortName[0],
+                                        style: TextStyle(
+                                          color: scheme.onPrimaryContainer,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    title: Text(subject.name),
+                                    subtitle: Text(subject.shortName),
+                                    onTap: () {
+                                      timetable.addSubjectToDate(
+                                        date,
+                                        subject.id,
+                                      );
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                },
+                              ),
+                              ListView(
+                                children: [
+                                  Text(
+                                    'Tap a day to add its timetable.',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ...weekdays.map((day) {
+                                    final isSelected = selectedDayKey == day.$1;
+                                    final daySlots = timetable.getDaySlots(
+                                      day.$1,
+                                    );
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? scheme.secondaryContainer
+                                              : scheme.surfaceContainerHighest,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            InkWell(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              onTap: () {
+                                                HapticFeedback.lightImpact();
+                                                setModalState(() {
+                                                  selectedDayKey = isSelected
+                                                      ? null
+                                                      : day.$1;
+                                                });
+                                              },
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 4,
+                                                    ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.view_week,
+                                                      color: isSelected
+                                                          ? scheme
+                                                                .onSecondaryContainer
+                                                          : scheme
+                                                                .onSurfaceVariant,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Text(
+                                                        weekdayNames[day.$1]!,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .titleMedium
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: isSelected
+                                                                  ? scheme
+                                                                        .onSecondaryContainer
+                                                                  : scheme
+                                                                        .onSurface,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    Icon(
+                                                      isSelected
+                                                          ? Icons.expand_less
+                                                          : Icons.chevron_right,
+                                                      color: isSelected
+                                                          ? scheme
+                                                                .onSecondaryContainer
+                                                          : scheme
+                                                                .onSurfaceVariant,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            if (isSelected) ...[
+                                              const SizedBox(height: 14),
+                                              if (daySlots.isEmpty)
+                                                Text(
+                                                  'No timetable found for ${weekdayNames[day.$1]}.',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: scheme
+                                                            .onSecondaryContainer,
+                                                      ),
+                                                )
+                                              else ...[
+                                                Wrap(
+                                                  spacing: 10,
+                                                  runSpacing: 10,
+                                                  children: daySlots.map((
+                                                    subjectId,
+                                                  ) {
+                                                    return Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 20,
+                                                            vertical: 14,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: scheme.surface,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              18,
+                                                            ),
+                                                      ),
+                                                      child: Text(
+                                                        shortLabel(subjectId),
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          color:
+                                                              scheme.onSurface,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                                const SizedBox(height: 14),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: FilledButton.icon(
+                                                    onPressed: () {
+                                                      for (final subjectId
+                                                          in daySlots) {
+                                                        timetable
+                                                            .addSubjectToDate(
+                                                              date,
+                                                              subjectId,
+                                                            );
+                                                      }
+                                                      Navigator.pop(context);
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.copy_all,
+                                                    ),
+                                                    label: Text(
+                                                      daySlots.length == 1
+                                                          ? 'Add 1 Subject'
+                                                          : 'Add ${daySlots.length} Subjects',
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               );
-            }).toList(),
+            },
           ),
         );
       },
