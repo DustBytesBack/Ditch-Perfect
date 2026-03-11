@@ -193,6 +193,9 @@ class _CalendarPageState extends State<CalendarPage> {
                       const Spacer(),
 
                       Container(
+                        key: TutorialService.keyFor(
+                          TutorialTargets.calendarMultiSelect,
+                        ),
                         decoration: BoxDecoration(
                           color: scheme.surface,
                           borderRadius: BorderRadius.circular(18),

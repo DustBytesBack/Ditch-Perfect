@@ -8,6 +8,7 @@ import 'calendar_page.dart';
 import 'subject_page.dart';
 import 'timetable_page.dart';
 import 'settings_page.dart';
+import 'attendance_calculator_page.dart';
 import 'ranked_bunking_page.dart';
 import '../services/database_service.dart';
 import '../services/update_service.dart';
@@ -23,7 +24,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   static const int _primaryNavCount = 5;
-  static const int _rankPageIndex = 5;
+  static const int _rankPageIndex = 6;
 
   int currentIndex = 0;
   int previousIndex = 0;
@@ -44,7 +45,7 @@ class _MainShellState extends State<MainShell> {
     _TutorialStep(
       title: 'Quick Add',
       description:
-          'Tap this add button to insert an extra subject into today\'s schedule.',
+          'Tap this add button to insert an extra subject into today\'s schedule. The sheet now has a Single tab for one subject and a From Day tab that copies an entire weekday timetable into today.',
       targetIds: [TutorialTargets.homeQuickAdd],
       pageIndex: 0,
     ),
@@ -73,9 +74,24 @@ class _MainShellState extends State<MainShell> {
       pageIndex: 2,
     ),
     _TutorialStep(
+      title: 'Calculator Shortcut',
+      description:
+          'After a long press, the Calc button appears here. Open it to estimate how many future classes you can cut while staying at or above your attendance criteria.',
+      targetIds: [TutorialTargets.navCalculator],
+      pageIndex: 2,
+      expandNav: true,
+    ),
+    _TutorialStep(
+      title: 'Calculator Page',
+      description:
+          'Pick a subject, enter how many non-cancelled classes are still left, and the calculator shows how many you can skip, how many you must attend, and the projected final percentage.',
+      targetIds: [TutorialTargets.calculatorMain],
+      pageIndex: 5,
+    ),
+    _TutorialStep(
       title: 'Rank Shortcut',
       description:
-          'After a long press, the Rank button appears here. Tap it to open the ranking screen, and any nav tap collapses the bar again.',
+          'The Rank button sits beside the calculator in the expanded nav row. Tap it to open the ranking screen, and any nav tap collapses the bar again.',
       targetIds: [TutorialTargets.navRank],
       pageIndex: 2,
       expandNav: true,
@@ -85,6 +101,13 @@ class _MainShellState extends State<MainShell> {
       description:
           'Use the calendar to review attendance by date. Tap a day to open details, then use the bottom arrows or swipe on the day switcher to move across dates.',
       targetIds: [TutorialTargets.calendarMain],
+      pageIndex: 1,
+    ),
+    _TutorialStep(
+      title: 'Calendar Multi-Select',
+      description:
+          'Tap this checklist button to switch the calendar into multi-select mode. Then tap several dates and use the floating pill above the nav bar to mark them present, absent, cancelled, or clear them in one go.',
+      targetIds: [TutorialTargets.calendarMultiSelect],
       pageIndex: 1,
     ),
     _TutorialStep(
@@ -109,6 +132,7 @@ class _MainShellState extends State<MainShell> {
     const SubjectPage(),
     const TimetablePage(),
     const SettingsPage(),
+    const AttendanceCalculatorPage(),
     RankedBunkingPage(onBack: _handleRankBack),
   ];
 
@@ -197,6 +221,11 @@ class _MainShellState extends State<MainShell> {
       icon: Icon(Icons.settings_outlined),
       selectedIcon: Icon(Icons.settings),
       label: "Settings",
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.calculate_outlined),
+      selectedIcon: Icon(Icons.calculate),
+      label: "Calc",
     ),
     NavigationDestination(
       icon: Icon(Icons.leaderboard_outlined),
@@ -314,6 +343,15 @@ class _MainShellState extends State<MainShell> {
                                         secondaryNavItem(
                                           destinations[_primaryNavCount],
                                           _primaryNavCount,
+                                          tutorialTargetId:
+                                              TutorialTargets.navCalculator,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        secondaryNavItem(
+                                          destinations[_primaryNavCount + 1],
+                                          _primaryNavCount + 1,
+                                          tutorialTargetId:
+                                              TutorialTargets.navRank,
                                         ),
                                         const Spacer(),
                                       ],
@@ -418,14 +456,18 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget secondaryNavItem(NavigationDestination destination, int index) {
+  Widget secondaryNavItem(
+    NavigationDestination destination,
+    int index, {
+    String? tutorialTargetId,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final selected = currentIndex == index;
 
     return Material(
-      key: index == _rankPageIndex
-          ? TutorialService.keyFor(TutorialTargets.navRank)
-          : null,
+      key: tutorialTargetId == null
+          ? null
+          : TutorialService.keyFor(tutorialTargetId),
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(32),

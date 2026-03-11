@@ -8,11 +8,14 @@ class TutorialTargets {
   static const homeBulkActions = 'tutorial.home.bulkActions';
   static const homeFirstSubjectRow = 'tutorial.home.firstSubjectRow';
   static const navBar = 'tutorial.nav.bar';
+  static const navCalculator = 'tutorial.nav.calculator';
   static const navRank = 'tutorial.nav.rank';
   static const subjectAdd = 'tutorial.subject.add';
   static const subjectFirstCard = 'tutorial.subject.firstCard';
   static const calendarMain = 'tutorial.calendar.main';
+  static const calendarMultiSelect = 'tutorial.calendar.multiSelect';
   static const calendarStats = 'tutorial.calendar.stats';
+  static const calculatorMain = 'tutorial.calculator.main';
   static const settingsTutorialRestart = 'tutorial.settings.restart';
 }
 

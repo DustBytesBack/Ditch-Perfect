@@ -1,0 +1,464 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/attendance_provider.dart';
+import '../providers/settings_provider.dart';
+import '../providers/subject_provider.dart';
+import '../services/tutorial_service.dart';
+import '../utils/attendance_utils.dart';
+
+class AttendanceCalculatorPage extends StatefulWidget {
+  const AttendanceCalculatorPage({super.key});
+
+  @override
+  State<AttendanceCalculatorPage> createState() =>
+      _AttendanceCalculatorPageState();
+}
+
+class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
+  final TextEditingController _futureClassesController =
+      TextEditingController();
+  String? _selectedSubjectId;
+
+  @override
+  void dispose() {
+    _futureClassesController.dispose();
+    super.dispose();
+  }
+
+  int get _futureClasses {
+    return int.tryParse(_futureClassesController.text.trim()) ?? 0;
+  }
+
+  _Projection _buildProjection({
+    required int attended,
+    required int total,
+    required int futureClasses,
+    required double minAttendance,
+  }) {
+    if (futureClasses <= 0) {
+      final currentPercent = total == 0 ? 100.0 : (attended / total) * 100;
+      return _Projection(
+        canCut: 0,
+        mustAttend: 0,
+        projectedPercent: currentPercent,
+        shortage: 0,
+      );
+    }
+
+    final targetRatio = minAttendance / 100;
+    final requiredAttendance =
+        (targetRatio * (total + futureClasses) - attended).ceil();
+    final mustAttend = requiredAttendance < 0 ? 0 : requiredAttendance;
+
+    if (mustAttend > futureClasses) {
+      final projectedPercent = total + futureClasses == 0
+          ? 100.0
+          : ((attended + futureClasses) / (total + futureClasses)) * 100;
+
+      return _Projection(
+        canCut: 0,
+        mustAttend: futureClasses,
+        projectedPercent: projectedPercent,
+        shortage: mustAttend - futureClasses,
+      );
+    }
+
+    return _Projection(
+      canCut: futureClasses - mustAttend,
+      mustAttend: mustAttend,
+      projectedPercent: total + futureClasses == 0
+          ? 100.0
+          : ((attended + mustAttend) / (total + futureClasses)) * 100,
+      shortage: 0,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final subjects = context.watch<SubjectProvider>().subjects;
+    final attendance = context.watch<AttendanceProvider>();
+    final minAttendance = context.watch<SettingsProvider>().minAttendance;
+
+    final selectedSubject =
+        subjects.where((s) => s.id == _selectedSubjectId).isNotEmpty
+        ? subjects.firstWhere((s) => s.id == _selectedSubjectId)
+        : (subjects.isEmpty ? null : subjects.first);
+
+    final stats = selectedSubject == null
+        ? const AttendanceStats(attended: 0, total: 0)
+        : calculateStats(selectedSubject.id, attendance.records.values);
+
+    final currentPercent = stats.total == 0
+        ? 100.0
+        : (stats.attended / stats.total) * 100;
+    final projection = _buildProjection(
+      attended: stats.attended,
+      total: stats.total,
+      futureClasses: _futureClasses,
+      minAttendance: minAttendance,
+    );
+
+    return Scaffold(
+      backgroundColor: scheme.primaryContainer,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 56,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(40),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: .08),
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                              offset: const Offset(0, -1),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Calculator',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    key: TutorialService.keyFor(TutorialTargets.calculatorMain),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: .12),
+                          blurRadius: 12,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: subjects.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Add a subject first to use the attendance calculator.',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          )
+                        : ListView(
+                            children: [
+                              const SizedBox(height: 20),
+                              Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: scheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Subject',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    DropdownButtonFormField<String>(
+                                      initialValue: selectedSubject?.id,
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: scheme.surface,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            18,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                      items: subjects.map((subject) {
+                                        return DropdownMenuItem<String>(
+                                          value: subject.id,
+                                          child: Text(subject.name),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        HapticFeedback.lightImpact();
+                                        setState(() {
+                                          _selectedSubjectId = value;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(height: 18),
+                                    Text(
+                                      'More classes left',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextField(
+                                      controller: _futureClassesController,
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      onChanged: (_) => setState(() {}),
+                                      decoration: InputDecoration(
+                                        hintText:
+                                            'Enter number of upcoming classes',
+                                        prefixIcon: const Icon(
+                                          Icons.calculate_outlined,
+                                        ),
+                                        filled: true,
+                                        fillColor: scheme.surface,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            18,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: scheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      selectedSubject?.name ?? 'Subject',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            color: scheme.onSecondaryContainer,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Current %',
+                                            value:
+                                                '${currentPercent.toStringAsFixed(1)}%',
+                                            color: scheme.onSecondaryContainer,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Criteria',
+                                            value:
+                                                '${minAttendance.toStringAsFixed(0)}%',
+                                            color: scheme.onSecondaryContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Present',
+                                            value: '${stats.attended}',
+                                            color: scheme.onSecondaryContainer,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Total',
+                                            value: '${stats.total}',
+                                            color: scheme.onSecondaryContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: projection.shortage > 0
+                                      ? scheme.errorContainer
+                                      : scheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Projection',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: projection.shortage > 0
+                                                ? scheme.onErrorContainer
+                                                : scheme.onPrimaryContainer,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      projection.shortage > 0
+                                          ? 'Even if you attend all $_futureClasses remaining classes, you still fall short by ${projection.shortage} classes.'
+                                          : 'You can cut ${projection.canCut} out of $_futureClasses upcoming classes and still meet the attendance criteria.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: projection.shortage > 0
+                                                ? scheme.onErrorContainer
+                                                : scheme.onPrimaryContainer,
+                                            height: 1.4,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Can cut',
+                                            value: '${projection.canCut}',
+                                            color: projection.shortage > 0
+                                                ? scheme.onErrorContainer
+                                                : scheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Must attend',
+                                            value: '${projection.mustAttend}',
+                                            color: projection.shortage > 0
+                                                ? scheme.onErrorContainer
+                                                : scheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _statTile(
+                                            context,
+                                            label: 'Projected %',
+                                            value:
+                                                '${projection.projectedPercent.toStringAsFixed(1)}%',
+                                            color: projection.shortage > 0
+                                                ? scheme.onErrorContainer
+                                                : scheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 90),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).padding.bottom + 12,
+              color: scheme.surface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statTile(
+    BuildContext context, {
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: color.withValues(alpha: .8)),
+        ),
+      ],
+    );
+  }
+}
+
+class _Projection {
+  final int canCut;
+  final int mustAttend;
+  final double projectedPercent;
+  final int shortage;
+
+  const _Projection({
+    required this.canCut,
+    required this.mustAttend,
+    required this.projectedPercent,
+    required this.shortage,
+  });
+}

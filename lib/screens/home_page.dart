@@ -152,7 +152,7 @@ class HomePage extends StatelessWidget {
                               ListView(
                                 children: [
                                   Text(
-                                    'Tap a weekday to preview it in the same style as the timetable page.',
+                                    'Tap a day to add its timetable.',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
