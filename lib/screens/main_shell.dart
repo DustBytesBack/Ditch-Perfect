@@ -9,7 +9,6 @@ import 'subject_page.dart';
 import 'timetable_page.dart';
 import 'settings_page.dart';
 import 'attendance_calculator_page.dart';
-import 'ranked_bunking_page.dart';
 import '../services/database_service.dart';
 import '../services/update_service.dart';
 import '../utils/update_checker.dart';
@@ -133,7 +132,6 @@ class _MainShellState extends State<MainShell> {
     const TimetablePage(),
     const SettingsPage(),
     const AttendanceCalculatorPage(),
-    RankedBunkingPage(onBack: _handleRankBack),
   ];
 
   @override
@@ -476,6 +474,10 @@ class _MainShellState extends State<MainShell> {
         hoverColor: Colors.transparent,
         onTap: () {
           HapticFeedback.lightImpact();
+          if (index == _rankPageIndex) {
+            _showComingSoonDialog();
+            return;
+          }
           _selectTab(index);
         },
         child: AnimatedContainer(
@@ -537,11 +539,24 @@ class _MainShellState extends State<MainShell> {
     });
   }
 
-  void _handleRankBack() {
-    setState(() {
-      currentIndex = previousIndex == _rankPageIndex ? 0 : previousIndex;
-      isNavExpanded = false;
-    });
+  void _showComingSoonDialog() {
+    final scheme = Theme.of(context).colorScheme;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Coming Soon'),
+          content: const Text('Ranked Bunking is coming soon.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK', style: TextStyle(color: scheme.primary)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _maybeStartTutorial() async {
