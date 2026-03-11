@@ -6,10 +6,6 @@ class UpdateService {
   static const String repoOwner = "DustBytesBack";
   static const String repoName = "Ditch-Perfect";
 
-  /// Returns a map with "version" and "url" if a newer release exists,
-  /// or `null` if already up to date.
-  /// Throws on network/parse errors so callers can distinguish
-  /// "no update" from "check failed".
   static Future<Map<String, dynamic>?> checkForUpdate() async {
     final url = Uri.parse(
       "https://api.github.com/repos/$repoOwner/$repoName/releases/latest",
