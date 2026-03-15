@@ -11,6 +11,10 @@ import '../providers/subject_provider.dart';
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/update_checker.dart';
+import '../services/update_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -592,6 +596,75 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+
+                          child: ListTile(
+                            leading: const Icon(Icons.article_outlined),
+                            title: const Text("Release Notes"),
+                            onTap: () async {
+                              HapticFeedback.lightImpact();
+                              final packageInfo =
+                                  await PackageInfo.fromPlatform();
+                              final version = packageInfo.version;
+                              if (!context.mounted) return;
+
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => AlertDialog(
+                                  content: Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 20),
+                                      Text(
+                                        "Fetching notes…",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+
+                              String? notes;
+                              try {
+                                notes = await UpdateService.fetchReleaseNotes(
+                                  version,
+                                );
+                              } catch (_) {}
+
+                              if (!context.mounted) return;
+                              Navigator.pop(context); // dismiss loading
+
+                              showDialog(
+                                context: context,
+                                builder: (_) => _buildReleaseNotesDialog(
+                                  context,
+                                  version,
+                                  notes,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
                             color: scheme.errorContainer,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(10),
@@ -691,6 +764,81 @@ class _SettingsPageState extends State<SettingsPage> {
             ? const Icon(Icons.check, size: 18, color: Colors.white)
             : null,
       ),
+    );
+  }
+  Widget _buildReleaseNotesDialog(
+    BuildContext context,
+    String version,
+    String? notes,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.article_outlined, color: scheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "Release Notes — v$version",
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
+        child: notes != null
+            ? Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  child: MarkdownBody(
+                    data: notes,
+                    selectable: true,
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(
+                          Uri.parse(href),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                    styleSheet:
+                        MarkdownStyleSheet.fromTheme(Theme.of(context))
+                            .copyWith(
+                              p: Theme.of(context).textTheme.bodyMedium,
+                              h1: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              h2: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              h3: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              listBullet:
+                                  Theme.of(context).textTheme.bodyMedium,
+                            ),
+                  ),
+                ),
+              )
+            : Text(
+                "No release notes available for version $version.",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Got it"),
+        ),
+      ],
     );
   }
 }

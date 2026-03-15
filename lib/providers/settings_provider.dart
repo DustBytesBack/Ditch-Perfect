@@ -7,7 +7,7 @@ import '../services/notification_service.dart';
 class SettingsProvider extends ChangeNotifier {
   double _minAttendance = 75;
 
-  bool _notificationsEnabled = false;
+  bool _notificationsEnabled = true;
   int _notificationHour = 7;
   int _notificationMinute = 0;
 
@@ -41,9 +41,17 @@ class SettingsProvider extends ChangeNotifier {
 
     // Load notification settings.
     _notificationsEnabled =
-        box.get("notificationsEnabled", defaultValue: false) as bool;
+        box.get("notificationsEnabled", defaultValue: true) as bool;
     _notificationHour = box.get("notificationHour", defaultValue: 7) as int;
     _notificationMinute = box.get("notificationMinute", defaultValue: 0) as int;
+
+    // One-time migration: force notifications on for existing users.
+    final migrated = box.get("notifMigratedToOn", defaultValue: false) as bool;
+    if (!migrated) {
+      _notificationsEnabled = true;
+      box.put("notificationsEnabled", true);
+      box.put("notifMigratedToOn", true);
+    }
 
     // Watch for external writes to the settings box (e.g. from settings page
     // which writes directly to Hive without going through this provider).
@@ -114,6 +122,13 @@ class SettingsProvider extends ChangeNotifier {
   /// Re-schedule notification (call on app launch).
   Future<void> rescheduleNotificationIfEnabled() async {
     if (_notificationsEnabled) {
+      final granted = await NotificationService.requestPermission();
+      if (!granted) {
+        _notificationsEnabled = false;
+        DatabaseService.settingsBox.put("notificationsEnabled", false);
+        notifyListeners();
+        return;
+      }
       await NotificationService.scheduleDailyNotification(
         hour: _notificationHour,
         minute: _notificationMinute,
