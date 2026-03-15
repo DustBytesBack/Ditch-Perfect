@@ -69,14 +69,14 @@ class _MainShellState extends State<MainShell> {
     _TutorialStep(
       title: 'Navigation Bar',
       description:
-          'Tap these floating pills to switch sections. Long-press the nav bar to expand a second row with more shortcuts.',
+          'Tap these floating pills to switch sections. Tap the pill on top or swipe up to reveal extra shortcuts. Long-press the bar to enter reorder mode and rearrange all buttons.',
       targetIds: [TutorialTargets.navBar],
       pageIndex: 2,
     ),
     _TutorialStep(
       title: 'Calculator Shortcut',
       description:
-          'After a long press, the Calc button appears here. Open it to estimate how many future classes you can cut while staying at or above your attendance criteria.',
+          'Expand the nav bar to find the Calc button. Open it to estimate how many future classes you can skip while staying at or above your attendance criteria.',
       targetIds: [TutorialTargets.navCalculator],
       pageIndex: 2,
       expandNav: true,
@@ -91,7 +91,7 @@ class _MainShellState extends State<MainShell> {
     _TutorialStep(
       title: 'Rank Shortcut',
       description:
-          'The Rank button sits beside the calculator in the expanded nav row. Tap it to open the ranking screen, and any nav tap collapses the bar again.',
+          'The Rank button sits beside the calculator in the expanded nav row. You can also long-press the bar and drag buttons around to customise which ones appear on the main row.',
       targetIds: [TutorialTargets.navRank],
       pageIndex: 2,
       expandNav: true,
@@ -284,9 +284,12 @@ class _MainShellState extends State<MainShell> {
       } else if (label == "Calc") {
         displayIndex = 5;
       } else if (label == "Rank") {
-        displayIndex = _rankPageIndex;
+        // Rank has no page widget yet; show the previous page instead
+        displayIndex = previousIndex < pages.length ? previousIndex : 0;
       }
     }
+    // Safety clamp
+    if (displayIndex >= pages.length) displayIndex = 0;
 
     return Scaffold(
       body: Stack(
