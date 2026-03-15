@@ -329,88 +329,75 @@ class _MainShellState extends State<MainShell> {
                             isNavExpanded = true;
                           });
                         },
-                  child: AnimatedContainer(
-                    key: TutorialService.keyFor(TutorialTargets.navBar),
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOutCubic,
-                    height: isReordering ? 200 : (isNavExpanded ? 164 : 90),
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: isReordering
-                          ? scheme.surfaceContainerHighest
-                          : scheme.surfaceContainerHigh,
-                      border: isReordering
-                          ? Border.all(color: scheme.primary, width: 2)
-                          : null,
-                      borderRadius: BorderRadius.circular(40),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.shadow.withValues(alpha: .35),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AnimatedContainer(
+                        key: TutorialService.keyFor(TutorialTargets.navBar),
+                        duration: const Duration(milliseconds: 280),
+                        curve: Curves.easeOutCubic,
+                        height: isReordering ? 200 : (isNavExpanded ? 164 : 90),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: isReordering
+                              ? scheme.surfaceContainerHighest
+                              : scheme.surfaceContainerHigh,
+                          border: isReordering
+                              ? Border.all(color: scheme.primary, width: 2)
+                              : null,
+                          borderRadius: BorderRadius.circular(40),
+                          boxShadow: [
+                            BoxShadow(
+                              color: scheme.shadow.withValues(alpha: .35),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
 
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isReordering)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 16),
-                                  child: Text(
-                                    "Reorder Navbar",
-                                    style: TextStyle(
-                                      color: scheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isReordering)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8, bottom: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 16),
+                                      child: Text(
+                                        "Reorder Navbar",
+                                        style: TextStyle(
+                                          color: scheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        HapticFeedback.lightImpact();
+                                        setState(() {
+                                          isReordering = false;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: scheme.primaryContainer,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.check,
+                                          size: 16,
+                                          color: scheme.onPrimaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    setState(() {
-                                      isReordering = false;
-                                    });
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: scheme.primaryContainer,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.check,
-                                      size: 16,
-                                      color: scheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              setState(() {
-                                isNavExpanded = !isNavExpanded;
-                              });
-                            },
-                            child: Icon(
-                              isNavExpanded
-                                  ? Icons.keyboard_arrow_down
-                                  : Icons.keyboard_arrow_up,
-                              size: 20,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
+                              ),
                         if (isReordering)
                           Expanded(
                             child: Padding(
@@ -599,7 +586,48 @@ class _MainShellState extends State<MainShell> {
                       ],
                     ),
                   ),
-                );
+                  // Chevron pill floating on top of navbar
+                  if (!isReordering)
+                    Positioned(
+                      top: -10,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() {
+                              isNavExpanded = !isNavExpanded;
+                            });
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: scheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: scheme.shadow.withValues(alpha: .15),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              isNavExpanded
+                                  ? Icons.keyboard_arrow_down
+                                  : Icons.keyboard_arrow_up,
+                              size: 18,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
               },
             ),
           ),
