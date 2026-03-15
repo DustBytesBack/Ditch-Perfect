@@ -663,19 +663,50 @@ class SubjectPage extends StatelessWidget {
                                       bottomRight: Radius.circular(5),
                                     ),
                                   ),
-                                  child: Text(
-                                    stats.total == 0
-                                        ? "-%"
-                                        : "${percent.toStringAsFixed(2)}%",
-                                    style: Theme.of(context).textTheme.bodyLarge
-                                        ?.copyWith(
-                                          fontSize: 18,
-                                          color: lowAttendance
-                                              ? scheme.error
-                                              : scheme.onSecondaryContainer,
-                                          fontWeight: FontWeight.w700,
+                                  child: stats.total == 0
+                                      ? Text(
+                                          "-%",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                fontSize: 18,
+                                                color: lowAttendance
+                                                    ? scheme.error
+                                                    : scheme
+                                                          .onSecondaryContainer,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        )
+                                      : RichText(
+                                          text: TextSpan(
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                  fontSize: 24,
+                                                  color: lowAttendance
+                                                      ? scheme.error
+                                                      : scheme
+                                                            .onSecondaryContainer,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                            children: [
+                                              TextSpan(
+                                                text: percent
+                                                    .toStringAsFixed(2)
+                                                    .split('.')[0],
+                                              ),
+                                              TextSpan(
+                                                text:
+                                                    ".${percent.toStringAsFixed(2).split('.')[1]}%",
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                  ),
                                 ),
 
                                 const SizedBox(width: 8),
