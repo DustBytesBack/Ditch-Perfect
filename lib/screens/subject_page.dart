@@ -238,7 +238,7 @@ class SubjectPage extends StatelessWidget {
     AttendanceStats stats,
   ) {
     final percentController = TextEditingController(
-      text: stats.total == 0 ? '' : stats.percentage.toStringAsFixed(1),
+      text: stats.total == 0 ? '' : stats.percentage.toStringAsFixed(2),
     );
     final totalController = TextEditingController(
       text: stats.total == 0 ? '' : stats.total.toString(),
@@ -666,7 +666,7 @@ class SubjectPage extends StatelessWidget {
                                   child: Text(
                                     stats.total == 0
                                         ? "-%"
-                                        : "${percent.toStringAsFixed(0)}%",
+                                        : "${percent.toStringAsFixed(2)}%",
                                     style: Theme.of(context).textTheme.bodyLarge
                                         ?.copyWith(
                                           fontSize: 18,
