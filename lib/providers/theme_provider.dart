@@ -16,7 +16,7 @@ class ThemeProvider extends ChangeNotifier {
 
     final colorValue = DatabaseService.settingsBox.get(
       "seedColor",
-      defaultValue: Colors.indigo.value,
+      defaultValue: Colors.indigo.toARGB32(),
     );
 
     final pookie = DatabaseService.settingsBox.get(
@@ -53,7 +53,7 @@ class ThemeProvider extends ChangeNotifier {
 
     seedColor = color;
 
-    DatabaseService.settingsBox.put("seedColor", color.value);
+    DatabaseService.settingsBox.put("seedColor", color.toARGB32());
     DatabaseService.settingsBox.put("pookieMode", false);
 
     notifyListeners();
@@ -79,7 +79,7 @@ class ThemeProvider extends ChangeNotifier {
 
       final storedColor = DatabaseService.settingsBox.get(
         "seedColor",
-        defaultValue: Colors.indigo.value,
+        defaultValue: Colors.indigo.toARGB32(),
       );
 
       seedColor = Color(storedColor);

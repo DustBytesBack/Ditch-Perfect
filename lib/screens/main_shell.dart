@@ -28,6 +28,7 @@ class _MainShellState extends State<MainShell> {
   int currentIndex = 0;
   int previousIndex = 0;
   bool isNavExpanded = false;
+  bool isReordering = false;
   bool _tutorialActive = false;
   int _tutorialStepIndex = 0;
   Rect? _currentTutorialRect;
@@ -134,13 +135,74 @@ class _MainShellState extends State<MainShell> {
     const AttendanceCalculatorPage(),
   ];
 
+  List<NavigationDestination> _allDestinations = [
+    const NavigationDestination(
+      icon: Icon(Icons.home_outlined),
+      selectedIcon: Icon(Icons.home),
+      label: "Home",
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.calendar_month_outlined),
+      selectedIcon: Icon(Icons.calendar_month),
+      label: "Calendar",
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.menu_book_outlined),
+      selectedIcon: Icon(Icons.menu_book),
+      label: "Subjects",
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.schedule_outlined),
+      selectedIcon: Icon(Icons.schedule),
+      label: "Timetable",
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.settings_outlined),
+      selectedIcon: Icon(Icons.settings),
+      label: "Settings",
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.calculate_outlined),
+      selectedIcon: Icon(Icons.calculate),
+      label: "Calc",
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.leaderboard_outlined),
+      selectedIcon: Icon(Icons.leaderboard),
+      label: "Rank",
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
+    _loadNavOrder();
     TutorialService.restartListenable.addListener(_handleTutorialRestart);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onLaunchChecks();
     });
+  }
+
+  void _loadNavOrder() {
+    final savedOrder = DatabaseService.settingsBox.get("navOrder") as List?;
+    if (savedOrder != null && savedOrder.length == _allDestinations.length) {
+      final newDestinations = <NavigationDestination>[];
+      for (final label in savedOrder) {
+        final dest = _allDestinations.firstWhere(
+          (d) => d.label == label,
+          orElse: () => _allDestinations[0],
+        );
+        newDestinations.add(dest);
+      }
+      setState(() {
+        _allDestinations = newDestinations;
+      });
+    }
+  }
+
+  void _saveNavOrder() {
+    final order = _allDestinations.map((d) => d.label).toList();
+    DatabaseService.settingsBox.put("navOrder", order);
   }
 
   @override
@@ -155,11 +217,15 @@ class _MainShellState extends State<MainShell> {
     final wasJustUpdated = await _wasAppJustUpdated();
 
     if (wasJustUpdated) {
-      if (mounted) await checkForPostUpdateNotes(context);
+      if (mounted) {
+        await checkForPostUpdateNotes(context);
+      }
     } else {
       // Seed lastSeenVersion so future updates can be detected.
       await _saveCurrentVersion();
-      if (mounted) await checkForUpdate(context);
+      if (mounted) {
+        await checkForUpdate(context);
+      }
     }
 
     if (mounted) {
@@ -194,44 +260,6 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
-  final destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: "Home",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.calendar_month_outlined),
-      selectedIcon: Icon(Icons.calendar_month),
-      label: "Calendar",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.menu_book_outlined),
-      selectedIcon: Icon(Icons.menu_book),
-      label: "Subjects",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.schedule_outlined),
-      selectedIcon: Icon(Icons.schedule),
-      label: "Timetable",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.settings_outlined),
-      selectedIcon: Icon(Icons.settings),
-      label: "Settings",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.calculate_outlined),
-      selectedIcon: Icon(Icons.calculate),
-      label: "Calc",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.leaderboard_outlined),
-      selectedIcon: Icon(Icons.leaderboard),
-      label: "Rank",
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -239,10 +267,31 @@ class _MainShellState extends State<MainShell> {
         ? _tutorialSteps[_tutorialStepIndex]
         : null;
 
+    // Map current index to the correct underlying page index
+    int displayIndex = currentIndex;
+    if (currentIndex < _allDestinations.length) {
+      final label = _allDestinations[currentIndex].label;
+      if (label == "Home") {
+        displayIndex = 0;
+      } else if (label == "Calendar") {
+        displayIndex = 1;
+      } else if (label == "Subjects") {
+        displayIndex = 2;
+      } else if (label == "Timetable") {
+        displayIndex = 3;
+      } else if (label == "Settings") {
+        displayIndex = 4;
+      } else if (label == "Calc") {
+        displayIndex = 5;
+      } else if (label == "Rank") {
+        displayIndex = _rankPageIndex;
+      }
+    }
+
     return Scaffold(
       body: Stack(
         children: [
-          pages[currentIndex],
+          pages[displayIndex],
 
           Positioned(
             bottom: 25,
@@ -259,30 +308,40 @@ class _MainShellState extends State<MainShell> {
                 final isSecondarySelected = currentIndex >= _primaryNavCount;
 
                 return GestureDetector(
-                  onVerticalDragEnd: (details) {
-                    final velocity = details.primaryVelocity ?? 0;
-                    if (velocity < -100 && !isNavExpanded) {
-                      HapticFeedback.mediumImpact();
-                      setState(() => isNavExpanded = true);
-                    } else if (velocity > 100 && isNavExpanded) {
-                      HapticFeedback.mediumImpact();
-                      setState(() => isNavExpanded = false);
-                    }
-                  },
-                  onLongPress: () {
-                    HapticFeedback.mediumImpact();
-                    setState(() {
-                      isNavExpanded = !isNavExpanded;
-                    });
-                  },
+                  onVerticalDragEnd: isReordering
+                      ? null
+                      : (details) {
+                          final velocity = details.primaryVelocity ?? 0;
+                          if (velocity < -100 && !isNavExpanded) {
+                            HapticFeedback.mediumImpact();
+                            setState(() => isNavExpanded = true);
+                          } else if (velocity > 100 && isNavExpanded) {
+                            HapticFeedback.mediumImpact();
+                            setState(() => isNavExpanded = false);
+                          }
+                        },
+                  onLongPress: isReordering
+                      ? null
+                      : () {
+                          HapticFeedback.mediumImpact();
+                          setState(() {
+                            isReordering = true;
+                            isNavExpanded = true;
+                          });
+                        },
                   child: AnimatedContainer(
                     key: TutorialService.keyFor(TutorialTargets.navBar),
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeOutCubic,
-                    height: isNavExpanded ? 164 : 90,
+                    height: isReordering ? 200 : (isNavExpanded ? 164 : 90),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHigh,
+                      color: isReordering
+                          ? scheme.surfaceContainerHighest
+                          : scheme.surfaceContainerHigh,
+                      border: isReordering
+                          ? Border.all(color: scheme.primary, width: 2)
+                          : null,
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
@@ -296,93 +355,247 @@ class _MainShellState extends State<MainShell> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            setState(() {
-                              isNavExpanded = !isNavExpanded;
-                            });
-                          },
-                          child: Icon(
-                            isNavExpanded
-                                ? Icons.keyboard_arrow_down
-                                : Icons.keyboard_arrow_up,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                        SizedBox(
-                          height: 65,
-                          child: Stack(
-                            children: [
-                              /// SLIDING INDICATOR
-                              AnimatedAlign(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic,
-                                alignment: Alignment(
-                                  -1 +
-                                      (primaryIndex *
-                                          2 /
-                                          (_primaryNavCount - 1)),
-                                  0,
-                                ),
-                                child: Container(
-                                  width: itemWidth,
-                                  height: 65,
-                                  decoration: BoxDecoration(
-                                    color: isSecondarySelected
-                                        ? Colors.transparent
-                                        : scheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(40),
-                                  ),
-                                ),
-                              ),
-
-                              /// NAV ITEMS
-                              Row(
-                                children: List.generate(
-                                  _primaryNavCount,
-                                  (index) => navItem(
-                                    destinations[index],
-                                    index,
-                                    width: itemWidth,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 280),
-                          curve: Curves.easeOutCubic,
-                          child: isNavExpanded
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 10),
-                                  child: SizedBox(
-                                    height: 49,
-                                    child: Row(
-                                      children: [
-                                        const Spacer(),
-                                        secondaryNavItem(
-                                          destinations[_primaryNavCount],
-                                          _primaryNavCount,
-                                          tutorialTargetId:
-                                              TutorialTargets.navCalculator,
-                                        ),
-                                        const SizedBox(width: 14),
-                                        secondaryNavItem(
-                                          destinations[_primaryNavCount + 1],
-                                          _primaryNavCount + 1,
-                                          tutorialTargetId:
-                                              TutorialTargets.navRank,
-                                        ),
-                                        const Spacer(),
-                                      ],
+                        if (isReordering)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 16),
+                                  child: Text(
+                                    "Reorder Navbar",
+                                    style: TextStyle(
+                                      color: scheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
                                     ),
                                   ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    setState(() {
+                                      isReordering = false;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: scheme.primaryContainer,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.check,
+                                      size: 16,
+                                      color: scheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() {
+                                isNavExpanded = !isNavExpanded;
+                              });
+                            },
+                            child: Icon(
+                              isNavExpanded
+                                  ? Icons.keyboard_arrow_down
+                                  : Icons.keyboard_arrow_up,
+                              size: 20,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        if (isReordering)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 0,
+                                runSpacing: 0,
+                                children: List.generate(
+                                  _allDestinations.length,
+                                  (index) {
+                                    final dest = _allDestinations[index];
+                                    return LongPressDraggable<int>(
+                                      data: index,
+                                      feedback: Material(
+                                        color: Colors.transparent,
+                                        child: Opacity(
+                                          opacity: 0.8,
+                                          child: SizedBox(
+                                            width: itemWidth,
+                                            height: 65,
+                                            child: Center(
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    (dest.icon as Icon).icon,
+                                                    size: 24,
+                                                    color: scheme.primary,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    dest.label,
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: scheme.primary,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      childWhenDragging: SizedBox(
+                                        width: itemWidth,
+                                        height: 65,
+                                        child: Center(
+                                          child: Icon(
+                                            (dest.icon as Icon).icon,
+                                            size: 20,
+                                            color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
+                                          ),
+                                        ),
+                                      ),
+                                      onDragStarted: () {
+                                        HapticFeedback.lightImpact();
+                                      },
+                                      child: DragTarget<int>(
+                                        onWillAcceptWithDetails: (_) => true,
+                                        onAcceptWithDetails: (details) {
+                                          final oldIndex = details.data;
+                                          final newIndex = index;
+                                          if (oldIndex == newIndex) return;
+                                          HapticFeedback.selectionClick();
+                                          setState(() {
+                                            final item = _allDestinations.removeAt(oldIndex);
+                                            _allDestinations.insert(newIndex, item);
+
+                                            if (currentIndex == oldIndex) {
+                                              currentIndex = newIndex;
+                                            } else if (oldIndex < newIndex &&
+                                                currentIndex > oldIndex &&
+                                                currentIndex <= newIndex) {
+                                              currentIndex--;
+                                            } else if (oldIndex > newIndex &&
+                                                currentIndex < oldIndex &&
+                                                currentIndex >= newIndex) {
+                                              currentIndex++;
+                                            }
+                                          });
+                                          _saveNavOrder();
+                                        },
+                                        builder: (context, candidateData, rejectedData) {
+                                          final isHovered = candidateData.isNotEmpty;
+                                          return AnimatedContainer(
+                                            duration: const Duration(milliseconds: 150),
+                                            width: itemWidth,
+                                            height: 65,
+                                            decoration: BoxDecoration(
+                                              color: isHovered
+                                                  ? scheme.primaryContainer.withValues(alpha: 0.5)
+                                                  : Colors.transparent,
+                                              borderRadius: BorderRadius.circular(16),
+                                            ),
+                                            child: navItem(
+                                              dest,
+                                              index,
+                                              isReordering: true,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          )
+                        else ...[
+                          SizedBox(
+                            height: 65,
+                            child: Stack(
+                              children: [
+                                /// SLIDING INDICATOR
+                                AnimatedAlign(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                  alignment: Alignment(
+                                    -1 +
+                                        (primaryIndex *
+                                            2 /
+                                            (_primaryNavCount - 1)),
+                                    0,
+                                  ),
+                                  child: Container(
+                                    width: itemWidth,
+                                    height: 65,
+                                    decoration: BoxDecoration(
+                                      color: isSecondarySelected
+                                          ? Colors.transparent
+                                          : scheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(40),
+                                    ),
+                                  ),
+                                ),
+  
+                                /// NAV ITEMS
+                                Row(
+                                  children: List.generate(
+                                    _primaryNavCount,
+                                    (index) => Expanded(
+                                      child: navItem(
+                                        _allDestinations[index],
+                                        index,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeOutCubic,
+                            child: isNavExpanded
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: SizedBox(
+                                      height: 49,
+                                      child: Row(
+                                        children: [
+                                          const Spacer(),
+                                          secondaryNavItem(
+                                            _allDestinations[_primaryNavCount],
+                                            _primaryNavCount,
+                                            tutorialTargetId:
+                                                TutorialTargets.navCalculator,
+                                          ),
+                                          const SizedBox(width: 14),
+                                          secondaryNavItem(
+                                            _allDestinations[_primaryNavCount + 1],
+                                            _primaryNavCount + 1,
+                                            tutorialTargetId:
+                                                TutorialTargets.navRank,
+                                          ),
+                                          const Spacer(),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -417,10 +630,57 @@ class _MainShellState extends State<MainShell> {
   Widget navItem(
     NavigationDestination destination,
     int index, {
-    required double width,
+    double? width,
+    bool isReordering = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final selected = currentIndex == index;
+    final selected = currentIndex == index && !isReordering;
+
+    final content = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, anim) =>
+              ScaleTransition(scale: anim, child: child),
+          child: selected
+              ? Icon(
+                  (destination.selectedIcon as Icon).icon,
+                  key: ValueKey("${destination.label}-true"),
+                  size: 24,
+                  color: scheme.onPrimaryContainer,
+                )
+              : Icon(
+                  (destination.icon as Icon).icon,
+                  key: ValueKey("${destination.label}-false"),
+                  size: 22,
+                  color: isReordering
+                      ? scheme.primary
+                      : scheme.onSurfaceVariant,
+                ),
+        ),
+        const SizedBox(height: 4),
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+            color: selected
+                ? scheme.onPrimaryContainer
+                : scheme.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+          child: Text(destination.label),
+        ),
+      ],
+    );
+
+    // In reorder mode, skip Material/InkWell so the grid can receive
+    // the long-press gesture needed to start dragging.
+    if (isReordering) {
+      return SizedBox(
+        width: width,
+        child: Center(child: content),
+      );
+    }
 
     return SizedBox(
       width: width,
@@ -433,46 +693,15 @@ class _MainShellState extends State<MainShell> {
           hoverColor: Colors.transparent,
           onTap: () {
             HapticFeedback.lightImpact();
+            if (destination.label == "Rank") {
+              _showComingSoonDialog();
+              return;
+            }
             _selectTab(index);
           },
           child: SizedBox(
             height: double.infinity,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (child, anim) =>
-                      ScaleTransition(scale: anim, child: child),
-                  child: selected
-                      ? Icon(
-                          (destination.selectedIcon as Icon).icon,
-                          key: const ValueKey(true),
-                          size: 24,
-                          color: scheme.onPrimaryContainer,
-                        )
-                      : Icon(
-                          (destination.icon as Icon).icon,
-                          key: const ValueKey(false),
-                          size: 22,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                ),
-
-                const SizedBox(height: 4),
-
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                    color: selected
-                        ? scheme.onPrimaryContainer
-                        : scheme.onSurfaceVariant,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                  child: Text(destination.label),
-                ),
-              ],
-            ),
+            child: content,
           ),
         ),
       ),
@@ -499,7 +728,7 @@ class _MainShellState extends State<MainShell> {
         hoverColor: Colors.transparent,
         onTap: () {
           HapticFeedback.lightImpact();
-          if (index == _rankPageIndex) {
+          if (destination.label == "Rank") {
             _showComingSoonDialog();
             return;
           }

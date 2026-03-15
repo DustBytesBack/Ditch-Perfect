@@ -213,7 +213,6 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
 
                               Slider(
-                                year2023: false,
                                 min: 50,
                                 max: 100,
                                 divisions: 50,
@@ -650,7 +649,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget colorOption(BuildContext context, Color color) {
     final themeProvider = context.watch<ThemeProvider>();
-    final selected = themeProvider.seedColor.value == color.value;
+    final selected = themeProvider.seedColor.toARGB32() == color.toARGB32();
 
     return GestureDetector(
       onTap: () {
