@@ -604,7 +604,7 @@ class _MainShellState extends State<MainShell> {
                             width: 40,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: scheme.surfaceContainerHigh,
+                              color: scheme.onInverseSurface,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
@@ -619,7 +619,7 @@ class _MainShellState extends State<MainShell> {
                                   ? Icons.keyboard_arrow_down
                                   : Icons.keyboard_arrow_up,
                               size: 18,
-                              color: scheme.onSurfaceVariant,
+                              color: scheme.primary,
                             ),
                           ),
                         ),

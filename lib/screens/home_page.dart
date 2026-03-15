@@ -412,7 +412,7 @@ class HomePage extends StatelessWidget {
                                 horizontal: 24,
                               ),
                               child: Text(
-                                "Its holiday bruv go waste yo life",
+                                "Its holiday bruv, go waste yo life",
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
@@ -422,7 +422,26 @@ class HomePage extends StatelessWidget {
                               ),
                             ),
                           )
-                        : Column(
+                        : slots.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: Text(
+                                    "Add a subject",
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ),
+                              )
+                            : Column(
                             children: [
                               /// BULK ACTION BUTTONS
                               Align(

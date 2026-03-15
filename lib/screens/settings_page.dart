@@ -485,63 +485,72 @@ class _SettingsPageState extends State<SettingsPage> {
                         const SizedBox(height: 8),
 
                         /// COLOR SCHEME
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 18,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                              bottomLeft: Radius.circular(28),
-                              bottomRight: Radius.circular(28),
+                        IgnorePointer(
+                          ignoring: themeProvider.pookieMode,
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: themeProvider.pookieMode ? 0.4 : 1.0,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 18,
+                              ),
+                              decoration: BoxDecoration(
+                                color: scheme.secondaryContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  topRight: Radius.circular(10),
+                                  bottomLeft: Radius.circular(28),
+                                  bottomRight: Radius.circular(28),
+                                ),
+                              ),
+
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.palette,
+                                        color: scheme.onSecondaryContainer,
+                                      ),
+
+                                      const SizedBox(width: 18),
+
+                                      Text(
+                                        themeProvider.pookieMode
+                                            ? "Color Scheme (Pookie Mode)"
+                                            : "Color Scheme",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 16,
+                                    runSpacing: 16,
+                                    children: [
+                                      colorOption(context, Colors.indigo),
+                                      colorOption(context, Colors.blue),
+                                      colorOption(context, Colors.cyan),
+                                      colorOption(context, Colors.teal),
+                                      colorOption(context, Colors.green),
+                                      colorOption(context, Colors.lime),
+                                      colorOption(context, Colors.amber),
+                                      colorOption(context, Colors.orange),
+                                      colorOption(context, Colors.deepOrange),
+                                      colorOption(context, Colors.red),
+                                      colorOption(context, Colors.pink),
+                                      colorOption(context, Colors.deepPurple),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.palette,
-                                    color: scheme.onSecondaryContainer,
-                                  ),
-
-                                  const SizedBox(width: 18),
-
-                                  const Text(
-                                    "Color Scheme",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 16,
-                                runSpacing: 16,
-                                children: [
-                                  colorOption(context, Colors.indigo),
-                                  colorOption(context, Colors.blue),
-                                  colorOption(context, Colors.cyan),
-                                  colorOption(context, Colors.teal),
-                                  colorOption(context, Colors.green),
-                                  colorOption(context, Colors.lime),
-                                  colorOption(context, Colors.amber),
-                                  colorOption(context, Colors.orange),
-                                  colorOption(context, Colors.deepOrange),
-                                  colorOption(context, Colors.red),
-                                  colorOption(context, Colors.pink),
-                                  colorOption(context, Colors.deepPurple),
-                                ],
-                              ),
-                            ],
                           ),
                         ),
 
