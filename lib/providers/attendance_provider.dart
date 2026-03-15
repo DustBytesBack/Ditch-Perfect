@@ -143,16 +143,23 @@ class AttendanceProvider extends ChangeNotifier {
       return;
     }
 
+    int uniqueSlotIndex = -1;
+    for (final r in _records.values) {
+      if (r.date.year == 2000 && r.slotIndex <= uniqueSlotIndex) {
+        uniqueSlotIndex = r.slotIndex - 1;
+      }
+    }
+
     final absent = total - attended;
     final baseDate = DateTime(2000, 1, 1);
 
     for (int i = 0; i < attended; i++) {
       final recordDate = baseDate.add(Duration(days: i));
-      final key = buildKey(recordDate, 0);
+      final key = buildKey(recordDate, uniqueSlotIndex);
       final record = Attendance(
         date: recordDate,
         subjectId: subjectId,
-        slotIndex: 0,
+        slotIndex: uniqueSlotIndex,
         status: AttendanceStatus.present,
       );
 
@@ -162,11 +169,11 @@ class AttendanceProvider extends ChangeNotifier {
 
     for (int i = 0; i < absent; i++) {
       final recordDate = baseDate.add(Duration(days: attended + i));
-      final key = buildKey(recordDate, 0);
+      final key = buildKey(recordDate, uniqueSlotIndex);
       final record = Attendance(
         date: recordDate,
         subjectId: subjectId,
-        slotIndex: 0,
+        slotIndex: uniqueSlotIndex,
         status: AttendanceStatus.absent,
       );
 
