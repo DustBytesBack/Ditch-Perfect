@@ -259,6 +259,16 @@ class _MainShellState extends State<MainShell> {
                 final isSecondarySelected = currentIndex >= _primaryNavCount;
 
                 return GestureDetector(
+                  onVerticalDragEnd: (details) {
+                    final velocity = details.primaryVelocity ?? 0;
+                    if (velocity < -100 && !isNavExpanded) {
+                      HapticFeedback.mediumImpact();
+                      setState(() => isNavExpanded = true);
+                    } else if (velocity > 100 && isNavExpanded) {
+                      HapticFeedback.mediumImpact();
+                      setState(() => isNavExpanded = false);
+                    }
+                  },
                   onLongPress: () {
                     HapticFeedback.mediumImpact();
                     setState(() {
@@ -286,6 +296,21 @@ class _MainShellState extends State<MainShell> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() {
+                              isNavExpanded = !isNavExpanded;
+                            });
+                          },
+                          child: Icon(
+                            isNavExpanded
+                                ? Icons.keyboard_arrow_down
+                                : Icons.keyboard_arrow_up,
+                            size: 20,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
                         SizedBox(
                           height: 65,
                           child: Stack(
