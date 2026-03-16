@@ -217,6 +217,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
 
                               Slider(
+                                // ignore: deprecated_member_use
+                                year2023: false,
                                 min: 50,
                                 max: 100,
                                 divisions: 50,

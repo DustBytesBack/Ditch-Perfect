@@ -404,7 +404,11 @@ class SubjectPage extends StatelessWidget {
     );
   }
 
-  void showSubjectInfo(BuildContext context, Subject subject) {
+  void showSubjectInfo(
+    BuildContext context,
+    Subject subject,
+    AttendanceStats stats,
+  ) {
     final scheme = Theme.of(context).colorScheme;
 
     final attendanceProvider = context.read<AttendanceProvider>();
@@ -455,6 +459,20 @@ class SubjectPage extends StatelessWidget {
 
                   statTile("Cancelled", cancelled, Colors.orange),
                 ],
+              ),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    showAttendanceEditDialog(context, subject, stats);
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text("Edit Attendance"),
+                ),
               ),
             ],
           ),
@@ -719,11 +737,7 @@ class SubjectPage extends StatelessWidget {
                                     children: [
                                       GestureDetector(
                                         onTap: () {
-                                          showSubjectInfo(context, subject);
-                                        },
-                                        onLongPress: () {
-                                          HapticFeedback.mediumImpact();
-                                          showAttendanceEditDialog(
+                                          showSubjectInfo(
                                             context,
                                             subject,
                                             stats,
