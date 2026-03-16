@@ -193,30 +193,69 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                           ),
                                     ),
                                     const SizedBox(height: 12),
-                                    DropdownButtonFormField<String>(
-                                      initialValue: selectedSubject?.id,
-                                      decoration: InputDecoration(
-                                        filled: true,
-                                        fillColor: scheme.surface,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            18,
+                                    LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        return DropdownMenu<String>(
+                                          width: constraints.maxWidth,
+                                          initialSelection: selectedSubject?.id,
+                                          menuStyle: MenuStyle(
+                                            backgroundColor: WidgetStatePropertyAll(scheme.surface),
+                                            elevation: const WidgetStatePropertyAll(4),
+                                            shape: WidgetStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(20),
+                                              ),
+                                            ),
                                           ),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                      ),
-                                      items: subjects.map((subject) {
-                                        return DropdownMenuItem<String>(
-                                          value: subject.id,
-                                          child: Text(subject.name),
+                                          inputDecorationTheme: InputDecorationTheme(
+                                            filled: true,
+                                            fillColor: scheme.surface,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: BorderSide(
+                                                color: scheme.primary,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            contentPadding: const EdgeInsets.symmetric(
+                                              horizontal: 20, 
+                                              vertical: 18,
+                                            ),
+                                          ),
+                                          textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: scheme.onSurface,
+                                          ),
+                                          dropdownMenuEntries: subjects.map((subject) {
+                                            return DropdownMenuEntry<String>(
+                                              value: subject.id,
+                                              label: subject.name,
+                                              style: MenuItemButton.styleFrom(
+                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                                textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onSelected: (value) {
+                                            if (value != null) {
+                                              HapticFeedback.lightImpact();
+                                              setState(() {
+                                                _selectedSubjectId = value;
+                                              });
+                                            }
+                                          },
                                         );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        HapticFeedback.lightImpact();
-                                        setState(() {
-                                          _selectedSubjectId = value;
-                                        });
-                                      },
+                                      }
                                     ),
                                     const SizedBox(height: 18),
                                     Text(

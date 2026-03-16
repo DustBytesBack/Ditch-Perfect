@@ -341,43 +341,67 @@ class _SubjectPageState extends State<SubjectPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: inputMode,
-                    decoration: InputDecoration(
-                      labelText: 'Known value',
-                      prefixIcon: const Icon(Icons.tune),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2,
+                  DropdownMenu<String>(
+                    width: MediaQuery.of(context).size.width - 96, // AlertDialog content padding is 24 on each side, + arbitrary dialog margin
+                    initialSelection: inputMode,
+                        label: const Text('Known value'),
+                        leadingIcon: const Icon(Icons.tune),
+                        menuStyle: MenuStyle(
+                          backgroundColor: WidgetStatePropertyAll(Theme.of(context).colorScheme.surface),
+                          elevation: const WidgetStatePropertyAll(4),
+                          shape: WidgetStatePropertyAll(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    items: _attendanceInputModes.map((mode) {
-                      return DropdownMenuItem<String>(
-                        value: mode.$1,
-                        child: Text(mode.$2),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      HapticFeedback.lightImpact();
-                      setDialogState(() {
-                        inputMode = value;
-                      });
-                    },
+                        inputDecorationTheme: InputDecorationTheme(
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(28),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(28),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(28),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 24, 
+                            vertical: 18,
+                          ),
+                        ),
+                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        dropdownMenuEntries: _attendanceInputModes.map((mode) {
+                          return DropdownMenuEntry<String>(
+                            value: mode.$1,
+                            label: mode.$2,
+                            style: MenuItemButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onSelected: (value) {
+                          if (value != null) {
+                            HapticFeedback.lightImpact();
+                            setDialogState(() {
+                              inputMode = value;
+                            });
+                          }
+                        },
                   ),
                   const SizedBox(height: 16),
                   TextField(
