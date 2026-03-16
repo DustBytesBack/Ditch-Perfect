@@ -41,6 +41,6 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/Ditch_Perfect_Icon.png"
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/icon/Ditch_Perfect_Icon.png"
-  adaptive_icon_monochrome: "assets/icon/Ditch_Perfect_Icon.png"
+  adaptive_icon_background: "#000000"
+  # adaptive_icon_foreground: "assets/icon/Ditch_Perfect_Icon.png"
+  # adaptive_icon_monochrome: "assets/icon/Ditch_perfect_monochrome_icon.png"
