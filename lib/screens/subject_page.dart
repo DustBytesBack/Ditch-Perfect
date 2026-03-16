@@ -47,19 +47,61 @@ class SubjectPage extends StatelessWidget {
       builder: (_) {
         return AlertDialog(
           title: const Text("Add Subject"),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: "Subject Name"),
+                decoration: InputDecoration(
+                  labelText: "Subject Name",
+                  prefixIcon: const Icon(Icons.subject),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                ),
               ),
+
+              const SizedBox(height: 16),
 
               TextField(
                 controller: shortController,
                 maxLength: 8,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "Short Name (max 8 letters)",
+                  prefixIcon: const Icon(Icons.short_text),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -259,6 +301,8 @@ class SubjectPage extends StatelessWidget {
 
             return AlertDialog(
               title: Text('Edit ${subject.shortName} Attendance'),
+              contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -267,14 +311,53 @@ class SubjectPage extends StatelessWidget {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Current attendance %',
+                      prefixIcon: const Icon(Icons.percent),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     initialValue: inputMode,
-                    decoration: const InputDecoration(labelText: 'Known value'),
+                    decoration: InputDecoration(
+                      labelText: 'Known value',
+                      prefixIcon: const Icon(Icons.tune),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(16),
                     items: _attendanceInputModes.map((mode) {
                       return DropdownMenuItem<String>(
                         value: mode.$1,
@@ -289,7 +372,7 @@ class SubjectPage extends StatelessWidget {
                       });
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: currentController,
                     keyboardType: TextInputType.number,
@@ -297,6 +380,28 @@ class SubjectPage extends StatelessWidget {
                       labelText: inputMode == 'total'
                           ? 'Total classes'
                           : 'Attended classes',
+                      prefixIcon: Icon(
+                        inputMode == 'total'
+                            ? Icons.class_outlined
+                            : Icons.check_circle_outline,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
                     ),
                   ),
                 ],

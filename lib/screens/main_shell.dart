@@ -28,6 +28,7 @@ class _MainShellState extends State<MainShell> {
   int currentIndex = 0;
   int previousIndex = 0;
   bool isNavExpanded = false;
+  int? _swappedSecondaryIndex;
   bool isReordering = false;
   bool _tutorialActive = false;
   int _tutorialStepIndex = 0;
@@ -819,7 +820,39 @@ class _MainShellState extends State<MainShell> {
         previousIndex = currentIndex == _rankPageIndex ? 0 : currentIndex;
       }
 
-      currentIndex = index;
+      // If a secondary (expanded-only) item is selected, swap it into
+      // the last primary slot so the selection pill stays visible.
+      if (index >= _primaryNavCount) {
+        // Undo any previous swap first.
+        if (_swappedSecondaryIndex != null) {
+          final temp = _allDestinations[_primaryNavCount - 1];
+          _allDestinations[_primaryNavCount - 1] =
+              _allDestinations[_swappedSecondaryIndex!];
+          _allDestinations[_swappedSecondaryIndex!] = temp;
+          _swappedSecondaryIndex = null;
+        }
+
+        // Swap the selected secondary item with the last primary item.
+        final temp = _allDestinations[_primaryNavCount - 1];
+        _allDestinations[_primaryNavCount - 1] = _allDestinations[index];
+        _allDestinations[index] = temp;
+        _swappedSecondaryIndex = index;
+        currentIndex = _primaryNavCount - 1;
+      } else {
+        // Primary item selected — undo any active swap, UNLESS
+        // the user tapped the slot that holds the swapped-in item
+        // (they want to stay on that page, not switch away).
+        if (_swappedSecondaryIndex != null &&
+            index != _primaryNavCount - 1) {
+          final temp = _allDestinations[_primaryNavCount - 1];
+          _allDestinations[_primaryNavCount - 1] =
+              _allDestinations[_swappedSecondaryIndex!];
+          _allDestinations[_swappedSecondaryIndex!] = temp;
+          _swappedSecondaryIndex = null;
+        }
+        currentIndex = index;
+      }
+
       isNavExpanded = false;
     });
   }
