@@ -10,8 +10,15 @@ import '../utils/attendance_utils.dart';
 import '../models/subject.dart';
 import '../models/attendance.dart';
 
-class SubjectPage extends StatelessWidget {
+class SubjectPage extends StatefulWidget {
   const SubjectPage({super.key});
+
+  @override
+  State<SubjectPage> createState() => _SubjectPageState();
+}
+
+class _SubjectPageState extends State<SubjectPage> {
+  String? _selectedSubjectId;
 
   static const List<(String, String)> _attendanceInputModes = [
     ('total', 'I know total classes'),
@@ -623,6 +630,20 @@ class SubjectPage extends StatelessWidget {
 
       body: Stack(
         children: [
+          /// BACKGROUND TAP TO DESELECT
+          if (_selectedSubjectId != null)
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  setState(() {
+                    _selectedSubjectId = null;
+                  });
+                },
+                child: const SizedBox(),
+              ),
+            ),
+
           /// ORIGINAL PAGE CONTENT
           SafeArea(
             child: Column(
@@ -709,9 +730,12 @@ class SubjectPage extends StatelessWidget {
                               )
                             : scheme.secondaryContainer;
 
+                        final isSelected = _selectedSubjectId == subject.id;
+                        final isAnySelected = _selectedSubjectId != null;
+
                         return Dismissible(
                           key: ValueKey(subject.id),
-                          direction: DismissDirection.horizontal,
+                          direction: isAnySelected ? DismissDirection.none : DismissDirection.horizontal,
 
                           confirmDismiss: (direction) async {
                             if (direction == DismissDirection.startToEnd) {
@@ -762,14 +786,42 @@ class SubjectPage extends StatelessWidget {
                             ),
                           ),
 
-                          child: Padding(
-                            key: index == 0
-                                ? TutorialService.keyFor(
-                                    TutorialTargets.subjectFirstCard,
-                                  )
+                          child: GestureDetector(
+                            onLongPress: () {
+                              HapticFeedback.mediumImpact();
+                              setState(() {
+                                _selectedSubjectId = subject.id;
+                              });
+                            },
+                            onTap: isAnySelected
+                                ? () {
+                                    if (isSelected) {
+                                      setState(() {
+                                        _selectedSubjectId = null;
+                                      });
+                                    } else {
+                                      HapticFeedback.lightImpact();
+                                      setState(() {
+                                        _selectedSubjectId = subject.id;
+                                      });
+                                    }
+                                  }
                                 : null,
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: Row(
+                            child: AnimatedScale(
+                              scale: isSelected ? 1.02 : (isAnySelected ? 0.95 : 1.0),
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutCubic,
+                              child: AnimatedOpacity(
+                                opacity: isAnySelected && !isSelected ? 0.4 : 1.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Padding(
+                                  key: index == 0
+                                      ? TutorialService.keyFor(
+                                          TutorialTargets.subjectFirstCard,
+                                        )
+                                      : null,
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: Row(
                               children: [
                                 /// ATTENDANCE PILL
                                 Container(
@@ -841,13 +893,15 @@ class SubjectPage extends StatelessWidget {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       GestureDetector(
-                                        onTap: () {
-                                          showSubjectInfo(
-                                            context,
-                                            subject,
-                                            stats,
-                                          );
-                                        },
+                                        onTap: isAnySelected
+                                            ? null
+                                            : () {
+                                                showSubjectInfo(
+                                                  context,
+                                                  subject,
+                                                  stats,
+                                                );
+                                              },
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 20,
@@ -945,12 +999,98 @@ class SubjectPage extends StatelessWidget {
                               ],
                             ),
                           ),
-                        );
+                        ),
+                      ),
+                    ),
+                  );
                       },
                     ),
                   ),
                 ),
               ],
+            ),
+          ),
+
+          /// FLOATING ACTION BAR FOR SELECTION
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            bottom: _selectedSubjectId != null
+                ? MediaQuery.of(context).padding.bottom + 140
+                : -100,
+            left: 24,
+            right: 24,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.shadow.withValues(alpha: .18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _selectionActionButton(
+                      context: context,
+                      icon: Icons.edit,
+                      color: scheme.primary,
+                      label: 'Rename',
+                      onTap: () {
+                        final subject = subjects.firstWhere(
+                          (s) => s.id == _selectedSubjectId,
+                        );
+                        setState(() => _selectedSubjectId = null);
+                        showRenameDialog(context, subject);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _selectionActionButton(
+                      context: context,
+                      icon: Icons.fact_check_outlined,
+                      color: scheme.primary,
+                      label: 'Attendance',
+                      onTap: () {
+                        final subject = subjects.firstWhere(
+                          (s) => s.id == _selectedSubjectId,
+                        );
+                        final stats = calculateStats(
+                          subject.id,
+                          attendanceProvider.records.values,
+                        );
+                        setState(() => _selectedSubjectId = null);
+                        showAttendanceEditDialog(context, subject, stats);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _selectionActionButton(
+                      context: context,
+                      icon: Icons.delete,
+                      color: scheme.error,
+                      label: 'Delete',
+                      onTap: () {
+                        final subject = subjects.firstWhere(
+                          (s) => s.id == _selectedSubjectId,
+                        );
+                        setState(() => _selectedSubjectId = null);
+                        showDeleteDialog(context, subject);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -963,6 +1103,52 @@ class SubjectPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+  Widget _selectionActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: color.withValues(alpha: .12),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: color,
+              ),
+              const SizedBox(height: 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
