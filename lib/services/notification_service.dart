@@ -54,7 +54,7 @@ class NotificationService {
 
       const initSettings = InitializationSettings(android: androidSettings);
 
-      await _plugin.initialize(initSettings);
+      await _plugin.initialize(settings: initSettings);
       WidgetsBinding.instance.addObserver(_lifecycleObserver);
       _appInForeground =
           WidgetsBinding.instance.lifecycleState == null ||
@@ -138,14 +138,12 @@ class NotificationService {
         }
 
         await _plugin.zonedSchedule(
-          _notificationIdBase + offset,
-          message.title,
-          message.body,
-          scheduledDate,
-          details,
+          id: _notificationIdBase + offset,
+          title: message.title,
+          body: message.body,
+          scheduledDate: scheduledDate,
+          notificationDetails: details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: null,
         );
 
@@ -173,7 +171,7 @@ class NotificationService {
       _clearForegroundBridgeTimers();
 
       for (int offset = 0; offset < _scheduleWindowDays; offset++) {
-        await _plugin.cancel(_notificationIdBase + offset);
+        await _plugin.cancel(id: _notificationIdBase + offset);
       }
     } catch (_) {
       // Non-critical.
@@ -324,7 +322,7 @@ class NotificationService {
       // Fallback: try to find by offset.
       for (var loc in tz.timeZoneDatabase.locations.values) {
         final tzOffset = loc.currentTimeZone.offset;
-        if (tzOffset == offset.inMilliseconds) {
+        if (tzOffset.inMilliseconds == offset.inMilliseconds) {
           return loc.name;
         }
       }
@@ -352,10 +350,10 @@ class NotificationService {
 
         try {
           await _plugin.show(
-            schedule.id,
-            schedule.title,
-            schedule.body,
-            details,
+            id: schedule.id,
+            title: schedule.title,
+            body: schedule.body,
+            notificationDetails: details,
           );
         } catch (_) {}
 
