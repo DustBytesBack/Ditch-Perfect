@@ -148,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           onPressed: () {
                             showAboutDialog(
                               context: context,
-                              applicationName: "Attendance Tracker",
+                              applicationName: "Ditch Perfect",
                               applicationVersion: "1.0",
                               applicationLegalese: "Aint got no shit here",
                             );
