@@ -405,10 +405,10 @@ class _CalendarPageState extends State<CalendarPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
+                    color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(color: scheme.outlineVariant),
-                    boxShadow: [
+                    boxShadow: isAbsolute ? null : [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: .5),
                         blurRadius: 25,
@@ -480,6 +480,14 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                 ),
               ),
+            /// NAV BAR COLOR FIX
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                height: MediaQuery.of(context).padding.bottom + 12,
+                color: scheme.surfaceContainer,
+              ),
+            ),
           ],
         ),
       );
@@ -794,7 +802,7 @@ class _CalendarPageState extends State<CalendarPage> {
             alignment: Alignment.bottomCenter,
             child: Container(
               height: MediaQuery.of(context).padding.bottom + 12,
-              color: scheme.surface,
+              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
           ),
 

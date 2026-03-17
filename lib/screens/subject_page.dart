@@ -1134,7 +1134,7 @@ class _SubjectPageState extends State<SubjectPage> {
             alignment: Alignment.bottomCenter,
             child: Container(
               height: MediaQuery.of(context).padding.bottom + 12,
-              color: scheme.surface,
+              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
           ),
         ],

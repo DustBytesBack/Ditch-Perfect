@@ -25,10 +25,13 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late double minAttendance;
+  late final PageController _pageController;
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
 
     final storedAttendance = DatabaseService.settingsBox.get(
       "minAttendance",
@@ -36,6 +39,12 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     minAttendance = storedAttendance.toDouble();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void showDeleteAllDialog(BuildContext context) {
@@ -442,104 +451,139 @@ class _SettingsPageState extends State<SettingsPage> {
                         /// APPEARANCE
                         sectionTitle(context, "Appearance"),
 
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isAbsolute
-                                ? scheme.surfaceContainerHigh
-                                : scheme.secondaryContainer,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(28),
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
-                            ),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
-                                : null,
-                          ),
-
-                          child: Row(
+                        SizedBox(
+                          height: 75, // Standard container height
+                          child: PageView(
+                            controller: _pageController,
+                            physics: themeProvider.isDark
+                                ? const BouncingScrollPhysics()
+                                : const NeverScrollableScrollPhysics(),
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPage = index;
+                              });
+                            },
                             children: [
-                              Icon(
-                                modeIcon,
-                                color: scheme.onSecondaryContainer,
-                              ),
-
-                              const SizedBox(width: 18),
-
-                              Expanded(
-                                child: Text(
-                                  modeLabel,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
+                              /// PAGE 1: Theme Mode
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 2,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isAbsolute
+                                      ? scheme.surfaceContainerHigh
+                                      : scheme.secondaryContainer,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(25),
+                                    topRight: Radius.circular(25),
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
                                   ),
+                                  border: isAbsolute
+                                      ? Border.all(color: scheme.outlineVariant)
+                                      : null,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      modeIcon,
+                                      color: scheme.onSecondaryContainer,
+                                    ),
+                                    const SizedBox(width: 18),
+                                    Expanded(
+                                      child: Text(
+                                        modeLabel,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Switch.adaptive(
+                                      value: themeProvider.isDark,
+                                      onChanged: themeProvider.pookieMode
+                                          ? null
+                                          : (value) {
+                                              HapticFeedback.lightImpact();
+                                              if (!value && _currentPage == 1) {
+                                                _pageController.animateToPage(
+                                                  0,
+                                                  duration: const Duration(
+                                                    milliseconds: 300,
+                                                  ),
+                                                  curve: Curves.easeInOut,
+                                                );
+                                              }
+                                              context
+                                                  .read<ThemeProvider>()
+                                                  .toggleTheme(value);
+                                            },
+                                    ),
+                                  ],
                                 ),
                               ),
 
-                              Switch.adaptive(
-                                value: themeProvider.isDark,
-                                onChanged: themeProvider.pookieMode
-                                    ? null
-                                    : (value) {
-                                        HapticFeedback.lightImpact();
-                                        context
-                                            .read<ThemeProvider>()
-                                            .toggleTheme(value);
-                                      },
-                              ),
+                              /// PAGE 2: Absolute Mode
+                              if (themeProvider.isDark)
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 2,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isAbsolute
+                                        ? scheme.surfaceContainerHigh
+                                        : scheme.secondaryContainer,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(25),
+                                      topRight: Radius.circular(25),
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                    border: isAbsolute
+                                        ? Border.all(
+                                          color: scheme.outlineVariant,
+                                        )
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.settings_brightness,
+                                        color: scheme.onSecondaryContainer,
+                                      ),
+                                      const SizedBox(width: 18),
+                                      const Expanded(
+                                        child: Text(
+                                          "Absolute Mode",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      Switch.adaptive(
+                                        value: themeProvider.absoluteMode,
+                                        onChanged: (value) {
+                                          HapticFeedback.lightImpact();
+                                          context
+                                              .read<ThemeProvider>()
+                                              .toggleAbsoluteMode(value);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                const SizedBox.shrink(),
                             ],
                           ),
                         ),
-
-                        if (themeProvider.isDark) ...[
-                          const SizedBox(height: 8),
-
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 14,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isAbsolute
-                                  ? scheme.surfaceContainerHigh
-                                  : scheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(10),
-                              border: isAbsolute
-                                  ? Border.all(color: scheme.outlineVariant)
-                                  : null,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.settings_brightness,
-                                  color: scheme.onSecondaryContainer,
-                                ),
-                                const SizedBox(width: 18),
-                                const Expanded(
-                                  child: Text(
-                                    "Absolute Mode",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                Switch.adaptive(
-                                  value: themeProvider.absoluteMode,
-                                  onChanged: (value) {
-                                    HapticFeedback.lightImpact();
-                                    context
-                                        .read<ThemeProvider>()
-                                        .toggleAbsoluteMode(value);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
 
                         const SizedBox(height: 8),
 
