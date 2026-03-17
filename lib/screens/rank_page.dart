@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:async';
 import '../services/database_service.dart';
 import '../models/subject.dart';
 import '../models/attendance.dart';
@@ -29,6 +31,22 @@ class _RankPageState extends State<RankPage> {
     _loadUsername();
     // Listen for changes (e.g. data reset from settings)
     DatabaseService.settingsBox.listenable().addListener(_loadUsername);
+
+    // Initial auto-upload after a brief delay to allow initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndAutoUpload();
+    });
+  }
+
+  Future<void> _checkAndAutoUpload() async {
+    // Only auto-upload if username is set
+    if (!_isUsernameSet || _username == null || _username!.isEmpty) return;
+
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult.contains(ConnectivityResult.none)) return;
+
+    // Perform silent upload
+    await _submitRankingData(silent: true);
   }
 
   void _loadUsername() {
@@ -53,14 +71,17 @@ class _RankPageState extends State<RankPage> {
     super.dispose();
   }
 
-  Future<void> _submitRankingData() async {
+  Future<void> _submitRankingData({bool silent = false}) async {
     if (_username == null || _username!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please set a username first')),
-      );
+      if (!silent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please set a username first')),
+        );
+      }
       return;
     }
 
+    if (_isUploading) return;
     setState(() => _isUploading = true);
 
     try {
@@ -69,6 +90,15 @@ class _RankPageState extends State<RankPage> {
 
       final subjects = subjectsBox.values.cast<Subject>().toList();
       final allAttendance = attendanceBox.values.cast<Attendance>().toList();
+
+      if (subjects.isEmpty) {
+        if (!silent) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No subjects found to upload')),
+          );
+        }
+        return;
+      }
 
       final subjectsSummary = subjects.map((subject) {
         final stats = calculateStats(subject.id, allAttendance);
@@ -87,13 +117,13 @@ class _RankPageState extends State<RankPage> {
 
       await FirebaseFirestore.instance.collection("rankings").add(dataMap);
 
-      if (mounted) {
+      if (mounted && !silent) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ranking data uploaded successfully')),
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !silent) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error uploading data: $e')),
         );
@@ -275,28 +305,21 @@ class _RankPageState extends State<RankPage> {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              if (hasUsername)
+                _isUploading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        onPressed: () => _submitRankingData(),
+                        icon: Icon(Icons.cloud_upload_outlined,
+                            color: scheme.primary),
+                        tooltip: "Sync Now",
+                      ),
             ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: _isUploading || !hasUsername ? null : _submitRankingData,
-          icon: _isUploading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.cloud_upload),
-          label: Text(_isUploading ? "Uploading..." : "Submit Ranking Data"),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
           ),
         ),
       ],
