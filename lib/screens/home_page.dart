@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
 import '../services/tutorial_service.dart';
@@ -309,6 +310,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
@@ -323,8 +326,7 @@ class HomePage extends StatelessWidget {
     final isHoliday = isWeekend && slots.isEmpty;
 
     return Scaffold(
-      backgroundColor: scheme.primaryContainer,
-
+      backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
       body: Stack(
         children: [
           SafeArea(
@@ -341,36 +343,45 @@ class HomePage extends StatelessWidget {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: .08),
-                              blurRadius: 12,
-                              spreadRadius: 1,
-                              offset: const Offset(0, -1),
-                            ),
-                          ],
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
+                          boxShadow: isAbsolute
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: .08),
+                                    blurRadius: 12,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, -1),
+                                  ),
+                                ],
                         ),
                         child: Text(
                           formatDate(today),
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
                       ),
-
                       const Spacer(),
-
                       Container(
                         key: TutorialService.keyFor(
                           TutorialTargets.homeQuickAdd,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: IconButton(
                           iconSize: 28,
@@ -391,18 +402,20 @@ class HomePage extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: scheme.surface,
+                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: .12),
-                          blurRadius: 12,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
+                      boxShadow: isAbsolute
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: .12),
+                                blurRadius: 12,
+                                offset: const Offset(0, -4),
+                              ),
+                            ],
                     ),
 
                     child: isHoliday
@@ -545,7 +558,7 @@ class HomePage extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: Container(
               height: MediaQuery.of(context).padding.bottom + 12,
-              color: scheme.surface,
+              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
           ),
         ],

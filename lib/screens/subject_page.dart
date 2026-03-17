@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../services/tutorial_service.dart';
@@ -643,6 +644,8 @@ class _SubjectPageState extends State<SubjectPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
 
     final subjects = context.watch<SubjectProvider>().subjects;
@@ -650,8 +653,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final minAttendance = context.watch<SettingsProvider>().minAttendance;
 
     return Scaffold(
-      backgroundColor: scheme.primaryContainer,
-
+      backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
       body: Stack(
         children: [
           /// BACKGROUND TAP TO DESELECT
@@ -683,26 +685,33 @@ class _SubjectPageState extends State<SubjectPage> {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: Text(
                           "Subjects",
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
                       ),
-
                       const Spacer(),
-
                       Container(
                         key: TutorialService.keyFor(TutorialTargets.subjectAdd),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: IconButton(
                           iconSize: 28,
@@ -720,7 +729,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: scheme.surface,
+                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
@@ -752,7 +761,9 @@ class _SubjectPageState extends State<SubjectPage> {
                                 scheme.error.withValues(alpha: .2),
                                 scheme.onError,
                               )
-                            : scheme.secondaryContainer;
+                            : (isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer);
 
                         final isSelected = _selectedSubjectId == subject.id;
                         final isAnySelected = _selectedSubjectId != null;

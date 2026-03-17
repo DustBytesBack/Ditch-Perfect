@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import 'timetable_editor_page.dart';
 
@@ -20,44 +21,43 @@ class TimetablePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
+    final themeProvider = context.watch<ThemeProvider>();
+    final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
     final subjects = context.watch<SubjectProvider>().subjects;
 
     return Scaffold(
-      backgroundColor: scheme.primaryContainer,
-
+      backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
       body: Stack(
         children: [
-
           /// MAIN PAGE
           SafeArea(
             child: Column(
               children: [
-
                 /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 56,
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: Text(
                           "Timetable",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -68,8 +68,13 @@ class TimetablePage extends StatelessWidget {
 
                       Container(
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: IconButton(
                           iconSize: 28,
@@ -94,7 +99,7 @@ class TimetablePage extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: scheme.surface,
+                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
@@ -144,7 +149,9 @@ class TimetablePage extends StatelessWidget {
                                           vertical: 14,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: scheme.secondaryContainer,
+                                          color: isAbsolute
+                                              ? scheme.surfaceContainerHigh
+                                              : scheme.secondaryContainer,
                                           borderRadius: BorderRadius.circular(18),
                                         ),
                                         child: Text(
@@ -178,7 +185,7 @@ class TimetablePage extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: Container(
               height: MediaQuery.of(context).padding.bottom + 12,
-              color: scheme.surface,
+              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
           ),
         ],

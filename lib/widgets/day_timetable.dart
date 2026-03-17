@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/timetable_provider.dart';
 import '../providers/subject_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/settings_provider.dart';
 import '../models/attendance.dart';
@@ -64,6 +65,8 @@ class DayTimetable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
 
     final timetable = context.watch<TimetableProvider>();
@@ -106,7 +109,7 @@ class DayTimetable extends StatelessWidget {
                 scheme.error.withValues(alpha: .12),
                 scheme.secondaryContainer,
               )
-            : scheme.secondaryContainer;
+            : (isAbsolute ? scheme.surfaceContainerHigh : scheme.secondaryContainer);
 
         final isExtra = index >= baseCount;
 

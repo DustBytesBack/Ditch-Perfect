@@ -7,6 +7,7 @@ class ThemeProvider extends ChangeNotifier {
   Color seedColor = Colors.indigo;
 
   bool pookieMode = false;
+  bool absoluteMode = false;
 
   void loadTheme() {
     final dark = DatabaseService.settingsBox.get(
@@ -26,6 +27,11 @@ class ThemeProvider extends ChangeNotifier {
 
     pookieMode = pookie;
 
+    absoluteMode = DatabaseService.settingsBox.get(
+      "absoluteMode",
+      defaultValue: false,
+    );
+
     if (pookieMode) {
       /// Pookie mode always uses light theme
       isDark = false;
@@ -42,6 +48,12 @@ class ThemeProvider extends ChangeNotifier {
     if (pookieMode) return;
 
     isDark = value;
+
+    /// Absolute mode can be turned on only in dark mode
+    if (!value) {
+      absoluteMode = false;
+      DatabaseService.settingsBox.put("absoluteMode", false);
+    }
 
     DatabaseService.settingsBox.put("darkMode", value);
 
@@ -85,6 +97,18 @@ class ThemeProvider extends ChangeNotifier {
       seedColor = Color(storedColor);
     }
 
+    notifyListeners();
+  }
+
+  void toggleAbsoluteMode(bool value) {
+    /// Absolute mode can be turned on only in dark mode
+    if (value && !isDark) {
+      absoluteMode = false;
+      DatabaseService.settingsBox.put("absoluteMode", false);
+    } else {
+      absoluteMode = value;
+      DatabaseService.settingsBox.put("absoluteMode", value);
+    }
     notifyListeners();
   }
 }

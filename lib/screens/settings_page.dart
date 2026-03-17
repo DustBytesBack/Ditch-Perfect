@@ -99,8 +99,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     final modeIcon = themeProvider.isDark ? Icons.light_mode : Icons.dark_mode;
 
+    final isAbsolute = themeProvider.absoluteMode;
+
     return Scaffold(
-      backgroundColor: scheme.primaryContainer,
+      backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
 
       body: Stack(
         children: [
@@ -118,13 +120,17 @@ class _SettingsPageState extends State<SettingsPage> {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: Text(
                           "Settings",
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -135,8 +141,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
                       Container(
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: IconButton(
                           iconSize: 28,
@@ -164,11 +175,20 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: scheme.surface,
+                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
                       ),
+                      boxShadow: isAbsolute
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: .12),
+                                blurRadius: 12,
+                                offset: const Offset(0, -4),
+                              ),
+                            ],
                     ),
 
                     child: ListView(
@@ -182,8 +202,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 18,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(28),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: Column(
@@ -255,8 +280,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(28),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -289,7 +319,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(28),
                               topRight: const Radius.circular(28),
@@ -300,6 +332,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 settingsProvider.notificationsEnabled ? 10 : 28,
                               ),
                             ),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: Row(
@@ -355,13 +390,18 @@ class _SettingsPageState extends State<SettingsPage> {
                                 vertical: 22,
                               ),
                               decoration: BoxDecoration(
-                                color: scheme.secondaryContainer,
+                                color: isAbsolute
+                                    ? scheme.surfaceContainerHigh
+                                    : scheme.secondaryContainer,
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(10),
                                   topRight: Radius.circular(10),
                                   bottomLeft: Radius.circular(28),
                                   bottomRight: Radius.circular(28),
                                 ),
+                                border: isAbsolute
+                                    ? Border.all(color: scheme.outlineVariant)
+                                    : null,
                               ),
 
                               child: Row(
@@ -408,13 +448,18 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(28),
                               topRight: Radius.circular(28),
                               bottomLeft: Radius.circular(10),
                               bottomRight: Radius.circular(10),
                             ),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: Row(
@@ -450,6 +495,52 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
+                        if (themeProvider.isDark) ...[
+                          const SizedBox(height: 8),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isAbsolute
+                                  ? scheme.surfaceContainerHigh
+                                  : scheme.secondaryContainer,
+                              borderRadius: BorderRadius.circular(10),
+                              border: isAbsolute
+                                  ? Border.all(color: scheme.outlineVariant)
+                                  : null,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.settings_brightness,
+                                  color: scheme.onSecondaryContainer,
+                                ),
+                                const SizedBox(width: 18),
+                                const Expanded(
+                                  child: Text(
+                                    "Absolute Mode",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Switch.adaptive(
+                                  value: themeProvider.absoluteMode,
+                                  onChanged: (value) {
+                                    HapticFeedback.lightImpact();
+                                    context
+                                        .read<ThemeProvider>()
+                                        .toggleAbsoluteMode(value);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
                         const SizedBox(height: 8),
 
                         Container(
@@ -458,8 +549,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(10),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: Row(
@@ -502,13 +598,18 @@ class _SettingsPageState extends State<SettingsPage> {
                                 vertical: 18,
                               ),
                               decoration: BoxDecoration(
-                                color: scheme.secondaryContainer,
+                                color: isAbsolute
+                                    ? scheme.surfaceContainerHigh
+                                    : scheme.secondaryContainer,
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(10),
                                   topRight: Radius.circular(10),
                                   bottomLeft: Radius.circular(28),
                                   bottomRight: Radius.circular(28),
                                 ),
+                                border: isAbsolute
+                                    ? Border.all(color: scheme.outlineVariant)
+                                    : null,
                               ),
 
                               child: Column(
@@ -571,13 +672,18 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(28),
                               topRight: Radius.circular(28),
                               bottomLeft: Radius.circular(10),
                               bottomRight: Radius.circular(10),
                             ),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: ListTile(
@@ -598,8 +704,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(10),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: ListTile(
@@ -674,6 +785,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               bottomLeft: Radius.circular(28),
                               bottomRight: Radius.circular(28),
                             ),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
                           ),
 
                           child: ListTile(
@@ -711,7 +825,7 @@ class _SettingsPageState extends State<SettingsPage> {
             alignment: Alignment.bottomCenter,
             child: Container(
               height: MediaQuery.of(context).padding.bottom + 12,
-              color: scheme.surface,
+              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
           ),
         ],
@@ -794,42 +908,47 @@ class _SettingsPageState extends State<SettingsPage> {
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
         child: notes != null
-            ? Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  child: MarkdownBody(
-                    data: notes,
-                    selectable: true,
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrl(
-                          Uri.parse(href),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    styleSheet:
-                        MarkdownStyleSheet.fromTheme(Theme.of(context))
-                            .copyWith(
-                              p: Theme.of(context).textTheme.bodyMedium,
-                              h1: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              h2: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              h3: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                              listBullet:
-                                  Theme.of(context).textTheme.bodyMedium,
-                            ),
+            ? () {
+                final controller = ScrollController();
+                return Scrollbar(
+                  controller: controller,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: controller,
+                    child: MarkdownBody(
+                      data: notes,
+                      selectable: true,
+                      onTapLink: (text, href, title) {
+                        if (href != null) {
+                          launchUrl(
+                            Uri.parse(href),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      styleSheet:
+                          MarkdownStyleSheet.fromTheme(Theme.of(context))
+                              .copyWith(
+                                p: Theme.of(context).textTheme.bodyMedium,
+                                h1: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                h2: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                h3: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                listBullet:
+                                    Theme.of(context).textTheme.bodyMedium,
+                              ),
+                    ),
                   ),
-                ),
-              )
+                );
+              }()
             : Text(
                 "No release notes available for version $version.",
                 style: Theme.of(context).textTheme.bodyMedium,
