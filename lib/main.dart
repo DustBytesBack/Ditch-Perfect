@@ -11,10 +11,15 @@ import 'providers/settings_provider.dart';
 import 'providers/attendance_provider.dart';
 import 'providers/theme_provider.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/main_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await DatabaseService.init();
   await NotificationService.init();
 

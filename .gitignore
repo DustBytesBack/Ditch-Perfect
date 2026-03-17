@@ -43,3 +43,24 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+android/local.properties
+android/**/google-services.json
+android/app/*.jks
+android/app/*.keystore
+android/app/*.pub
+android/app/*.gpg
+
+# iOS-related
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GoogleService-Info.plist
+
+# Firebase / Secrets
+service-account-key.json
+.env*
+
+# IDE-related
+.idea/
+.vscode/
+*.iml

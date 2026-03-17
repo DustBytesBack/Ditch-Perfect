@@ -61,6 +61,15 @@ class DatabaseService {
     if (!settings.containsKey("minAttendance")) {
       await settings.put("minAttendance", 75);
     }
+
+    if (!settings.containsKey("username")) {
+      final randomId = (DateTime.now().millisecondsSinceEpoch % 9000) + 1000;
+      await settings.put("username", "User_$randomId");
+    }
+
+    if (!settings.containsKey("isUsernameSet")) {
+      await settings.put("isUsernameSet", false);
+    }
   }
 
   static Box get subjectsBox => Hive.box(subjectsBoxName);

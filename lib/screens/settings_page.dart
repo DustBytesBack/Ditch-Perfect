@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 import '../services/database_service.dart';
 import '../services/tutorial_service.dart';
@@ -15,6 +14,7 @@ import '../services/update_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'edit_username_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -66,10 +66,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
             TextButton(
               onPressed: () async {
-                await Hive.close();
-                await Hive.deleteFromDisk();
-
-                await DatabaseService.init();
+                // Instead of extreme deleteFromDisk which kills everything, 
+                // let's clear each box and re-init settings.
+                await DatabaseService.subjectsBox.clear();
+                await DatabaseService.attendanceBox.clear();
+                await DatabaseService.timetableBox.clear();
+                await DatabaseService.timetableRemovalsBox.clear();
+                
+                // Specifically reset the username lock
+                await DatabaseService.settingsBox.put("isUsernameSet", false);
+                
+                // Generate a new random username so it feels truly reset
+                final randomId = (DateTime.now().millisecondsSinceEpoch % 9000) + 1000;
+                await DatabaseService.settingsBox.put("username", "User_$randomId");
 
                 if (!context.mounted) return;
 
@@ -81,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Navigator.pop(context);
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("All data deleted")),
+                  const SnackBar(content: Text("All data deleted and username reset")),
                 );
               },
               child: Text(
@@ -273,6 +282,48 @@ class _SettingsPageState extends State<SettingsPage> {
                                 },
                               ),
                             ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        sectionTitle(context, "Profile"),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(28),
+                            border: isAbsolute
+                                ? Border.all(color: scheme.outlineVariant)
+                                : null,
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.person_outline,
+                              color: scheme.onSecondaryContainer,
+                            ),
+                            title: const Text(
+                              "Display Name",
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              (DatabaseService.settingsBox.get("username") as String?) ?? "Not set",
+                            ),
+                            onTap: () async {
+                              HapticFeedback.lightImpact();
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const EditUsernamePage()),
+                              );
+                              if (mounted) setState(() {});
+                            },
                           ),
                         ),
 

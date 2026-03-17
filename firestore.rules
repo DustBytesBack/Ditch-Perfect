@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to upload their ranking data snapshot
+    match /rankings/{document=**} {
+      allow create: if true;
+      allow get, list: if true;
+      allow update, delete: if false;
+    }
+    
+    // Allow users to read the leaderboard
+    match /leaderboard/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
