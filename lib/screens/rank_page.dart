@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'dart:async';
+import '../utils/ranking_utils.dart';
 import '../services/database_service.dart';
-import '../models/subject.dart';
-import '../models/attendance.dart';
 import '../providers/theme_provider.dart';
 
-import '../utils/attendance_utils.dart';
 import 'edit_username_page.dart';
 
 class RankPage extends StatefulWidget {
@@ -31,22 +27,6 @@ class _RankPageState extends State<RankPage> {
     _loadUsername();
     // Listen for changes (e.g. data reset from settings)
     DatabaseService.settingsBox.listenable().addListener(_loadUsername);
-
-    // Initial auto-upload after a brief delay to allow initialization
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndAutoUpload();
-    });
-  }
-
-  Future<void> _checkAndAutoUpload() async {
-    // Only auto-upload if username is set
-    if (!_isUsernameSet || _username == null || _username!.isEmpty) return;
-
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult.contains(ConnectivityResult.none)) return;
-
-    // Perform silent upload
-    await _submitRankingData(silent: true);
   }
 
   void _loadUsername() {
@@ -71,13 +51,11 @@ class _RankPageState extends State<RankPage> {
     super.dispose();
   }
 
-  Future<void> _submitRankingData({bool silent = false}) async {
+  Future<void> _submitRankingData() async {
     if (_username == null || _username!.isEmpty) {
-      if (!silent) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please set a username first')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please set a username first')),
+      );
       return;
     }
 
@@ -85,45 +63,15 @@ class _RankPageState extends State<RankPage> {
     setState(() => _isUploading = true);
 
     try {
-      final subjectsBox = DatabaseService.subjectsBox;
-      final attendanceBox = DatabaseService.attendanceBox;
+      await RankingUtils.uploadRankingData();
 
-      final subjects = subjectsBox.values.cast<Subject>().toList();
-      final allAttendance = attendanceBox.values.cast<Attendance>().toList();
-
-      if (subjects.isEmpty) {
-        if (!silent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No subjects found to upload')),
-          );
-        }
-        return;
-      }
-
-      final subjectsSummary = subjects.map((subject) {
-        final stats = calculateStats(subject.id, allAttendance);
-        return {
-          'subjectName': subject.name,
-          'totalClasses': stats.total,
-          'attendedClasses': stats.attended,
-        };
-      }).toList();
-
-      final dataMap = {
-        'username': _username,
-        'timestamp': FieldValue.serverTimestamp(),
-        'subjects': subjectsSummary,
-      };
-
-      await FirebaseFirestore.instance.collection("rankings").add(dataMap);
-
-      if (mounted && !silent) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ranking data uploaded successfully')),
         );
       }
     } catch (e) {
-      if (mounted && !silent) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error uploading data: $e')),
         );
@@ -167,7 +115,7 @@ class _RankPageState extends State<RankPage> {
                               : null,
                         ),
                         child: Text(
-                          "Rankings",
+                          "Rankings (BETA)",
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.bold,
@@ -256,20 +204,7 @@ class _RankPageState extends State<RankPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          "Share your progress",
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "Submit your attendance snapshot to the global leaderboard.",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-        ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -335,7 +270,7 @@ class _RankPageState extends State<RankPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Global Leaderboard",
+              "Leaderboard",
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

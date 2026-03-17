@@ -14,6 +14,7 @@ import '../services/database_service.dart';
 import '../services/update_service.dart';
 import '../utils/update_checker.dart';
 import '../widgets/tutorial_overlay.dart';
+import '../utils/ranking_utils.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -232,6 +233,7 @@ class _MainShellState extends State<MainShell> {
     }
 
     if (mounted) {
+      await RankingUtils.checkAndAutoUpload();
       await _maybeStartTutorial();
     }
   }
