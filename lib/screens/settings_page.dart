@@ -11,6 +11,7 @@ import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/update_checker.dart';
 import '../services/update_service.dart';
+import '../services/backup_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,6 +25,166 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  Future<void> _handleExport() async {
+    HapticFeedback.mediumImpact();
+    try {
+      final path = await BackupService.exportBackup();
+      if (path != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Data exported to $path")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Export failed: $e"),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleImport() async {
+    HapticFeedback.mediumImpact();
+    final scheme = Theme.of(context).colorScheme;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Import Data?"),
+        content: const Text(
+          "This will REPLACE all current subjects, attendance, and settings with the data from the backup file. This cannot be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              "Import & Replace",
+              style: TextStyle(
+                color: scheme.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // Show loading dialog
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(width: 20),
+            Text(
+              "Importing backup...",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final success = await BackupService.importBackup();
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+      }
+
+      if (success && mounted) {
+        // Refresh all providers to reflect imported data
+        context.read<SubjectProvider>().loadSubjects();
+        context.read<TimetableProvider>().loadTimetable();
+        context.read<AttendanceProvider>().loadAllAttendance();
+        
+        final settingsProvider = context.read<SettingsProvider>();
+        settingsProvider.loadSettings();
+        // Ensure notifications are rescheduled according to imported settings
+        settingsProvider.rescheduleNotificationIfEnabled();
+
+        context.read<ThemeProvider>().loadTheme();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data restored successfully!")),
+        );
+
+        // Force UI update
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Import failed: $e"),
+            backgroundColor: scheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildBackupButton(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+    required bool isAbsolute,
+    required ColorScheme scheme,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isAbsolute
+            ? scheme.surfaceContainerHigh
+            : scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(10),
+        border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: scheme.onSecondaryContainer, size: 28),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSecondaryContainer,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   late double minAttendance;
   late final PageController _pageController;
   int _currentPage = 0;
@@ -863,6 +1024,34 @@ class _SettingsPageState extends State<SettingsPage> {
                               );
                             },
                           ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildBackupButton(
+                                context,
+                                title: "Export Data",
+                                icon: Icons.upload_rounded,
+                                onTap: _handleExport,
+                                isAbsolute: isAbsolute,
+                                scheme: scheme,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildBackupButton(
+                                context,
+                                title: "Import Data",
+                                icon: Icons.download_rounded,
+                                onTap: _handleImport,
+                                isAbsolute: isAbsolute,
+                                scheme: scheme,
+                              ),
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 8),

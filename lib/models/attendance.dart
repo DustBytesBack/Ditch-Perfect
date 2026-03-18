@@ -14,7 +14,12 @@ enum AttendanceStatus {
   cancelled,
 
   @HiveField(3)
-  none,
+  none;
+
+  String toJson() => name;
+
+  static AttendanceStatus fromJson(String json) =>
+      AttendanceStatus.values.byName(json);
 }
 
 @HiveType(typeId: 2)
@@ -37,4 +42,18 @@ class Attendance {
     required this.slotIndex,
     this.status = AttendanceStatus.none,
   });
+
+  Map<String, dynamic> toJson() => {
+        'date': date.toIso8601String(),
+        'subjectId': subjectId,
+        'slotIndex': slotIndex,
+        'status': status.toJson(),
+      };
+
+  factory Attendance.fromJson(Map<String, dynamic> json) => Attendance(
+        date: DateTime.parse(json['date']),
+        subjectId: json['subjectId'],
+        slotIndex: json['slotIndex'],
+        status: AttendanceStatus.fromJson(json['status']),
+      );
 }

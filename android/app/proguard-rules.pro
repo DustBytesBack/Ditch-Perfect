@@ -9,3 +9,6 @@
 
 ## Keep AndroidX core (used for notification channels)
 -keep class androidx.core.app.NotificationCompat** { *; }
+
+## Keep file_picker
+-keep class com.mr.flutter.plugin.filepicker.** { *; }

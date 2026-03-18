@@ -22,4 +22,18 @@ class Subject {
     required this.shortName,
     this.minAttendance = 75,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'shortName': shortName,
+        'minAttendance': minAttendance,
+      };
+
+  factory Subject.fromJson(Map<String, dynamic> json) => Subject(
+        id: json['id'],
+        name: json['name'],
+        shortName: json['shortName'],
+        minAttendance: (json['minAttendance'] as num).toDouble(),
+      );
 }
