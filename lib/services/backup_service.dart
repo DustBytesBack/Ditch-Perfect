@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import '../models/subject.dart';
@@ -75,12 +74,26 @@ class BackupService {
 
       final Map<String, dynamic> backup = jsonDecode(jsonString);
 
-      // Basic validation
-      if (!backup.containsKey('subjects') || !backup.containsKey('attendance')) {
-        throw Exception('Invalid backup file format.');
+      // Validate and parse all data before touching the database to avoid data loss on error
+      final List<dynamic> subjectsJson = backup['subjects'] ?? [];
+      final Map<String, dynamic> attendanceJson = backup['attendance'] ?? {};
+      final Map<String, dynamic> timetableJson = backup['timetable'] ?? {};
+      final Map<String, dynamic> settingsJson = backup['settings'] ?? {};
+      final Map<String, dynamic> removalsJson = backup['timetable_removals'] ?? {};
+
+      // Parse subjects
+      final List<Subject> parsedSubjects = [];
+      for (var sJson in subjectsJson) {
+        parsedSubjects.add(Subject.fromJson(Map<String, dynamic>.from(sJson)));
       }
 
-      // Clear existing data completely
+      // Parse attendance
+      final Map<String, Attendance> parsedAttendance = {};
+      for (var entry in attendanceJson.entries) {
+        parsedAttendance[entry.key] = Attendance.fromJson(Map<String, dynamic>.from(entry.value));
+      }
+
+      // Clear existing data ONLY after successful parsing
       await DatabaseService.subjectsBox.clear();
       await DatabaseService.attendanceBox.clear();
       await DatabaseService.timetableBox.clear();
@@ -88,32 +101,35 @@ class BackupService {
       await DatabaseService.timetableRemovalsBox.clear();
 
       // Restore subjects
-      final List<dynamic> subjectsJson = backup['subjects'];
-      for (var sJson in subjectsJson) {
-        final subject = Subject.fromJson(Map<String, dynamic>.from(sJson));
+      for (var subject in parsedSubjects) {
         await DatabaseService.subjectsBox.put(subject.id, subject);
       }
 
       // Restore attendance
-      final Map<String, dynamic> attendanceJson = backup['attendance'];
-      for (var entry in attendanceJson.entries) {
-        await DatabaseService.attendanceBox.put(
-          entry.key,
-          Attendance.fromJson(Map<String, dynamic>.from(entry.value)),
-        );
+      for (var entry in parsedAttendance.entries) {
+        await DatabaseService.attendanceBox.put(entry.key, entry.value);
       }
 
-      // Restore timetable
-      final Map<String, dynamic> timetableJson = backup['timetable'];
-      await DatabaseService.timetableBox.putAll(timetableJson);
+      // Restore other data
+      if (timetableJson.isNotEmpty) await DatabaseService.timetableBox.putAll(timetableJson);
+      if (settingsJson.isNotEmpty) await DatabaseService.settingsBox.putAll(settingsJson);
+      if (removalsJson.isNotEmpty) await DatabaseService.timetableRemovalsBox.putAll(removalsJson);
 
-      // Restore settings
-      final Map<String, dynamic> settingsJson = backup['settings'];
-      await DatabaseService.settingsBox.putAll(settingsJson);
-
-      // Restore timetable_removals
-      final Map<String, dynamic> removalsJson = backup['timetable_removals'];
-      await DatabaseService.timetableRemovalsBox.putAll(removalsJson);
+      // Ensure default settings exist just in case they were missing from the backup
+      final settingsBox = DatabaseService.settingsBox;
+      if (!settingsBox.containsKey("hoursPerDay")) {
+        await settingsBox.put("hoursPerDay", 8);
+      }
+      if (!settingsBox.containsKey("minAttendance")) {
+        await settingsBox.put("minAttendance", 75);
+      }
+      if (!settingsBox.containsKey("username")) {
+        final randomId = (DateTime.now().millisecondsSinceEpoch % 9000) + 1000;
+        await settingsBox.put("username", "User_$randomId");
+      }
+      if (!settingsBox.containsKey("isUsernameSet")) {
+        await settingsBox.put("isUsernameSet", false);
+      }
 
       return true;
     } catch (e) {

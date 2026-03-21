@@ -424,9 +424,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 // ignore: deprecated_member_use
                                 year2023: false,
                                 min: 50,
-                                max: 100,
-                                divisions: 50,
-                                value: minAttendance,
+                                max: 99,
+                                divisions: 49,
+                                value: minAttendance > 99 ? 99 : minAttendance,
 
                                 onChanged: (value) {
                                   setState(() {
