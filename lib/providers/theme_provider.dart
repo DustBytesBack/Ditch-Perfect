@@ -10,22 +10,15 @@ class ThemeProvider extends ChangeNotifier {
   bool absoluteMode = false;
 
   void loadTheme() {
-    final dark = DatabaseService.settingsBox.get(
-      "darkMode",
-      defaultValue: false,
-    );
-
     final colorValue = DatabaseService.settingsBox.get(
       "seedColor",
       defaultValue: Colors.indigo.toARGB32(),
     );
 
-    final pookie = DatabaseService.settingsBox.get(
+    pookieMode = DatabaseService.settingsBox.get(
       "pookieMode",
       defaultValue: false,
     );
-
-    pookieMode = pookie;
 
     absoluteMode = DatabaseService.settingsBox.get(
       "absoluteMode",
@@ -33,29 +26,39 @@ class ThemeProvider extends ChangeNotifier {
     );
 
     if (pookieMode) {
-      /// Pookie mode always uses light theme
-      isDark = false;
-
-      seedColor = const Color(0xFFFF8AD6);
+      if (isDark) {
+        /// Emo Pookie (Dark Pink + Absolute Black)
+        absoluteMode = true;
+        seedColor = const Color(0xFFF7A5E1);
+      } else {
+        /// Standard Pookie (Light Pink)
+        absoluteMode = false;
+        seedColor = const Color(0xFFFF8AD6);
+      }
     } else {
-      isDark = dark;
       seedColor = Color(colorValue);
     }
   }
 
   void toggleTheme(bool value) {
-    /// If user turns on Dark mode, pookie mode must be disabled
-    if (value && pookieMode) {
-      pookieMode = false;
-      DatabaseService.settingsBox.put("pookieMode", false);
-    }
-
     isDark = value;
 
-    /// Absolute mode can be turned on only in dark mode
-    if (!value) {
-      absoluteMode = false;
-      DatabaseService.settingsBox.put("absoluteMode", false);
+    if (pookieMode) {
+      if (value) {
+        /// Switch to Emo Pookie (Dark)
+        seedColor = const Color(0xFFF7A5E1);
+        absoluteMode = true;
+      } else {
+        /// Switch to Standard Pookie (Light)
+        seedColor = const Color(0xFFFF8AD6);
+        absoluteMode = false;
+      }
+    } else {
+      /// Standard Absolute mode logic
+      if (!value) {
+        absoluteMode = false;
+        DatabaseService.settingsBox.put("absoluteMode", false);
+      }
     }
 
     DatabaseService.settingsBox.put("darkMode", value);
@@ -80,21 +83,29 @@ class ThemeProvider extends ChangeNotifier {
     DatabaseService.settingsBox.put("pookieMode", value);
 
     if (value) {
-      /// Pookie mode conflicts with Absolute mode, so disable it
+      /// Default to Light Pookie mode
+      isDark = false;
+      DatabaseService.settingsBox.put("darkMode", false);
+
       absoluteMode = false;
       DatabaseService.settingsBox.put("absoluteMode", false);
 
-      /// Force light mode
-      isDark = false;
-
       seedColor = const Color(0xFFFF8AD6);
     } else {
+      /// Restore previous settings
       final storedDark = DatabaseService.settingsBox.get(
         "darkMode",
         defaultValue: false,
       );
 
       isDark = storedDark;
+
+      final storedAbsolute = DatabaseService.settingsBox.get(
+        "absoluteMode",
+        defaultValue: false,
+      );
+
+      absoluteMode = storedAbsolute;
 
       final storedColor = DatabaseService.settingsBox.get(
         "seedColor",
@@ -108,20 +119,34 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   void toggleAbsoluteMode(bool value) {
-    /// Absolute mode can be turned on only in dark mode
-    if (value && !isDark) {
+    if (pookieMode) {
+      /// If user turns on Absolute mode while in Pookie mode,
+      /// it forces Emo Pookie (Dark Mode).
+      if (value) {
+        isDark = true;
+        DatabaseService.settingsBox.put("darkMode", true);
+
+        seedColor = const Color(0xFFF7A5E1);
+      } else {
+        /// If turning off Absolute mode while in Pookie mode, 
+        /// it reverts to Light Pookie.
+        isDark = false;
+        DatabaseService.settingsBox.put("darkMode", false);
+
+        seedColor = const Color(0xFFFF8AD6);
+      }
+    }
+
+    /// Absolute mode can be turned on only in dark mode normally
+    if (!pookieMode && value && !isDark) {
       absoluteMode = false;
       DatabaseService.settingsBox.put("absoluteMode", false);
-    } else {
-      if (value) {
-        /// Absolute mode conflicts with Pookie mode, so disable it
-        pookieMode = false;
-        DatabaseService.settingsBox.put("pookieMode", false);
-      }
-
-      absoluteMode = value;
-      DatabaseService.settingsBox.put("absoluteMode", value);
+      return;
     }
+
+    absoluteMode = value;
+    DatabaseService.settingsBox.put("absoluteMode", value);
+
     notifyListeners();
   }
 }

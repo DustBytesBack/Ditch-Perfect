@@ -717,23 +717,21 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                     Switch.adaptive(
                                       value: themeProvider.isDark,
-                                      onChanged: themeProvider.pookieMode
-                                          ? null
-                                          : (value) {
-                                              HapticFeedback.lightImpact();
-                                              if (!value && _currentPage == 1) {
-                                                _pageController.animateToPage(
-                                                  0,
-                                                  duration: const Duration(
-                                                    milliseconds: 300,
-                                                  ),
-                                                  curve: Curves.easeInOut,
-                                                );
-                                              }
-                                              context
-                                                  .read<ThemeProvider>()
-                                                  .toggleTheme(value);
-                                            },
+                                      onChanged: (value) {
+                                        HapticFeedback.lightImpact();
+                                        if (!value && _currentPage == 1) {
+                                          _pageController.animateToPage(
+                                            0,
+                                            duration: const Duration(
+                                              milliseconds: 300,
+                                            ),
+                                            curve: Curves.easeInOut,
+                                          );
+                                        }
+                                        context
+                                            .read<ThemeProvider>()
+                                            .toggleTheme(value);
+                                      },
                                     ),
                                   ],
                                 ),
@@ -817,14 +815,21 @@ class _SettingsPageState extends State<SettingsPage> {
 
                           child: Row(
                             children: [
-                              const Text("🎀", style: TextStyle(fontSize: 20)),
+                              Text(
+                                themeProvider.pookieMode && themeProvider.isDark
+                                    ? "🖤"
+                                    : "🎀",
+                                style: const TextStyle(fontSize: 20),
+                              ),
 
                               const SizedBox(width: 18),
 
-                              const Expanded(
+                              Expanded(
                                 child: Text(
-                                  "Pookie Mode",
-                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                  themeProvider.pookieMode && themeProvider.isDark
+                                      ? "Emo Pookie Mode 🕸️"
+                                      : "Pookie Mode",
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
 

@@ -756,14 +756,16 @@ class _SubjectPageState extends State<SubjectPage> {
 
                         bool lowAttendance = percent < minAttendance;
 
-                        final tintedColor = lowAttendance
-                            ? Color.alphaBlend(
-                                scheme.error.withValues(alpha: .2),
-                                scheme.onError,
-                              )
-                            : (isAbsolute
-                                ? scheme.surfaceContainerHigh
-                                : scheme.secondaryContainer);
+                        final tintedColor = (themeProvider.pookieMode)
+                            ? scheme.surfaceContainerHigh
+                            : (lowAttendance
+                                ? Color.alphaBlend(
+                                    scheme.error.withValues(alpha: .2),
+                                    scheme.onError,
+                                  )
+                                : (isAbsolute
+                                    ? scheme.surfaceContainerHigh
+                                    : scheme.secondaryContainer));
 
                         final isSelected = _selectedSubjectId == subject.id;
                         final isAnySelected = _selectedSubjectId != null;
@@ -951,10 +953,16 @@ class _SubjectPageState extends State<SubjectPage> {
                                                     5,
                                                   ),
                                                   bottomRight: Radius.circular(
-                                                    5,
+                                                      5,
+                                                    ),
                                                   ),
+                                                  border: (themeProvider.pookieMode)
+                                                      ? Border.all(
+                                                          color: scheme.primary.withValues(alpha: 0.15),
+                                                          width: 1,
+                                                        )
+                                                      : null,
                                                 ),
-                                          ),
                                           alignment: Alignment.center,
                                           child: Text(
                                             subject.name,
@@ -1011,7 +1019,13 @@ class _SubjectPageState extends State<SubjectPage> {
                                                     bottomRight:
                                                         Radius.circular(20),
                                                   ),
-                                            ),
+                                                  border: (themeProvider.pookieMode)
+                                                      ? Border.all(
+                                                          color: scheme.primary.withValues(alpha: 0.15),
+                                                          width: 1,
+                                                        )
+                                                      : null,
+                                                ),
                                             alignment: Alignment.center,
                                             child: Text(
                                               lowAttendance

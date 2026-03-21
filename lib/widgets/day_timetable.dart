@@ -104,12 +104,14 @@ class DayTimetable extends StatelessWidget {
         int bunk = canBunk(attended, total, minAttendance);
         int need = needToAttend(attended, total, minAttendance);
 
-        final tintedColor = lowAttendance
-            ? Color.alphaBlend(
-                scheme.error.withValues(alpha: .12),
-                scheme.secondaryContainer,
-              )
-            : (isAbsolute ? scheme.surfaceContainerHigh : scheme.secondaryContainer);
+        final tintedColor = (themeProvider.pookieMode)
+            ? scheme.surfaceContainerHigh
+            : (lowAttendance
+                ? Color.alphaBlend(
+                    scheme.error.withValues(alpha: .12),
+                    scheme.secondaryContainer,
+                  )
+                : (isAbsolute ? scheme.surfaceContainerHigh : scheme.secondaryContainer));
 
         final isExtra = index >= baseCount;
 
@@ -178,6 +180,12 @@ class DayTimetable extends StatelessWidget {
                             bottomLeft: Radius.circular(5),
                             bottomRight: Radius.circular(5),
                           ),
+                          border: (themeProvider.pookieMode)
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.15),
+                                  width: 1,
+                                )
+                              : null,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -312,6 +320,12 @@ class DayTimetable extends StatelessWidget {
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
                   ),
+                  border: (themeProvider.pookieMode)
+                      ? Border.all(
+                          color: scheme.primary.withValues(alpha: 0.15),
+                          width: 1,
+                        )
+                      : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(

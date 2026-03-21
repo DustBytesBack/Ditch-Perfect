@@ -88,7 +88,39 @@ class OutStanding extends StatelessWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorSchemeSeed: themeProvider.seedColor,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: themeProvider.seedColor,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: themeProvider.absoluteMode ? Colors.black : null,
+          surfaceContainer: themeProvider.pookieMode
+              ? const Color(0xFF1A1218) // Richer pinkish black
+              : (themeProvider.absoluteMode ? const Color(0xFF080808) : null),
+          surfaceContainerHigh: themeProvider.pookieMode
+              ? const Color(0xFF2B1B26) // Noticeable pink tint
+              : (themeProvider.absoluteMode ? const Color(0xFF121212) : null),
+          surfaceContainerHighest: themeProvider.pookieMode
+              ? const Color(0xFF382331) // Strong pink-tinted panel
+              : (themeProvider.absoluteMode ? const Color(0xFF1A1A1A) : null),
+          onSurface: themeProvider.pookieMode
+              ? const Color(0xFFF7A5E1)
+              : null,
+          onSurfaceVariant: themeProvider.pookieMode
+              ? const Color(0xFFF7A5E1).withValues(alpha: 0.8)
+              : null,
+          onSecondaryContainer: themeProvider.pookieMode
+              ? const Color(0xFFF7A5E1)
+              : null,
+          primary: themeProvider.pookieMode
+              ? const Color(0xFFF7A5E1)
+              : null,
+          secondary: themeProvider.pookieMode
+              ? const Color(0xFFF7A5E1)
+              : null,
+          secondaryContainer: themeProvider.pookieMode
+              ? const Color(0xFF2B1B26) // Same as surfaceContainerHigh
+              : null,
+        ),
       ),
 
       themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
