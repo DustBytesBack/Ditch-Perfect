@@ -94,7 +94,11 @@ class _ManualUpdateCheckDialogState extends State<_ManualUpdateCheckDialog> {
 
   Future<void> _check() async {
     try {
-      final result = await UpdateService.checkForUpdate();
+      final result = await Future.wait([
+        UpdateService.checkForUpdate(),
+        Future.delayed(const Duration(seconds: 3)),
+      ]).then((values) => values[0] as Map<String, dynamic>?);
+
       if (!mounted) return;
       setState(() {
         _loading = false;

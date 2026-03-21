@@ -413,7 +413,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                               : null,
                           boxShadow: isAbsolute
                               ? null

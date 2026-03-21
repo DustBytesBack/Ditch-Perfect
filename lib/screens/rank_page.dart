@@ -126,7 +126,7 @@ class _RankPageState extends State<RankPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                               : null,
                         ),
                         child: Text(
@@ -146,8 +146,8 @@ class _RankPageState extends State<RankPage> {
                                 : scheme.surface,
                             borderRadius: BorderRadius.circular(18),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
-                                : null,
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              : null,
                           ),
                           child: IconButton(
                             iconSize: 28,
@@ -225,7 +225,9 @@ class _RankPageState extends State<RankPage> {
           decoration: BoxDecoration(
             color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: scheme.outlineVariant),
+            border: isAbsolute
+                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                : Border.all(color: scheme.outlineVariant),
           ),
           child: Row(
             children: [
@@ -378,7 +380,7 @@ class _RankPageState extends State<RankPage> {
                           : scheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(20),
                       border: isAbsolute
-                          ? Border.all(color: scheme.outlineVariant)
+                          ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                           : null,
                     ),
                     child: Row(
@@ -450,6 +452,7 @@ class _RankPageState extends State<RankPage> {
                   );
                 },
               ),
+            const SizedBox(height: 120),
           ],
         );
       },

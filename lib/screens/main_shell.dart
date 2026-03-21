@@ -1016,7 +1016,7 @@ class _PeekingPonyState extends State<PeekingPony> with SingleTickerProviderStat
     if (!mounted) return;
     setState(() => _isVisible = true);
     await _controller.forward();
-    await Future.delayed(const Duration(seconds: 6));
+    await Future.delayed(const Duration(seconds: 10));
     if (!mounted) return;
     await _controller.reverse();
     if (!mounted) return;

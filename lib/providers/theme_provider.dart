@@ -10,6 +10,11 @@ class ThemeProvider extends ChangeNotifier {
   bool absoluteMode = false;
 
   void loadTheme() {
+    isDark = DatabaseService.settingsBox.get(
+      "darkMode",
+      defaultValue: false,
+    );
+
     final colorValue = DatabaseService.settingsBox.get(
       "seedColor",
       defaultValue: Colors.indigo.toARGB32(),

@@ -156,7 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ? scheme.surfaceContainerHigh
             : scheme.secondaryContainer,
         borderRadius: BorderRadius.circular(10),
-        border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+        border: isAbsolute ? Border.all(color: scheme.primary.withValues(alpha: 0.10)) : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -305,7 +305,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                               : null,
                         ),
                         child: Text(
@@ -326,7 +326,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
                           border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                               : null,
                         ),
                         child: IconButton(
@@ -387,7 +387,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(28),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
 
@@ -462,7 +462,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(28),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
                           child: ListTile(
@@ -507,7 +507,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(28),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
                           child: ListTile(
@@ -555,7 +555,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
 
@@ -622,7 +622,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   bottomRight: Radius.circular(28),
                                 ),
                                 border: isAbsolute
-                                    ? Border.all(color: scheme.outlineVariant)
+                                    ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                     : null,
                               ),
 
@@ -697,7 +697,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     bottomRight: Radius.circular(10),
                                   ),
                                   border: isAbsolute
-                                      ? Border.all(color: scheme.outlineVariant)
+                                      ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                       : null,
                                 ),
                                 child: Row(
@@ -759,7 +759,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                     border: isAbsolute
                                         ? Border.all(
-                                          color: scheme.outlineVariant,
+                                          color: scheme.primary.withValues(alpha: 0.10),
                                         )
                                         : null,
                                   ),
@@ -809,7 +809,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(10),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
 
@@ -870,7 +870,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   bottomRight: Radius.circular(28),
                                 ),
                                 border: isAbsolute
-                                    ? Border.all(color: scheme.outlineVariant)
+                                    ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                     : null,
                               ),
 
@@ -944,7 +944,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               bottomRight: Radius.circular(10),
                             ),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
 
@@ -971,7 +971,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(10),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
 
@@ -1009,9 +1009,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
                               String? notes;
                               try {
-                                notes = await UpdateService.fetchReleaseNotes(
-                                  version,
-                                );
+                                notes = await Future.wait([
+                                  UpdateService.fetchReleaseNotes(version),
+                                  Future.delayed(const Duration(seconds: 3)),
+                                ]).then((values) => values[0] as String?);
                               } catch (_) {}
 
                               if (!context.mounted) return;
@@ -1073,7 +1074,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               bottomRight: Radius.circular(28),
                             ),
                             border: isAbsolute
-                                ? Border.all(color: scheme.outlineVariant)
+                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                                 : null,
                           ),
 

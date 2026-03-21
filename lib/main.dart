@@ -95,13 +95,19 @@ class OutStanding extends StatelessWidget {
           surface: themeProvider.absoluteMode ? Colors.black : null,
           surfaceContainer: themeProvider.pookieMode
               ? const Color(0xFF1A1218) // Richer pinkish black
-              : (themeProvider.absoluteMode ? const Color(0xFF080808) : null),
+              : (themeProvider.absoluteMode 
+                  ? Color.alphaBlend(themeProvider.seedColor.withValues(alpha: 0.03), const Color(0xFF0A0A0A)) 
+                  : null),
           surfaceContainerHigh: themeProvider.pookieMode
               ? const Color(0xFF2B1B26) // Noticeable pink tint
-              : (themeProvider.absoluteMode ? const Color(0xFF121212) : null),
+              : (themeProvider.absoluteMode 
+                  ? Color.alphaBlend(themeProvider.seedColor.withValues(alpha: 0.06), const Color(0xFF161616)) 
+                  : null),
           surfaceContainerHighest: themeProvider.pookieMode
               ? const Color(0xFF382331) // Strong pink-tinted panel
-              : (themeProvider.absoluteMode ? const Color(0xFF1A1A1A) : null),
+              : (themeProvider.absoluteMode 
+                  ? Color.alphaBlend(themeProvider.seedColor.withValues(alpha: 0.10), const Color(0xFF222222)) 
+                  : null),
           onSurface: themeProvider.pookieMode
               ? const Color(0xFFF7A5E1)
               : null,

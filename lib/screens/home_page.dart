@@ -348,7 +348,7 @@ class HomePage extends StatelessWidget {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                               : null,
                           boxShadow: isAbsolute
                               ? null
@@ -380,7 +380,7 @@ class HomePage extends StatelessWidget {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
                           border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
+                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
                               : null,
                         ),
                         child: IconButton(
