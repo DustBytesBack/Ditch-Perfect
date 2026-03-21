@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
 import '../services/tutorial_service.dart';
 import 'home_page.dart';
@@ -15,6 +17,7 @@ import '../services/update_service.dart';
 import '../utils/update_checker.dart';
 import '../widgets/tutorial_overlay.dart';
 import '../utils/ranking_utils.dart';
+import '../providers/theme_provider.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -299,6 +302,10 @@ class _MainShellState extends State<MainShell> {
       body: Stack(
         children: [
           pages[displayIndex],
+          PeekingPony(
+            active: context.watch<ThemeProvider>().pookieMode,
+            navbarHeight: isReordering ? 225.0 : (isNavExpanded ? 189.0 : 115.0),
+          ),
 
           Positioned(
             bottom: 25,
@@ -967,4 +974,106 @@ class _TutorialStep {
     required this.pageIndex,
     this.expandNav = false,
   });
+}
+
+class PeekingPony extends StatefulWidget {
+  final bool active;
+  final double navbarHeight;
+  const PeekingPony({super.key, required this.active, required this.navbarHeight});
+
+  @override
+  State<PeekingPony> createState() => _PeekingPonyState();
+}
+
+class _PeekingPonyState extends State<PeekingPony> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _isVisible = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 35), (timer) {
+      if (widget.active && !_isVisible && mounted) {
+        _showPony();
+      }
+    });
+  }
+
+  void _showPony() async {
+    if (!mounted) return;
+    setState(() => _isVisible = true);
+    await _controller.forward();
+    await Future.delayed(const Duration(seconds: 6));
+    if (!mounted) return;
+    await _controller.reverse();
+    if (!mounted) return;
+    setState(() => _isVisible = false);
+  }
+
+  @override
+  void didUpdateWidget(PeekingPony oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active != oldWidget.active) {
+      if (widget.active) {
+        _startTimer();
+      } else {
+        _timer?.cancel();
+        if (_isVisible) {
+          _controller.reverse().then((_) {
+            if (mounted) setState(() => _isVisible = false);
+          });
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active && !_isVisible) return const SizedBox.shrink();
+
+    return Positioned(
+      bottom: widget.navbarHeight,
+      right: 80,
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(
+              0,
+              100 * (1 - _animation.value),
+            ),
+            child: Opacity(
+              opacity: _animation.value.clamp(0.0, 1.0),
+              child: child,
+            ),
+          );
+        },
+        child: Image.asset(
+          'assets/gif/pony.gif',
+          height: 100,
+          width: 100,
+        ),
+      ),
+    );
+  }
 }
