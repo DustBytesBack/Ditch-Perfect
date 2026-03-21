@@ -45,6 +45,20 @@ class _RankPageState extends State<RankPage> {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
+  String _formatRelativeTime(Timestamp? timestamp) {
+    if (timestamp == null) return "";
+    final now = DateTime.now();
+    final difference = now.difference(timestamp.toDate());
+    final minutes = difference.inMinutes;
+    final hours = difference.inHours;
+
+    if (hours >= 1) {
+      return "${hours}hr ago";
+    } else {
+      return "$minutes min ago";
+    }
+  }
+
   @override
   void dispose() {
     DatabaseService.settingsBox.listenable().removeListener(_loadUsername);
@@ -263,52 +277,70 @@ class _RankPageState extends State<RankPage> {
 
   Widget _buildLeaderboard(
       BuildContext context, bool isAbsolute, ColorScheme scheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return StreamBuilder<QuerySnapshot>(
+      key: ValueKey('leaderboard_stream_$_refreshCounter'),
+      stream: FirebaseFirestore.instance
+          .collection('leaderboard')
+          .orderBy('rank')
+          .limit(50)
+          .snapshots(),
+      builder: (context, snapshot) {
+        Timestamp? updatedAt;
+        if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+          final firstDoc = snapshot.data!.docs.first.data() as Map<String, dynamic>;
+          updatedAt = firstDoc['updatedAt'] as Timestamp?;
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Text(
+                  "Leaderboard",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                if (updatedAt != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatRelativeTime(updatedAt),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant.withValues(alpha: .7),
+                        ),
+                  ),
+                ],
+                const Spacer(),
+                IconButton(
+                  onPressed: _refreshLeaderboard,
+                  icon: Icon(Icons.refresh, color: scheme.primary),
+                  tooltip: 'Reload Leaderboard',
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
-              "Leaderboard",
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+              "Users closest to 75% attendance rank higher.",
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
             ),
-            IconButton(
-              onPressed: _refreshLeaderboard,
-              icon: Icon(Icons.refresh, color: scheme.primary),
-              tooltip: 'Reload Leaderboard',
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          "Users closest to 75% attendance rank higher.",
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-        ),
-        const SizedBox(height: 16),
-        StreamBuilder<QuerySnapshot>(
-          key: ValueKey('leaderboard_stream_$_refreshCounter'),
-          stream: FirebaseFirestore.instance
-              .collection('leaderboard')
-              .orderBy('rank')
-              .limit(50)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final docs = snapshot.data?.docs ?? [];
-
-            if (docs.isEmpty) {
-              return Center(
+            const SizedBox(height: 16),
+            if (snapshot.hasError)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text('Error: ${snapshot.error}'),
+              )
+            else if (snapshot.connectionState == ConnectionState.waiting)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (docs.isEmpty)
+              Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Column(
@@ -321,106 +353,105 @@ class _RankPageState extends State<RankPage> {
                     ],
                   ),
                 ),
-              );
-            }
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: docs.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final doc = docs[index];
+                  final data = doc.data() as Map<String, dynamic>;
 
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: docs.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final doc = docs[index];
-                final data = doc.data() as Map<String, dynamic>;
-                
-                final username = data['username'] ?? 'Unknown';
-                final attendance = (data['attendancePercent'] ?? 0.0).toDouble();
-                final score = (data['rankingScore'] ?? 0.0).toDouble();
-                final rank = data['rank'] ?? (index + 1);
+                  final username = data['username'] ?? 'Unknown';
+                  final attendance = (data['attendancePercent'] ?? 0.0).toDouble();
+                  final score = (data['rankingScore'] ?? 0.0).toDouble();
+                  final rank = data['rank'] ?? (index + 1);
 
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isAbsolute
-                        ? scheme.surfaceContainerHigh
-                        : scheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(20),
-                    border: isAbsolute
-                        ? Border.all(color: scheme.outlineVariant)
-                        : null,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: index < 3
-                              ? scheme.primaryContainer
-                              : scheme.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          "$rank",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isAbsolute
+                          ? scheme.surfaceContainerHigh
+                          : scheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(20),
+                      border: isAbsolute
+                          ? Border.all(color: scheme.outlineVariant)
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
                             color: index < 3
-                                ? scheme.onPrimaryContainer
-                                : scheme.onSurface,
+                                ? scheme.primaryContainer
+                                : scheme.surface,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            "$rank",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: index < 3
+                                  ? scheme.onPrimaryContainer
+                                  : scheme.onSurface,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                username,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                "${attendance.toStringAsFixed(1)}% Attendance",
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              username,
-                              style: const TextStyle(
+                              score.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: scheme.primary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 18,
                               ),
                             ),
                             Text(
-                              "${attendance.toStringAsFixed(1)}% Attendance",
+                              "Score",
                               style: TextStyle(
                                 color: scheme.onSurfaceVariant,
-                                fontSize: 13,
+                                fontSize: 10,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            score.toStringAsFixed(1),
-                            style: TextStyle(
-                              color: scheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          Text(
-                            "Score",
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
     );
   }
 }
