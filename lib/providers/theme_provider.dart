@@ -44,8 +44,11 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   void toggleTheme(bool value) {
-    /// Block dark mode if pookie mode is active
-    if (pookieMode) return;
+    /// If user turns on Dark mode, pookie mode must be disabled
+    if (value && pookieMode) {
+      pookieMode = false;
+      DatabaseService.settingsBox.put("pookieMode", false);
+    }
 
     isDark = value;
 
@@ -77,6 +80,10 @@ class ThemeProvider extends ChangeNotifier {
     DatabaseService.settingsBox.put("pookieMode", value);
 
     if (value) {
+      /// Pookie mode conflicts with Absolute mode, so disable it
+      absoluteMode = false;
+      DatabaseService.settingsBox.put("absoluteMode", false);
+
       /// Force light mode
       isDark = false;
 
@@ -106,6 +113,12 @@ class ThemeProvider extends ChangeNotifier {
       absoluteMode = false;
       DatabaseService.settingsBox.put("absoluteMode", false);
     } else {
+      if (value) {
+        /// Absolute mode conflicts with Pookie mode, so disable it
+        pookieMode = false;
+        DatabaseService.settingsBox.put("pookieMode", false);
+      }
+
       absoluteMode = value;
       DatabaseService.settingsBox.put("absoluteMode", value);
     }
