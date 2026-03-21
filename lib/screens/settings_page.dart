@@ -12,6 +12,7 @@ import '../providers/attendance_provider.dart';
 import '../utils/update_checker.dart';
 import '../services/update_service.dart';
 import '../services/backup_service.dart';
+import '../widgets/wavy_progress_indicator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -983,22 +984,19 @@ class _SettingsPageState extends State<SettingsPage> {
                                 context: context,
                                 barrierDismissible: false,
                                 builder: (_) => AlertDialog(
-                                  content: Row(
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
+                                      const SizedBox(height: 16),
+                                      const WavyCircularProgressIndicator(),
+                                      const SizedBox(height: 24),
                                       Text(
                                         "Fetching notes…",
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium,
                                       ),
+                                      const SizedBox(height: 8),
                                     ],
                                   ),
                                 ),

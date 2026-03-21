@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../utils/ranking_utils.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/wavy_progress_indicator.dart';
 
 import 'edit_username_page.dart';
 
@@ -260,7 +261,7 @@ class _RankPageState extends State<RankPage> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: WavyCircularProgressIndicator(size: 24, strokeWidth: 3),
                       )
                     : IconButton(
                         onPressed: () => _submitRankingData(),
@@ -337,7 +338,7 @@ class _RankPageState extends State<RankPage> {
             else if (snapshot.connectionState == ConnectionState.waiting)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: WavyCircularProgressIndicator()),
               )
             else if (docs.isEmpty)
               Center(

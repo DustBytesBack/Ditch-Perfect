@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/update_service.dart';
 import '../services/database_service.dart';
+import '../widgets/wavy_progress_indicator.dart';
 
 /// Silent check — used on app launch. Shows dialog only if update exists.
 Future<void> checkForUpdate(BuildContext context) async {
@@ -113,20 +114,18 @@ class _ManualUpdateCheckDialogState extends State<_ManualUpdateCheckDialog> {
     if (_loading) {
       return AlertDialog(
         title: const Text("Checking for Updates"),
-        content: Row(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
+            const SizedBox(height: 16),
+            const WavyCircularProgressIndicator(),
+            const SizedBox(height: 24),
+            Text(
+              "Please wait...",
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Text(
-                "Please wait...",
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
+            const SizedBox(height: 8),
           ],
         ),
       );
