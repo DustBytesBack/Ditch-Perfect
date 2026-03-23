@@ -209,6 +209,134 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
+  void _showAppInfoDialog() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+
+    final scheme = Theme.of(context).colorScheme;
+    final themeProvider = context.read<ThemeProvider>();
+    final isAbsolute = themeProvider.absoluteMode;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          decoration: BoxDecoration(
+            color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+            borderRadius: BorderRadius.circular(36),
+            border: isAbsolute
+                ? Border.all(color: scheme.primary.withValues(alpha: 0.12))
+                : null,
+            boxShadow: isAbsolute
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: isAbsolute ? scheme.primary.withValues(alpha: 0.1) : scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    "assets/icon/Ditch_Perfect_Icon.png",
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 32,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "Ditch Perfect",
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "v${packageInfo.version}",
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                "Attendance Tracker Application.",
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () {
+                        showLicensePage(
+                          context: context,
+                          applicationName: "Ditch Perfect",
+                          applicationVersion: packageInfo.version,
+                        );
+                      },
+                      child: const Text("Licenses"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Got it"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void showDeleteAllDialog(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
@@ -336,14 +464,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             Icons.info_outline,
                             color: scheme.onSurface,
                           ),
-                          onPressed: () {
-                            showAboutDialog(
-                              context: context,
-                              applicationName: "Ditch Perfect",
-                              applicationVersion: "1.0",
-                              applicationLegalese: "Aint got no shit here",
-                            );
-                          },
+                          onPressed: _showAppInfoDialog,
                         ),
                       ),
                     ],
