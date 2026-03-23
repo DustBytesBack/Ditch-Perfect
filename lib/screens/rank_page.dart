@@ -371,17 +371,44 @@ class _RankPageState extends State<RankPage> {
                   final attendance = (data['attendancePercent'] ?? 0.0).toDouble();
                   final score = (data['rankingScore'] ?? 0.0).toDouble();
                   final rank = data['rank'] ?? (index + 1);
+                  final isCurrentUser = _username != null && username == _username;
+                  final isRank1 = rank == 1;
+                  final isRank2 = rank == 2;
+                  final isRank3 = rank == 3;
 
-                  return Container(
+                  Color? rankColor;
+                  IconData? rankIcon;
+                  Color? shimmerColor;
+
+                  if (isRank1) {
+                    rankColor = const Color(0xFFFFD700); // Pure Gold
+                    rankIcon = Icons.workspace_premium_rounded;
+                    shimmerColor = const Color(0xFFFFE082); // Brighter Gold Shimmer
+                  } else if (isRank2) {
+                    rankColor = Colors.blueGrey.shade400;
+                    rankIcon = Icons.emoji_events_rounded;
+                    shimmerColor = Colors.grey.shade300;
+                  } else if (isRank3) {
+                    rankColor = Colors.brown.shade300;
+                    rankIcon = Icons.emoji_events_rounded;
+                    shimmerColor = null; // Removed shine for bronze
+                  }
+
+                  Widget pill = Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isAbsolute
                           ? scheme.surfaceContainerHigh
                           : scheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(20),
-                      border: isAbsolute
-                          ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                          : null,
+                      border: rankColor != null
+                          ? Border.all(color: rankColor, width: 2.5)
+                          : (isCurrentUser
+                              ? Border.all(color: scheme.primary, width: 2.5)
+                              : (isAbsolute
+                                  ? Border.all(
+                                      color: scheme.primary.withValues(alpha: 0.10))
+                                  : null)),
                     ),
                     child: Row(
                       children: [
@@ -389,21 +416,28 @@ class _RankPageState extends State<RankPage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: index < 3
-                                ? scheme.primaryContainer
-                                : scheme.surface,
+                            color: rankColor?.withValues(alpha: 0.15) ??
+                                (index < 3
+                                    ? scheme.primaryContainer
+                                    : scheme.surface),
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
-                          child: Text(
-                            "$rank",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: index < 3
-                                  ? scheme.onPrimaryContainer
-                                  : scheme.onSurface,
-                            ),
-                          ),
+                          child: rankIcon != null
+                              ? Icon(
+                                  rankIcon,
+                                  color: rankColor,
+                                  size: 24,
+                                )
+                              : Text(
+                                  "$rank",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: index < 3
+                                        ? scheme.onPrimaryContainer
+                                        : scheme.onSurface,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -412,9 +446,10 @@ class _RankPageState extends State<RankPage> {
                             children: [
                               Text(
                                 username,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
+                                  color: scheme.onSurface,
                                 ),
                               ),
                               Text(
@@ -450,6 +485,15 @@ class _RankPageState extends State<RankPage> {
                       ],
                     ),
                   );
+
+                  if (shimmerColor != null) {
+                    return ShimmeringRankPill(
+                      shimmerColor: shimmerColor,
+                      duration: Duration(milliseconds: isRank1 ? 3000 : 6000),
+                      child: pill,
+                    );
+                  }
+                  return pill;
                 },
               ),
             const SizedBox(height: 120),
@@ -457,5 +501,92 @@ class _RankPageState extends State<RankPage> {
         );
       },
     );
+  }
+}
+
+class ShimmeringRankPill extends StatefulWidget {
+  final Widget child;
+  final Color shimmerColor;
+  final Duration duration;
+  const ShimmeringRankPill({
+    super.key,
+    required this.child,
+    required this.shimmerColor,
+    this.duration = const Duration(milliseconds: 3000),
+  });
+
+  @override
+  State<ShimmeringRankPill> createState() => _ShimmeringRankPillState();
+}
+
+class _ShimmeringRankPillState extends State<ShimmeringRankPill>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        double offset = _controller.value;
+
+        // Maintain consistent speed (3s travel) while allowing variable frequency
+        const travelDurationMs = 3000.0;
+        final totalDurationMs = widget.duration.inMilliseconds.toDouble();
+
+        if (totalDurationMs > travelDurationMs) {
+          final ratio = travelDurationMs / totalDurationMs;
+          if (offset < ratio) {
+            offset = offset / ratio;
+          } else {
+            offset = 1.1; // Stay just outside the right edge
+          }
+        }
+
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.shimmerColor.withValues(alpha: 0),
+                widget.shimmerColor.withValues(alpha: 0.5),
+                widget.shimmerColor.withValues(alpha: 0),
+              ],
+              stops: const [0.0, 0.5, 1.0],
+              transform: _SlidingGradientTransform(offset: offset),
+            ).createShader(bounds);
+          },
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _SlidingGradientTransform extends GradientTransform {
+  final double offset;
+  const _SlidingGradientTransform({required this.offset});
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * (offset * 3 - 1.5), 0, 0);
   }
 }
