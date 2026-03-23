@@ -19,6 +19,120 @@ const dayNames = {
 class TimetablePage extends StatelessWidget {
   const TimetablePage({super.key});
 
+  void _showEditOptions(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final themeProvider = context.read<ThemeProvider>();
+    final isAbsolute = themeProvider.absoluteMode;
+
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 32),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildOption(
+                  context,
+                  icon: Icons.edit_calendar_rounded,
+                  label: "Add",
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TimetableEditorPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildOption(
+                  context,
+                  icon: Icons.camera_alt_outlined,
+                  label: "Scan",
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showFeatureOnWay(context);
+                  },
+                ),
+                _buildOption(
+                  context,
+                  icon: Icons.photo_library_outlined,
+                  label: "Gallery",
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showFeatureOnWay(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withValues(alpha: .4),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: scheme.primary, size: 28),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: scheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFeatureOnWay(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Feature on the way"),
+        content: const Text("This feature is currently under development."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Dismiss"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -80,14 +194,8 @@ class TimetablePage extends StatelessWidget {
                           iconSize: 28,
                           padding: const EdgeInsets.all(14),
                           icon: Icon(Icons.edit, color: scheme.onSurface),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const TimetableEditorPage(),
-                              ),
-                            );
-                          },
+                          onPressed: () => _showEditOptions(context),
+
                         ),
                       ),
                     ],
