@@ -294,6 +294,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       height: 1.5,
                     ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                "Licensed under MIT",
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
               const SizedBox(height: 32),
               Row(
                 children: [

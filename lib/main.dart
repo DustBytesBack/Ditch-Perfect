@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 
 import 'services/database_service.dart';
@@ -20,6 +21,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('LICENSE');
+    yield LicenseEntryWithLineBreaks(['Ditch Perfect'], license);
+  });
   await DatabaseService.init();
   await NotificationService.init();
 

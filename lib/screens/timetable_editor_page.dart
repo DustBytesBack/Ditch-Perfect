@@ -180,7 +180,9 @@ class TimetableEditorPage extends StatelessWidget {
                                 ? null
                                 : [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: .08),
+                                      color: Colors.black.withValues(
+                                        alpha: .08,
+                                      ),
                                       blurRadius: 12,
                                       spreadRadius: 1,
                                       offset: const Offset(0, -1),
@@ -189,7 +191,8 @@ class TimetableEditorPage extends StatelessWidget {
                           ),
                           child: Text(
                             "Edit Timetable",
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
                                   color: scheme.onSurface,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -229,7 +232,9 @@ class TimetableEditorPage extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
+                        color: isAbsolute
+                            ? scheme.surfaceContainer
+                            : scheme.surface,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(32),
                           topRight: Radius.circular(32),
@@ -279,14 +284,13 @@ class TimetableEditorPage extends StatelessWidget {
                                   onReorder: (oldIndex, newIndex) {
                                     if (newIndex > oldIndex) newIndex--;
 
-                                    final list = List<String>.from(slots);
-
-                                    final item = list.removeAt(oldIndex);
-                                    list.insert(newIndex, item);
-
                                     context
                                         .read<TimetableProvider>()
-                                        .updateDaySlots(day, list);
+                                        .reorderSubject(
+                                          day,
+                                          oldIndex,
+                                          newIndex,
+                                        );
                                   },
 
                                   itemBuilder: (context, index) {
@@ -333,7 +337,8 @@ class TimetableEditorPage extends StatelessWidget {
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color: isAbsolute
-                                                      ? scheme.surfaceContainerHigh
+                                                      ? scheme
+                                                            .surfaceContainerHigh
                                                       : scheme.onSecondary,
                                                   borderRadius:
                                                       const BorderRadius.only(
