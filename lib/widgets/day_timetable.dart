@@ -198,12 +198,11 @@ class DayTimetable extends StatelessWidget {
                                     ? subject.name
                                     : subject.shortName,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       color: lowAttendance
                                           ? scheme.error
                                           : scheme.onSecondaryContainer,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
                                     ),
                               ),
                             ),
@@ -336,7 +335,7 @@ class DayTimetable extends StatelessWidget {
                   lowAttendance
                       ? "Needs to attend $need class${need == 1 ? "" : "es"}"
                       : "Can bunk $bunk class${bunk == 1 ? "" : "es"}",
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: lowAttendance
                         ? scheme.error
                         : scheme.onSecondaryContainer,
