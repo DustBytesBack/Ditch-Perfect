@@ -15,6 +15,7 @@ import 'providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/main_shell.dart';
+import 'screens/splash_screen.dart';
 
 /// Builds a single Roboto Flex TextStyle with tuned variable-font axes.
 TextStyle _robotoFlexStyle({
@@ -189,7 +190,7 @@ class OutStanding extends StatelessWidget {
 
       themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
 
-      home: const MainShell(),
+      home: const SplashScreen(child: MainShell()),
     );
   }
 }
