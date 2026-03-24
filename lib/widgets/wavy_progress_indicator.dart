@@ -8,8 +8,8 @@ class WavyCircularProgressIndicator extends StatefulWidget {
 
   const WavyCircularProgressIndicator({
     super.key,
-    this.size = 48,
-    this.strokeWidth = 5.5,
+    this.size = 36, // Standard size closer to M3
+    this.strokeWidth = 4.0, // Standard M3 stroke width
     this.color,
   });
 
@@ -28,7 +28,7 @@ class _WavyCircularProgressIndicatorState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1333 * 2222 ~/ 1000), // Approximate duration logic
     )..repeat();
   }
 
@@ -63,6 +63,9 @@ class _WavyProgressPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
 
+  // Constants mapping to real Flutter indeterminate curves
+  static const double _kMinSweep = 0.05;
+
   _WavyProgressPainter({
     required this.animationValue,
     required this.color,
@@ -77,35 +80,49 @@ class _WavyProgressPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
-    final double radius = size.width / 2.3;
+    final double radius = (size.width - strokeWidth) / 2;
     final Offset center = Offset(size.width / 2, size.height / 2);
 
-    // M3 Expressive Style:
-    // A single wavy line that rotates.
-    // The "wave" is created by varying the radius slightly based on the angle.
-    final Path path = Path();
-    const int segments = 120;
+    // Standard Indeterminate Logic:
+    // We break the 1.0 animationValue into parts just like official flutter logic.
+    final double headValue = const Interval(0.0, 0.5, curve: Curves.fastOutSlowIn).transform(animationValue);
+    final double tailValue = const Interval(0.5, 1.0, curve: Curves.fastOutSlowIn).transform(animationValue);
+    final double stepValue = animationValue;
+
+    // Head and Tail give the arc boundaries.
+    // The "sweep" is the distance between them.
+    double arcStart = tailValue * 1.5 * pi;
+    double arcSweep = (headValue - tailValue) * 1.5 * pi;
     
-    // We'll draw an arc of about 280 degrees to look like a progress indicator
-    const double arcAngle = 1.6 * pi; 
-    final double startAngle = animationValue * 2 * pi;
+    // Add rotational offset
+    arcStart += (stepValue * 2 * pi);
+    
+    // Ensure minimum sweep visibility
+    if (arcSweep.abs() < _kMinSweep * pi) {
+      arcSweep = arcSweep.sign * _kMinSweep * pi;
+    }
+
+    final Path path = Path();
+    const int segments = 100;
 
     for (int i = 0; i <= segments; i++) {
-        final double currentAngle = startAngle + (i / segments) * arcAngle;
-        
-        // Wave frequency: 7 cycles per circle
-        // Wave amplitude: 2.5 pixels
-        final double wave = sin(currentAngle * 7 - animationValue * 4 * pi) * 2.5;
-        final double r = radius + wave;
-        
-        final double x = center.dx + r * cos(currentAngle);
-        final double y = center.dy + r * sin(currentAngle);
-        
-        if (i == 0) {
-            path.moveTo(x, y);
-        } else {
-            path.lineTo(x, y);
-        }
+      final double progress = i / segments;
+      final double angle = arcStart + (progress * arcSweep);
+      
+      // WAVE LOGIC:
+      // Frequency: 8 cycles
+      // Amplitude: scaled by stroke width
+      final double wave = sin(angle * 8 - (animationValue * 10)) * (strokeWidth * 0.45);
+      final double r = radius + wave;
+
+      final double x = center.dx + r * cos(angle);
+      final double y = center.dy + r * sin(angle);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
     }
 
     canvas.drawPath(path, paint);
@@ -117,3 +134,4 @@ class _WavyProgressPainter extends CustomPainter {
         oldDelegate.color != color;
   }
 }
+

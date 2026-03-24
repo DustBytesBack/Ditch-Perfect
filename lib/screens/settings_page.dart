@@ -90,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
+              child: WavyCircularProgressIndicator(strokeWidth: 2.5),
             ),
             const SizedBox(width: 20),
             Text(

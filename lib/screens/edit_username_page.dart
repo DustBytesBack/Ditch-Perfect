@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/wavy_progress_indicator.dart';
 
 class EditUsernamePage extends StatefulWidget {
   const EditUsernamePage({super.key});
@@ -199,14 +200,14 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
                   FilledButton.icon(
                     onPressed: _isLoading ? null : _saveUsername,
                     icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: WavyCircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                         : const Icon(Icons.check),
                     label: const Text("Save Username"),
                     style: FilledButton.styleFrom(

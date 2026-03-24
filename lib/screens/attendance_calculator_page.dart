@@ -417,13 +417,13 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                           : 'You can cut ${projection.canCut} out of $_futureClasses upcoming classes and still meet the attendance criteria.',
                                       style: Theme.of(context)
                                           .textTheme
-                                          .bodyLarge
+                                          .bodyMedium
                                           ?.copyWith(
                                             color: projection.shortage > 0
                                                 ? scheme.onErrorContainer
                                                 : scheme.onPrimaryContainer,
                                             height: 1.4,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w400,
                                           ),
                                     ),
                                     const SizedBox(height: 16),

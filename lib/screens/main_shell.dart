@@ -180,10 +180,16 @@ class _MainShellState extends State<MainShell> {
     ),
   ];
 
+  int _currentDisplayIndex = 0;
+  int _prevDisplayIndex = 0;
+
   @override
   void initState() {
     super.initState();
     _loadNavOrder();
+    _currentDisplayIndex = _getDisplayIndex();
+    _prevDisplayIndex = _currentDisplayIndex;
+
     TutorialService.restartListenable.addListener(_handleTutorialRestart);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onLaunchChecks();
@@ -217,6 +223,24 @@ class _MainShellState extends State<MainShell> {
     TutorialService.restartListenable.removeListener(_handleTutorialRestart);
     super.dispose();
   }
+
+  int _getDisplayIndex([int? specificCurrentIndex]) {
+    int index = specificCurrentIndex ?? currentIndex;
+    int displayIndex = index;
+    if (index < _allDestinations.length) {
+      final label = _allDestinations[index].label;
+      if (label == "Home") { displayIndex = 0; }
+      else if (label == "Calendar") { displayIndex = 1; }
+      else if (label == "Subjects") { displayIndex = 2; }
+      else if (label == "Timetable") { displayIndex = 3; }
+      else if (label == "Settings") { displayIndex = 4; }
+      else if (label == "Calc") { displayIndex = 5; }
+      else if (label == "Rank") { displayIndex = 6; }
+    }
+    if (displayIndex >= pages.length) displayIndex = 0;
+    return displayIndex;
+  }
+
 
   Future<void> _onLaunchChecks() async {
     // Show release notes first if the app was just updated.
@@ -274,34 +298,61 @@ class _MainShellState extends State<MainShell> {
     final currentStep = _tutorialActive
         ? _tutorialSteps[_tutorialStepIndex]
         : null;
-
-    // Map current index to the correct underlying page index
-    int displayIndex = currentIndex;
-    if (currentIndex < _allDestinations.length) {
-      final label = _allDestinations[currentIndex].label;
-      if (label == "Home") {
-        displayIndex = 0;
-      } else if (label == "Calendar") {
-        displayIndex = 1;
-      } else if (label == "Subjects") {
-        displayIndex = 2;
-      } else if (label == "Timetable") {
-        displayIndex = 3;
-      } else if (label == "Settings") {
-        displayIndex = 4;
-      } else if (label == "Calc") {
-        displayIndex = 5;
-      } else if (label == "Rank") {
-        displayIndex = 6;
-      }
-    }
-    // Safety clamp
-    if (displayIndex >= pages.length) displayIndex = 0;
+    // Dynamically order the stack so the current page is always on top (drawn last),
+    // and the previous page is just below it.
+    final renderOrder = List<int>.generate(pages.length, (i) => i);
+    renderOrder.sort((a, b) {
+      if (a == b) return 0;
+      if (a == _currentDisplayIndex) return 1;
+      if (b == _currentDisplayIndex) return -1;
+      if (a == _prevDisplayIndex) return 1;
+      if (b == _prevDisplayIndex) return -1;
+      return a.compareTo(b);
+    });
 
     return Scaffold(
       body: Stack(
         children: [
-          pages[displayIndex],
+          ...renderOrder.map((pageIndex) {
+            final isCurrent = pageIndex == _currentDisplayIndex;
+            final isPrevious = pageIndex == _prevDisplayIndex;
+            
+            final offset = isCurrent 
+                ? Offset.zero 
+                : (isPrevious ? const Offset(0.0, 0.0) : const Offset(0.0, 0.08));
+            final scale = isCurrent ? 1.0 : (isPrevious ? 0.96 : 0.96);
+            final opacity = isCurrent ? 1.0 : 0.0;
+            
+            return AnimatedScale(
+              key: ValueKey<int>(pageIndex),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              scale: scale,
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                offset: offset,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  opacity: opacity,
+                  child: IgnorePointer(
+                    ignoring: !isCurrent,
+                    child: FocusScope(
+                      canRequestFocus: isCurrent,
+                      child: TickerMode(
+                        enabled: isCurrent,
+                        child: RepaintBoundary(
+                          child: pages[pageIndex],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+
           PeekingPony(
             active: context.watch<ThemeProvider>().pookieMode,
             navbarHeight: isReordering ? 225.0 : (isNavExpanded ? 189.0 : 115.0),
@@ -855,6 +906,11 @@ class _MainShellState extends State<MainShell> {
         currentIndex = index;
       }
 
+      int nextDisplayIndex = _getDisplayIndex(index);
+      if (nextDisplayIndex != _currentDisplayIndex) {
+        _prevDisplayIndex = _currentDisplayIndex;
+        _currentDisplayIndex = nextDisplayIndex;
+      }
       isNavExpanded = false;
     });
   }
@@ -875,6 +931,12 @@ class _MainShellState extends State<MainShell> {
       currentIndex = 0;
       previousIndex = 0;
       isNavExpanded = false;
+      
+      int nextDisplayIndex = _getDisplayIndex();
+      if (nextDisplayIndex != _currentDisplayIndex) {
+        _prevDisplayIndex = _currentDisplayIndex;
+        _currentDisplayIndex = nextDisplayIndex;
+      }
     });
 
     await _showTutorialStep(0);
@@ -891,6 +953,12 @@ class _MainShellState extends State<MainShell> {
       isNavExpanded = step.expandNav;
       if (step.pageIndex != _rankPageIndex) {
         previousIndex = step.pageIndex;
+      }
+      
+      int nextDisplayIndex = _getDisplayIndex();
+      if (nextDisplayIndex != _currentDisplayIndex) {
+        _prevDisplayIndex = _currentDisplayIndex;
+        _currentDisplayIndex = nextDisplayIndex;
       }
     });
 
