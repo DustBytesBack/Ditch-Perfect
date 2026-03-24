@@ -298,8 +298,9 @@ class TimetableProvider extends ChangeNotifier {
         oldIndex < 0 ||
         oldIndex >= slots.length ||
         newIndex < 0 ||
-        newIndex >= slots.length)
+        newIndex >= slots.length) {
       return;
+    }
 
     // 1. Snapshot past dates with the CURRENT base slots so history is preserved
     final weekdayNumber = days.indexOf(day) + 1;

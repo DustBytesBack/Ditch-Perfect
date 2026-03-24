@@ -656,6 +656,23 @@ class _SubjectPageState extends State<SubjectPage> {
       backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
       body: Stack(
         children: [
+          /// GRADIENT BACKGROUND
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0, 1.0],
+                  colors: [
+                    isAbsolute ? scheme.surface : scheme.primaryContainer,
+                    isAbsolute ? scheme.surfaceContainer : scheme.surface,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           /// BACKGROUND TAP TO DESELECT
           if (_selectedSubjectId != null)
             Positioned.fill(
@@ -727,6 +744,7 @@ class _SubjectPageState extends State<SubjectPage> {
                 /// PANEL
                 Expanded(
                   child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
@@ -862,9 +880,10 @@ class _SubjectPageState extends State<SubjectPage> {
                               children: [
                                 /// ATTENDANCE PILL
                                 Container(
+                                  width: 100,
+                                  alignment: Alignment.center,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 42,
+                                    vertical: 39,
                                   ),
                                   decoration: BoxDecoration(
                                     color: tintedColor,

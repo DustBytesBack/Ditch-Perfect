@@ -148,6 +148,10 @@ class TimetableEditorPage extends StatelessWidget {
     final timetable = context.watch<TimetableProvider>();
     final subjects = context.watch<SubjectProvider>().subjects;
 
+    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+
     return DefaultTabController(
       length: timetable.days.length,
       child: Scaffold(
@@ -155,6 +159,22 @@ class TimetableEditorPage extends StatelessWidget {
 
         body: Stack(
           children: [
+            /// GRADIENT BACKGROUND
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      topGradientColor,
+                      bottomGradientColor,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             SafeArea(
               child: Column(
                 children: [
@@ -230,24 +250,11 @@ class TimetableEditorPage extends StatelessWidget {
                   /// PANEL
                   Expanded(
                     child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: isAbsolute
-                            ? scheme.surfaceContainer
-                            : scheme.surface,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(32),
-                          topRight: Radius.circular(32),
-                        ),
-                        boxShadow: isAbsolute
-                            ? null
-                            : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: .12),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, -4),
-                                ),
-                              ],
+                        color: panelColor,
+                        borderRadius: BorderRadius.circular(32),
                       ),
 
                       child: Column(

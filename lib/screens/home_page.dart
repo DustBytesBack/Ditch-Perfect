@@ -329,6 +329,22 @@ class HomePage extends StatelessWidget {
       backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
       body: Stack(
         children: [
+          /// GRADIENT BACKGROUND
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    isAbsolute ? scheme.surface : scheme.primaryContainer,
+                    isAbsolute ? scheme.surfaceContainer : scheme.surface,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           SafeArea(
             child: Column(
               children: [
@@ -400,13 +416,11 @@ class HomePage extends StatelessWidget {
                 Expanded(
                   key: TutorialService.keyFor(TutorialTargets.homeOverview),
                   child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
+                      borderRadius: BorderRadius.circular(32),
                       boxShadow: isAbsolute
                           ? null
                           : [
@@ -553,14 +567,6 @@ class HomePage extends StatelessWidget {
             ),
           ),
 
-          /// NAV BAR FIX
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: MediaQuery.of(context).padding.bottom + 12,
-              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
-            ),
-          ),
         ],
       ),
     );

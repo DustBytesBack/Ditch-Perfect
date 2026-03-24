@@ -159,344 +159,33 @@ class _CalendarPageState extends State<CalendarPage> {
 
     final stats = calculateMonthStats(focusedDay, attendance, timetable);
 
-    if (isAbsolute) {
-      return Scaffold(
-        backgroundColor: scheme.surface,
-        body: Stack(
-          children: [
-            SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 56,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(40),
-                            border: Border.all(color: scheme.outlineVariant),
-                          ),
-                          child: Text(
-                            isMultiSelectMode
-                                ? '${selectedDates.length} selected'
-                                : "Calendar",
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          key: TutorialService.keyFor(
-                            TutorialTargets.calendarMultiSelect,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              isMultiSelectMode ? Icons.close : Icons.checklist,
-                            ),
-                            iconSize: 28,
-                            padding: const EdgeInsets.all(14),
-                            onPressed: _toggleMultiSelectMode,
-                            onLongPress: () {
-                              HapticFeedback.lightImpact();
-                              setState(() {
-                                selectedDay = DateTime.now();
-                                focusedDay = DateTime.now();
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        20,
-                        20,
-                        MediaQuery.of(context).padding.bottom + 110,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainer,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(32),
-                          topRight: Radius.circular(32),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          TableCalendar(
-                            key: TutorialService.keyFor(
-                              TutorialTargets.calendarMain,
-                            ),
-                            firstDay: DateTime(2020),
-                            lastDay: DateTime(2100),
-                            focusedDay: focusedDay,
-                            headerStyle: const HeaderStyle(
-                              formatButtonVisible: false,
-                              titleCentered: true,
-                            ),
-                            selectedDayPredicate: (day) =>
-                                !isMultiSelectMode &&
-                                isSameDay(selectedDay, day),
-                            onDaySelected: (selected, focused) {
-                              if (isMultiSelectMode) {
-                                _toggleDateSelection(selected);
-
-                                setState(() {
-                                  focusedDay = focused;
-                                });
-
-                                return;
-                              }
-
-                              setState(() {
-                                selectedDay = selected;
-                                focusedDay = focused;
-                              });
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      DayDetailsPage(date: selected),
-                                ),
-                              );
-                            },
-                            onPageChanged: (focused) {
-                              setState(() {
-                                focusedDay = focused;
-                              });
-                            },
-                            calendarBuilders: CalendarBuilders(
-                              defaultBuilder: (context, day, focusedDay) {
-                                final color = getDayColor(
-                                  day,
-                                  attendance,
-                                  timetable,
-                                );
-
-                                return Container(
-                                  margin: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: color?.withValues(alpha: .9),
-                                    shape: BoxShape.circle,
-                                    border: _isDateSelected(day)
-                                        ? Border.all(
-                                            color: scheme.primary,
-                                            width: 2.5,
-                                          )
-                                        : null,
-                                    boxShadow: color == null
-                                        ? null
-                                        : [
-                                            BoxShadow(
-                                              color:
-                                                  color.withValues(alpha: .25),
-                                              blurRadius: 8,
-                                            )
-                                          ],
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    "${day.day}",
-                                    style: TextStyle(
-                                      color: color == null
-                                          ? scheme.onSurface
-                                          : Colors.white,
-                                    ),
-                                  ),
-                                );
-                              },
-                              todayBuilder: (context, day, focusedDay) {
-                                final color = getDayColor(
-                                  day,
-                                  attendance,
-                                  timetable,
-                                );
-
-                                return Container(
-                                  margin: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: scheme.primary,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: scheme.primary
-                                            .withValues(alpha: .5),
-                                        blurRadius: 10,
-                                      )
-                                    ],
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    "${day.day}",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            key: TutorialService.keyFor(
-                              TutorialTargets.calendarStats,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(color: scheme.outlineVariant),
-                              gradient: LinearGradient(
-                                colors: [
-                                  scheme.surfaceContainerHigh,
-                                  scheme.surfaceContainerHighest,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 16,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                statTile(context, stats.notMarked, "Not marked",
-                                    Colors.grey),
-                                statTile(context, stats.cancelled, "Off",
-                                    Colors.orange),
-                                statTile(context, stats.missed, "Missed",
-                                    Colors.red),
-                                statTile(context, stats.attended, "Attended",
-                                    Colors.green),
-                                statTile(context, stats.mixed, "Mixed",
-                                    Colors.purple),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isMultiSelectMode)
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 120,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: scheme.outlineVariant),
-                    boxShadow: isAbsolute ? null : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: .5),
-                        blurRadius: 25,
-                        offset: const Offset(0, 10),
-                      )
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _selectionActionButton(
-                          icon: Icons.check_circle,
-                          color: Colors.green,
-                          label: 'Present',
-                          onTap: selectedDates.isEmpty
-                              ? null
-                              : () => _applySelectionMarking(
-                                    AttendanceStatus.present,
-                                  ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: _selectionActionButton(
-                          icon: Icons.cancel,
-                          color: Colors.red,
-                          label: 'Absent',
-                          onTap: selectedDates.isEmpty
-                              ? null
-                              : () => _applySelectionMarking(
-                                    AttendanceStatus.absent,
-                                  ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: _selectionActionButton(
-                          icon: Icons.remove_circle,
-                          color: Colors.orange,
-                          label: 'Cancel',
-                          onTap: selectedDates.isEmpty
-                              ? null
-                              : () => _applySelectionMarking(
-                                    AttendanceStatus.cancelled,
-                                  ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: _selectionActionButton(
-                          icon: Icons.layers_clear,
-                          color: scheme.primary,
-                          label: 'Clear',
-                          onTap: selectedDates.isEmpty
-                              ? null
-                              : () => _applySelectionMarking(null),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: _selectionActionButton(
-                          icon: Icons.close,
-                          color: scheme.onSurfaceVariant,
-                          label: 'Done',
-                          onTap: _clearSelectionMode,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            /// NAV BAR COLOR FIX
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                height: MediaQuery.of(context).padding.bottom + 12,
-                color: scheme.surfaceContainer,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    // Use simple conditional logic for colors while keeping a single structural layout
+    final bgColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
+    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final headerColor = isAbsolute ? scheme.surfaceContainerHigh : scheme.surface;
 
     return Scaffold(
-      backgroundColor: scheme.primaryContainer,
+      backgroundColor: bgColor,
       body: Stack(
         children: [
+          /// GRADIENT BACKGROUND
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    topGradientColor,
+                    bottomGradientColor,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           SafeArea(
             child: Column(
               children: [
@@ -511,8 +200,9 @@ class _CalendarPageState extends State<CalendarPage> {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: headerColor,
                           borderRadius: BorderRadius.circular(40),
+                          border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
                         ),
                         child: Text(
                           isMultiSelectMode
@@ -533,7 +223,7 @@ class _CalendarPageState extends State<CalendarPage> {
                           TutorialTargets.calendarMultiSelect,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surface,
+                          color: headerColor,
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: IconButton(
@@ -543,9 +233,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             isMultiSelectMode ? Icons.close : Icons.checklist,
                             color: scheme.onSurface,
                           ),
-                          onPressed: () {
-                            _toggleMultiSelectMode();
-                          },
+                          onPressed: _toggleMultiSelectMode,
                           onLongPress: () {
                             HapticFeedback.lightImpact();
                             setState(() {
@@ -562,6 +250,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 /// PANEL
                 Expanded(
                   child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: EdgeInsets.fromLTRB(
                       20,
                       20,
@@ -569,11 +258,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       MediaQuery.of(context).padding.bottom + 110,
                     ),
                     decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
+                      color: panelColor,
+                      borderRadius: BorderRadius.circular(32),
                     ),
                     child: SingleChildScrollView(
                       child: Column(
@@ -640,6 +326,14 @@ class _CalendarPageState extends State<CalendarPage> {
                                               width: 2.5,
                                             )
                                           : null,
+                                      boxShadow: (isAbsolute && color != null)
+                                          ? [
+                                              BoxShadow(
+                                                color: color.withValues(alpha: .25),
+                                                blurRadius: 8,
+                                              )
+                                            ]
+                                          : null,
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
@@ -670,6 +364,14 @@ class _CalendarPageState extends State<CalendarPage> {
                                             : scheme.primary,
                                         width: 2.5,
                                       ),
+                                      boxShadow: isAbsolute
+                                          ? [
+                                              BoxShadow(
+                                                color: scheme.primary.withValues(alpha: .5),
+                                                blurRadius: 10,
+                                              )
+                                            ]
+                                          : null,
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
@@ -713,58 +415,42 @@ class _CalendarPageState extends State<CalendarPage> {
                           const SizedBox(height: 24),
 
                           /// STATS DASHBOARD CARD
-                          Card(
+                          Container(
                             key: TutorialService.keyFor(
                               TutorialTargets.calendarStats,
                             ),
-                            elevation: 0,
-                            color: scheme.secondaryContainer,
-                            shape: RoundedRectangleBorder(
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
+                              color: isAbsolute ? null : scheme.secondaryContainer,
+                              border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                              gradient: isAbsolute
+                                  ? LinearGradient(
+                                      colors: [
+                                        scheme.surfaceContainerHigh,
+                                        scheme.surfaceContainerHighest,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 16,
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: [
-                                      statTile(
-                                        context,
-                                        stats.notMarked,
-                                        "Not marked",
-                                        Colors.grey,
-                                      ),
-                                      statTile(
-                                        context,
-                                        stats.cancelled,
-                                        "Off",
-                                        Colors.orange,
-                                      ),
-                                      statTile(
-                                        context,
-                                        stats.missed,
-                                        "Missed",
-                                        Colors.red,
-                                      ),
-                                      statTile(
-                                        context,
-                                        stats.attended,
-                                        "Attended",
-                                        Colors.green,
-                                      ),
-                                      statTile(
-                                        context,
-                                        stats.mixed,
-                                        "Mixed",
-                                        Colors.purple,
-                                      ),
-                                    ],
-                                  ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 18,
+                              horizontal: 16,
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    statTile(context, stats.notMarked, "Not marked", Colors.grey),
+                                    statTile(context, stats.cancelled, "Off", Colors.orange),
+                                    statTile(context, stats.missed, "Missed", Colors.red),
+                                    statTile(context, stats.attended, "Attended", Colors.green),
+                                    statTile(context, stats.mixed, "Mixed", Colors.purple),
+                                  ],
+                                ),
+                                if (!isAbsolute) ...[
                                   const SizedBox(height: 12),
                                   Container(
                                     height: 36,
@@ -785,7 +471,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                     ),
                                   ),
                                 ],
-                              ),
+                              ],
                             ),
                           ),
                         ],
@@ -794,15 +480,6 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                 ),
               ],
-            ),
-          ),
-
-          /// NAV BAR COLOR FIX
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: MediaQuery.of(context).padding.bottom + 12,
-              color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
           ),
 
@@ -819,14 +496,22 @@ class _CalendarPageState extends State<CalendarPage> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: scheme.surface,
+                    color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
                     borderRadius: BorderRadius.circular(28),
+                    border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
                     boxShadow: [
-                      BoxShadow(
-                        color: scheme.shadow.withValues(alpha: .18),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
+                      if (isAbsolute)
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: .5),
+                          blurRadius: 25,
+                          offset: const Offset(0, 10),
+                        )
+                      else
+                        BoxShadow(
+                          color: scheme.shadow.withValues(alpha: .18),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
                     ],
                   ),
                   child: Row(

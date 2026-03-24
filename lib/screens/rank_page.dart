@@ -104,10 +104,30 @@ class _RankPageState extends State<RankPage> {
     final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
 
+    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+
     return Scaffold(
       backgroundColor: isAbsolute ? scheme.surface : scheme.primaryContainer,
       body: Stack(
         children: [
+          /// GRADIENT BACKGROUND
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    topGradientColor,
+                    bottomGradientColor,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           SafeArea(
             child: Column(
               children: [
@@ -126,7 +146,7 @@ class _RankPageState extends State<RankPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(color: scheme.primary.withOpacity(0.10))
                               : null,
                         ),
                         child: Text(
@@ -146,7 +166,7 @@ class _RankPageState extends State<RankPage> {
                                 : scheme.surface,
                             borderRadius: BorderRadius.circular(18),
                             border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(color: scheme.primary.withOpacity(0.10))
                               : null,
                           ),
                           child: IconButton(
@@ -170,15 +190,11 @@ class _RankPageState extends State<RankPage> {
                 ),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: isAbsolute
-                          ? scheme.surfaceContainer
-                          : scheme.surface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
+                      color: panelColor,
+                      borderRadius: BorderRadius.circular(32),
                     ),
                     child: RefreshIndicator(
                       onRefresh: _refreshLeaderboard,
@@ -226,7 +242,7 @@ class _RankPageState extends State<RankPage> {
             color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
             border: isAbsolute
-                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                ? Border.all(color: scheme.primary.withOpacity(0.10))
                 : Border.all(color: scheme.outlineVariant),
           ),
           child: Row(
@@ -312,7 +328,7 @@ class _RankPageState extends State<RankPage> {
                   Text(
                     _formatRelativeTime(updatedAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(alpha: .7),
+                          color: scheme.onSurfaceVariant.withOpacity(.7),
                         ),
                   ),
                 ],
@@ -407,7 +423,7 @@ class _RankPageState extends State<RankPage> {
                               ? Border.all(color: scheme.primary, width: 2.5)
                               : (isAbsolute
                                   ? Border.all(
-                                      color: scheme.primary.withValues(alpha: 0.10))
+                                      color: scheme.primary.withOpacity(0.10))
                                   : null)),
                     ),
                     child: Row(
@@ -416,7 +432,7 @@ class _RankPageState extends State<RankPage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: rankColor?.withValues(alpha: 0.15) ??
+                            color: rankColor?.withOpacity(0.15) ??
                                 (index < 3
                                     ? scheme.primaryContainer
                                     : scheme.surface),
