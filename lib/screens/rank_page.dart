@@ -6,6 +6,7 @@ import '../utils/ranking_utils.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/wavy_progress_indicator.dart';
+import '../widgets/m3_loading_indicator.dart';
 
 import 'edit_username_page.dart';
 
@@ -355,8 +356,8 @@ class _RankPageState extends State<RankPage> {
               )
             else if (snapshot.connectionState == ConnectionState.waiting)
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: WavyCircularProgressIndicator()),
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: M3ExpressiveLoadingIndicator()),
               )
             else if (docs.isEmpty)
               Center(
