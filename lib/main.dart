@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
@@ -24,22 +23,21 @@ TextStyle _robotoFlexStyle({
   double? height,
   double? letterSpacing,
 }) {
-  return GoogleFonts.robotoFlex(
+  return TextStyle(
+    fontFamily: 'RobotoFlex',
     fontSize: fontSize,
     height: height,
     letterSpacing: letterSpacing,
-    fontWeight: FontWeight.w400,
-  ).copyWith(
     fontVariations: <FontVariation>[
       FontVariation('wght', weight),
       const FontVariation('GRAD', 150),   // Grade: increased optical weight boost
       const FontVariation('slnt', 0),     // Slant: upright
       const FontVariation('wdth', 100),   // Width: standard
-      const FontVariation('XOPQ', 100),   // Thick Stroke: slightly bolder
-      const FontVariation('YOPQ', 82),    // Thin Stroke: crisper thin strokes
-      const FontVariation('XTRA', 480),   // Counter Width: slightly wider openings
-      const FontVariation('YTUC', 720),   // Uppercase Height: taller caps
-      const FontVariation('YTLC', 520),   // Lowercase Height: taller x-height
+      const FontVariation('XOPQ', 70),   // Thick Stroke: slightly bolder
+      const FontVariation('YOPQ', 90),    // Thin Stroke: crisper thin strokes
+      const FontVariation('XTRA', 560),   // Counter Width: slightly wider openings
+      const FontVariation('YTUC', 750),   // Uppercase Height: taller caps
+      const FontVariation('YTLC', 540),   // Lowercase Height: taller x-height
       const FontVariation('YTAS', 760),   // Ascender Height: taller ascenders
       const FontVariation('YTDE', -210),  // Descender Depth: deeper descenders
       const FontVariation('YTFI', 745),   // Figure Height: taller numerals

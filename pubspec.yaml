@@ -47,6 +47,10 @@ flutter:
     - assets/gif/
     - assets/icon/
     - LICENSE
+  fonts:
+    - family: RobotoFlex
+      fonts:
+        - asset: assets/fonts/RobotoFlex.ttf
 
 flutter_launcher_icons:
   android: true
