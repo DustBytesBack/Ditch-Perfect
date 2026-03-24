@@ -868,6 +868,9 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _selectTab(int index) {
+    // Resolve the intended page BEFORE any list swapping happens
+    final int nextDisplayIndex = _getDisplayIndex(index);
+
     setState(() {
       if (index == _rankPageIndex) {
         previousIndex = currentIndex == _rankPageIndex ? 0 : currentIndex;
@@ -906,7 +909,6 @@ class _MainShellState extends State<MainShell> {
         currentIndex = index;
       }
 
-      int nextDisplayIndex = _getDisplayIndex(index);
       if (nextDisplayIndex != _currentDisplayIndex) {
         _prevDisplayIndex = _currentDisplayIndex;
         _currentDisplayIndex = nextDisplayIndex;
