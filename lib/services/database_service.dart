@@ -32,25 +32,14 @@ class DatabaseService {
       _initialized = true;
     }
 
-    if (!Hive.isBoxOpen(subjectsBoxName)) {
-      await Hive.openBox(subjectsBoxName);
-    }
-
-    if (!Hive.isBoxOpen(attendanceBoxName)) {
-      await Hive.openBox(attendanceBoxName);
-    }
-
-    if (!Hive.isBoxOpen(timetableBoxName)) {
-      await Hive.openBox(timetableBoxName);
-    }
-
-    if (!Hive.isBoxOpen(settingsBoxName)) {
-      await Hive.openBox(settingsBoxName);
-    }
-
-    if (!Hive.isBoxOpen(timetableRemovalsBoxName)) {
-      await Hive.openBox(timetableRemovalsBoxName);
-    }
+    // Open all boxes in parallel for faster startup
+    await Future.wait([
+      if (!Hive.isBoxOpen(subjectsBoxName)) Hive.openBox(subjectsBoxName),
+      if (!Hive.isBoxOpen(attendanceBoxName)) Hive.openBox(attendanceBoxName),
+      if (!Hive.isBoxOpen(timetableBoxName)) Hive.openBox(timetableBoxName),
+      if (!Hive.isBoxOpen(settingsBoxName)) Hive.openBox(settingsBoxName),
+      if (!Hive.isBoxOpen(timetableRemovalsBoxName)) Hive.openBox(timetableRemovalsBoxName),
+    ]);
 
     final settings = Hive.box(settingsBoxName);
 

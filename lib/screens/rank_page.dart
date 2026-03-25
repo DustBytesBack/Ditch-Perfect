@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../utils/ranking_utils.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/wavy_progress_indicator.dart';
-import '../widgets/m3_loading_indicator.dart';
 
 import 'edit_username_page.dart';
 
@@ -297,224 +297,219 @@ class _RankPageState extends State<RankPage> {
 
   Widget _buildLeaderboard(
       BuildContext context, bool isAbsolute, ColorScheme scheme) {
-    return StreamBuilder<QuerySnapshot>(
-      key: ValueKey('leaderboard_stream_$_refreshCounter'),
-      stream: FirebaseFirestore.instance
-          .collection('leaderboard')
-          .orderBy('rank')
-          .limit(50)
-          .snapshots(),
-      builder: (context, snapshot) {
-        Timestamp? updatedAt;
-        if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-          final firstDoc = snapshot.data!.docs.first.data() as Map<String, dynamic>;
-          updatedAt = firstDoc['updatedAt'] as Timestamp?;
+    return FutureBuilder(
+      future: Firebase.initializeApp(),
+      builder: (context, firebaseSnapshot) {
+        if (firebaseSnapshot.connectionState != ConnectionState.done) {
+          return const Center(child: WavyCircularProgressIndicator());
         }
 
-        final docs = snapshot.data?.docs ?? [];
+        return StreamBuilder<QuerySnapshot>(
+          key: ValueKey('leaderboard_stream_$_refreshCounter'),
+          stream: FirebaseFirestore.instance
+              .collection('leaderboard')
+              .orderBy('rank')
+              .limit(50)
+              .snapshots(),
+          builder: (context, snapshot) {
+            Timestamp? updatedAt;
+            if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+              final firstDoc =
+                  snapshot.data!.docs.first.data() as Map<String, dynamic>;
+              updatedAt = firstDoc['updatedAt'] as Timestamp?;
+            }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+            final docs = snapshot.data?.docs ?? [];
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Text(
+                      "Leaderboard",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    if (updatedAt != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatRelativeTime(updatedAt),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color:
+                                  scheme.onSurfaceVariant.withValues(alpha: .7),
+                            ),
+                      ),
+                    ],
+                    const Spacer(),
+                    IconButton(
+                      onPressed: _refreshLeaderboard,
+                      icon: Icon(Icons.refresh, color: scheme.primary),
+                      tooltip: 'Reload Leaderboard',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  "Leaderboard",
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  "Users closest to 75% attendance rank higher.",
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
                 ),
-                if (updatedAt != null) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    _formatRelativeTime(updatedAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(alpha: .7),
-                        ),
-                  ),
-                ],
-                const Spacer(),
-                IconButton(
-                  onPressed: _refreshLeaderboard,
-                  icon: Icon(Icons.refresh, color: scheme.primary),
-                  tooltip: 'Reload Leaderboard',
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              "Users closest to 75% attendance rank higher.",
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            if (snapshot.hasError)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text('Error: ${snapshot.error}'),
-              )
-            else if (snapshot.connectionState == ConnectionState.waiting)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(child: M3ExpressiveLoadingIndicator()),
-              )
-            else if (docs.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Column(
-                    children: [
-                      Icon(Icons.emoji_events_outlined,
-                          size: 48, color: scheme.outline),
-                      const SizedBox(height: 12),
-                      Text("No rankings yet",
-                          style: TextStyle(color: scheme.onSurfaceVariant)),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: docs.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final doc = docs[index];
-                  final data = doc.data() as Map<String, dynamic>;
-
-                  final username = data['username'] ?? 'Unknown';
-                  final attendance = (data['attendancePercent'] ?? 0.0).toDouble();
-                  final score = (data['rankingScore'] ?? 0.0).toDouble();
-                  final rank = data['rank'] ?? (index + 1);
-                  final isCurrentUser = _username != null && username == _username;
-                  final isRank1 = rank == 1;
-                  final isRank2 = rank == 2;
-                  final isRank3 = rank == 3;
-
-                  Color? rankColor;
-                  IconData? rankIcon;
-                  Color? shimmerColor;
-
-                  if (isRank1) {
-                    rankColor = const Color(0xFFFFD700); // Pure Gold
-                    rankIcon = Icons.workspace_premium_rounded;
-                    shimmerColor = const Color(0xFFFFE082); // Brighter Gold Shimmer
-                  } else if (isRank2) {
-                    rankColor = Colors.blueGrey.shade400;
-                    rankIcon = Icons.emoji_events_rounded;
-                    shimmerColor = Colors.grey.shade300;
-                  } else if (isRank3) {
-                    rankColor = Colors.brown.shade300;
-                    rankIcon = Icons.emoji_events_rounded;
-                    shimmerColor = null; // Removed shine for bronze
-                  }
-
-                  Widget pill = Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isAbsolute
-                          ? scheme.surfaceContainerHigh
-                          : scheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(20),
-                      border: rankColor != null
-                          ? Border.all(color: rankColor, width: 2.5)
-                          : (isCurrentUser
-                              ? Border.all(color: scheme.primary, width: 2.5)
-                              : (isAbsolute
-                                  ? Border.all(
-                                      color: scheme.primary.withValues(alpha: 0.10))
-                                  : null)),
+                const SizedBox(height: 16),
+                if (snapshot.hasError)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        "Error loading data: ${snapshot.error}",
+                        style: TextStyle(color: scheme.error),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: rankColor?.withValues(alpha: 0.15) ??
-                                (index < 3
-                                    ? scheme.primaryContainer
-                                    : scheme.surface),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: rankIcon != null
-                              ? Icon(
-                                  rankIcon,
-                                  color: rankColor,
-                                  size: 24,
-                                )
-                              : Text(
-                                  "$rank",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: index < 3
-                                        ? scheme.onPrimaryContainer
-                                        : scheme.onSurface,
-                                  ),
-                                ),
+                  )
+                else if (!snapshot.hasData || docs.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(child: Text("No ranking data yet.")),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final data = docs[index].data() as Map<String, dynamic>;
+                      final username = data['username'] as String? ?? "Unknown";
+                      final attendance = (data['attendance'] ?? 0).toDouble();
+                      final score = (data['score'] ?? 0).toDouble();
+                      final rank = index + 1;
+
+                      final isRank1 = rank == 1;
+                      final isRank2 = rank == 2;
+                      final isRank3 = rank == 3;
+
+                      Color? shimmerColor;
+                      if (isRank1) shimmerColor = const Color(0xFFFFD700);
+                      if (isRank2) shimmerColor = const Color(0xFFC0C0C0);
+
+                      final Color rankColor = isRank1
+                          ? const Color(0xFFFFD700)
+                          : isRank2
+                              ? const Color(0xFFC0C0C0)
+                              : isRank3
+                                  ? const Color(0xFFCD7F32)
+                                  : scheme.onSurfaceVariant;
+
+                      final IconData rankIcon = isRank1
+                          ? Icons.emoji_events
+                          : isRank2
+                              ? Icons.workspace_premium
+                              : Icons.military_tech;
+
+                      final pill = Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: index < 3
+                              ? rankColor.withValues(alpha: 0.15)
+                              : scheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(16),
+                          border: index < 3
+                              ? Border.all(color: rankColor.withValues(alpha: 0.5), width: 1.5)
+                              : null,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                username,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: scheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                "${attendance.toStringAsFixed(1)}% Attendance",
-                                style: TextStyle(
-                                  color: scheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        child: Row(
                           children: [
-                            Text(
-                              score.toStringAsFixed(1),
-                              style: TextStyle(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: index < 3
+                                    ? rankColor.withValues(alpha: 0.2)
+                                    : scheme.surfaceContainerHighest,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: index < 3
+                                    ? Icon(
+                                        rankIcon,
+                                        color: rankColor,
+                                        size: 24,
+                                      )
+                                    : Text(
+                                        "$rank",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: index < 3
+                                              ? scheme.onPrimaryContainer
+                                              : scheme.onSurface,
+                                        ),
+                                      ),
                               ),
                             ),
-                            Text(
-                              "Score",
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                fontSize: 10,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    username,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: scheme.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${attendance.toStringAsFixed(1)}% Attendance",
+                                    style: TextStyle(
+                                      color: scheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  score.toStringAsFixed(1),
+                                  style: TextStyle(
+                                    color: scheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                Text(
+                                  "Score",
+                                  style: TextStyle(
+                                    color: scheme.onSurfaceVariant,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  );
+                      );
 
-                  if (shimmerColor != null) {
-                    return ShimmeringRankPill(
-                      shimmerColor: shimmerColor,
-                      duration: Duration(milliseconds: isRank1 ? 3000 : 6000),
-                      child: pill,
-                    );
-                  }
-                  return pill;
-                },
-              ),
-            const SizedBox(height: 120),
-          ],
+                      if (shimmerColor != null) {
+                        return ShimmeringRankPill(
+                          shimmerColor: shimmerColor,
+                          duration:
+                              Duration(milliseconds: isRank1 ? 3000 : 6000),
+                          child: pill,
+                        );
+                      }
+                      return pill;
+                    },
+                  ),
+                const SizedBox(height: 120),
+              ],
+            );
+          },
         );
       },
     );

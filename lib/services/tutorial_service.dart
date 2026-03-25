@@ -25,7 +25,12 @@ class TutorialService {
   static final Map<String, GlobalKey> _keys = <String, GlobalKey>{};
   static final ValueNotifier<int> restartListenable = ValueNotifier<int>(0);
 
-  static GlobalKey keyFor(String id) {
+  /// When false, keyFor returns null to avoid GlobalKey conflicts
+  /// in IndexedStack which mounts all pages simultaneously.
+  static bool isActive = false;
+
+  static GlobalKey? keyFor(String id) {
+    if (!isActive) return null;
     return _keys.putIfAbsent(id, () => GlobalKey(debugLabel: id));
   }
 

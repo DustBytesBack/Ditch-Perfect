@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/database_service.dart';
@@ -21,6 +22,10 @@ class RankingUtils {
 
   /// Performs the actual data gathering and Firestore upload.
   static Future<void> uploadRankingData() async {
+    // Ensure Firebase is ready before accessing Firestore.
+    // This handles cases where the background init hasn't finished yet.
+    await Firebase.initializeApp();
+
     final username = DatabaseService.settingsBox.get("username") as String?;
     if (username == null || username.isEmpty) return;
 

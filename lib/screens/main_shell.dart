@@ -132,14 +132,14 @@ class _MainShellState extends State<MainShell> {
     ),
   ];
 
-  List<Widget> get pages => [
-    const HomePage(),
-    const CalendarPage(),
-    const SubjectPage(),
-    const TimetablePage(),
-    const SettingsPage(),
-    const AttendanceCalculatorPage(),
-    const RankPage(),
+  final List<Widget> pages = const [
+    HomePage(),
+    CalendarPage(),
+    SubjectPage(),
+    TimetablePage(),
+    SettingsPage(),
+    AttendanceCalculatorPage(),
+    RankPage(),
   ];
 
   List<NavigationDestination> _allDestinations = [
@@ -181,14 +181,12 @@ class _MainShellState extends State<MainShell> {
   ];
 
   int _currentDisplayIndex = 0;
-  int _prevDisplayIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _loadNavOrder();
     _currentDisplayIndex = _getDisplayIndex();
-    _prevDisplayIndex = _currentDisplayIndex;
 
     TutorialService.restartListenable.addListener(_handleTutorialRestart);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -298,60 +296,14 @@ class _MainShellState extends State<MainShell> {
     final currentStep = _tutorialActive
         ? _tutorialSteps[_tutorialStepIndex]
         : null;
-    // Dynamically order the stack so the current page is always on top (drawn last),
-    // and the previous page is just below it.
-    final renderOrder = List<int>.generate(pages.length, (i) => i);
-    renderOrder.sort((a, b) {
-      if (a == b) return 0;
-      if (a == _currentDisplayIndex) return 1;
-      if (b == _currentDisplayIndex) return -1;
-      if (a == _prevDisplayIndex) return 1;
-      if (b == _prevDisplayIndex) return -1;
-      return a.compareTo(b);
-    });
 
     return Scaffold(
       body: Stack(
         children: [
-          ...renderOrder.map((pageIndex) {
-            final isCurrent = pageIndex == _currentDisplayIndex;
-            final isPrevious = pageIndex == _prevDisplayIndex;
-            
-            final offset = isCurrent 
-                ? Offset.zero 
-                : (isPrevious ? const Offset(0.0, 0.0) : const Offset(0.0, 0.08));
-            final scale = isCurrent ? 1.0 : (isPrevious ? 0.96 : 0.96);
-            final opacity = isCurrent ? 1.0 : 0.0;
-            
-            return AnimatedScale(
-              key: ValueKey<int>(pageIndex),
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutCubic,
-              scale: scale,
-              child: AnimatedSlide(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                offset: offset,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                  opacity: opacity,
-                  child: IgnorePointer(
-                    ignoring: !isCurrent,
-                    child: FocusScope(
-                      canRequestFocus: isCurrent,
-                      child: TickerMode(
-                        enabled: isCurrent,
-                        child: RepaintBoundary(
-                          child: pages[pageIndex],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
+          IndexedStack(
+            index: _currentDisplayIndex,
+            children: pages,
+          ),
 
           PeekingPony(
             active: context.watch<ThemeProvider>().pookieMode,
@@ -910,7 +862,6 @@ class _MainShellState extends State<MainShell> {
       }
 
       if (nextDisplayIndex != _currentDisplayIndex) {
-        _prevDisplayIndex = _currentDisplayIndex;
         _currentDisplayIndex = nextDisplayIndex;
       }
       isNavExpanded = false;
@@ -927,6 +878,7 @@ class _MainShellState extends State<MainShell> {
 
     setState(() {
       _tutorialActive = true;
+      TutorialService.isActive = true;
       _tutorialStepIndex = 0;
       _currentTutorialRect = null;
       _previousTutorialRect = null;
@@ -936,7 +888,6 @@ class _MainShellState extends State<MainShell> {
       
       int nextDisplayIndex = _getDisplayIndex();
       if (nextDisplayIndex != _currentDisplayIndex) {
-        _prevDisplayIndex = _currentDisplayIndex;
         _currentDisplayIndex = nextDisplayIndex;
       }
     });
@@ -959,7 +910,6 @@ class _MainShellState extends State<MainShell> {
       
       int nextDisplayIndex = _getDisplayIndex();
       if (nextDisplayIndex != _currentDisplayIndex) {
-        _prevDisplayIndex = _currentDisplayIndex;
         _currentDisplayIndex = nextDisplayIndex;
       }
     });
@@ -1018,6 +968,7 @@ class _MainShellState extends State<MainShell> {
 
     setState(() {
       _tutorialActive = false;
+      TutorialService.isActive = false;
       _currentTutorialRect = null;
       _previousTutorialRect = null;
       isNavExpanded = false;
