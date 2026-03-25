@@ -541,6 +541,13 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                                       MediaQuery.of(context).size.width * 0.4,
 
                                   child: SegmentedButton<BulkAction>(
+                                    style: SegmentedButton.styleFrom(
+                                      selectedBackgroundColor: scheme.tertiaryContainer,
+                                      selectedForegroundColor: scheme.onTertiaryContainer,
+                                      backgroundColor: scheme.tertiaryContainer.withValues(alpha: .6),
+                                      foregroundColor: scheme.onTertiaryContainer.withValues(alpha: .8),
+                                      side: BorderSide(color: scheme.tertiary.withValues(alpha: 0.7)),
+                                    ),
                                     segments: const [
                                       ButtonSegment(
                                         value: BulkAction.clear,

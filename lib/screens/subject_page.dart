@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import 'subject_summary_page.dart';
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
@@ -600,16 +601,69 @@ class _SubjectPageState extends State<SubjectPage> {
 
               const SizedBox(height: 24),
 
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.tonalIcon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    showAttendanceEditDialog(context, subject, stats);
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text("Edit Attendance"),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 64,
+                      child: FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: scheme.tertiaryContainer,
+                          foregroundColor: scheme.onTertiaryContainer,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.horizontal(
+                              left: Radius.circular(32),
+                              right: Radius.circular(4),
+                            ),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SubjectSummaryPage(subject: subject),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.analytics_outlined, size: 24),
+                        label: const Text("Summary"),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: SizedBox(
+                      height: 64,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: scheme.tertiary,
+                          foregroundColor: scheme.onTertiary,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.horizontal(
+                              left: Radius.circular(4),
+                              right: Radius.circular(32),
+                            ),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          showAttendanceEditDialog(context, subject, stats);
+                        },
+                        icon: const Icon(Icons.edit, size: 24),
+                        label: const Text("Edit"),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
