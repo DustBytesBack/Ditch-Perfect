@@ -18,18 +18,18 @@ class BackupService {
             .map((s) => s.toJson())
             .toList(),
         'attendance': DatabaseService.attendanceBox.toMap().map(
-              (key, value) =>
-                  MapEntry(key.toString(), (value as Attendance).toJson()),
-            ),
+          (key, value) =>
+              MapEntry(key.toString(), (value as Attendance).toJson()),
+        ),
         'timetable': DatabaseService.timetableBox.toMap().map(
-              (key, value) => MapEntry(key.toString(), value),
-            ),
+          (key, value) => MapEntry(key.toString(), value),
+        ),
         'settings': DatabaseService.settingsBox.toMap().map(
-              (key, value) => MapEntry(key.toString(), value),
-            ),
+          (key, value) => MapEntry(key.toString(), value),
+        ),
         'timetable_removals': DatabaseService.timetableRemovalsBox.toMap().map(
-              (key, value) => MapEntry(key.toString(), value),
-            ),
+          (key, value) => MapEntry(key.toString(), value),
+        ),
       };
 
       final String jsonString = jsonEncode(backup);
@@ -79,7 +79,8 @@ class BackupService {
       final Map<String, dynamic> attendanceJson = backup['attendance'] ?? {};
       final Map<String, dynamic> timetableJson = backup['timetable'] ?? {};
       final Map<String, dynamic> settingsJson = backup['settings'] ?? {};
-      final Map<String, dynamic> removalsJson = backup['timetable_removals'] ?? {};
+      final Map<String, dynamic> removalsJson =
+          backup['timetable_removals'] ?? {};
 
       // Parse subjects
       final List<Subject> parsedSubjects = [];
@@ -90,7 +91,9 @@ class BackupService {
       // Parse attendance
       final Map<String, Attendance> parsedAttendance = {};
       for (var entry in attendanceJson.entries) {
-        parsedAttendance[entry.key] = Attendance.fromJson(Map<String, dynamic>.from(entry.value));
+        parsedAttendance[entry.key] = Attendance.fromJson(
+          Map<String, dynamic>.from(entry.value),
+        );
       }
 
       // Clear existing data ONLY after successful parsing
@@ -111,9 +114,12 @@ class BackupService {
       }
 
       // Restore other data
-      if (timetableJson.isNotEmpty) await DatabaseService.timetableBox.putAll(timetableJson);
-      if (settingsJson.isNotEmpty) await DatabaseService.settingsBox.putAll(settingsJson);
-      if (removalsJson.isNotEmpty) await DatabaseService.timetableRemovalsBox.putAll(removalsJson);
+      if (timetableJson.isNotEmpty)
+        await DatabaseService.timetableBox.putAll(timetableJson);
+      if (settingsJson.isNotEmpty)
+        await DatabaseService.settingsBox.putAll(settingsJson);
+      if (removalsJson.isNotEmpty)
+        await DatabaseService.timetableRemovalsBox.putAll(removalsJson);
 
       // Ensure default settings exist just in case they were missing from the backup
       final settingsBox = DatabaseService.settingsBox;

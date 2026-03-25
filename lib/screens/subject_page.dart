@@ -67,7 +67,9 @@ class _SubjectPageState extends State<SubjectPage> {
                   labelText: "Subject Name",
                   prefixIcon: const Icon(Icons.subject),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
                     borderSide: BorderSide.none,
@@ -95,7 +97,9 @@ class _SubjectPageState extends State<SubjectPage> {
                   labelText: "Short Name (max 8 letters)",
                   prefixIcon: const Icon(Icons.short_text),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
                     borderSide: BorderSide.none,
@@ -324,7 +328,10 @@ class _SubjectPageState extends State<SubjectPage> {
                       labelText: 'Current attendance %',
                       prefixIcon: const Icon(Icons.percent),
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide.none,
@@ -344,66 +351,76 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   const SizedBox(height: 16),
                   DropdownMenu<String>(
-                    width: MediaQuery.of(context).size.width - 96, // AlertDialog content padding is 24 on each side, + arbitrary dialog margin
+                    width:
+                        MediaQuery.of(context).size.width -
+                        96, // AlertDialog content padding is 24 on each side, + arbitrary dialog margin
                     initialSelection: inputMode,
-                        label: const Text('Known value'),
-                        leadingIcon: const Icon(Icons.tune),
-                        menuStyle: MenuStyle(
-                          backgroundColor: WidgetStatePropertyAll(Theme.of(context).colorScheme.surface),
-                          elevation: const WidgetStatePropertyAll(4),
-                          shape: WidgetStatePropertyAll(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
+                    label: const Text('Known value'),
+                    leadingIcon: const Icon(Icons.tune),
+                    menuStyle: MenuStyle(
+                      backgroundColor: WidgetStatePropertyAll(
+                        Theme.of(context).colorScheme.surface,
+                      ),
+                      elevation: const WidgetStatePropertyAll(4),
+                      shape: WidgetStatePropertyAll(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        inputDecorationTheme: InputDecorationTheme(
-                          filled: true,
-                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(28),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(28),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(28),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 24, 
-                            vertical: 18,
-                          ),
+                      ),
+                    ),
+                    inputDecorationTheme: InputDecorationTheme(
+                      filled: true,
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: .5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
                         ),
-                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 18,
+                      ),
+                    ),
+                    textStyle: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
-                        dropdownMenuEntries: _attendanceInputModes.map((mode) {
-                          return DropdownMenuEntry<String>(
-                            value: mode.$1,
-                            label: mode.$2,
-                            style: MenuItemButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                              textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onSelected: (value) {
-                          if (value != null) {
-                            HapticFeedback.lightImpact();
-                            setDialogState(() {
-                              inputMode = value;
-                            });
-                          }
-                        },
+                    dropdownMenuEntries: _attendanceInputModes.map((mode) {
+                      return DropdownMenuEntry<String>(
+                        value: mode.$1,
+                        label: mode.$2,
+                        style: MenuItemButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          textStyle: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                      );
+                    }).toList(),
+                    onSelected: (value) {
+                      if (value != null) {
+                        HapticFeedback.lightImpact();
+                        setDialogState(() {
+                          inputMode = value;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -419,7 +436,10 @@ class _SubjectPageState extends State<SubjectPage> {
                             : Icons.check_circle_outline,
                       ),
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide.none,
@@ -626,7 +646,8 @@ class _SubjectPageState extends State<SubjectPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => SubjectSummaryPage(subject: subject),
+                              builder: (_) =>
+                                  SubjectSummaryPage(subject: subject),
                             ),
                           );
                         },
@@ -766,7 +787,8 @@ class _SubjectPageState extends State<SubjectPage> {
                         ),
                         child: Text(
                           "Subjects",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -801,7 +823,9 @@ class _SubjectPageState extends State<SubjectPage> {
                     margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
+                      color: isAbsolute
+                          ? scheme.surfaceContainer
+                          : scheme.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
@@ -831,20 +855,22 @@ class _SubjectPageState extends State<SubjectPage> {
                         final tintedColor = (themeProvider.pookieMode)
                             ? scheme.surfaceContainerHigh
                             : (lowAttendance
-                                ? Color.alphaBlend(
-                                    scheme.error.withValues(alpha: .2),
-                                    scheme.onError,
-                                  )
-                                : (isAbsolute
-                                    ? scheme.surfaceContainerHigh
-                                    : scheme.secondaryContainer));
+                                  ? Color.alphaBlend(
+                                      scheme.error.withValues(alpha: .2),
+                                      scheme.onError,
+                                    )
+                                  : (isAbsolute
+                                        ? scheme.surfaceContainerHigh
+                                        : scheme.secondaryContainer));
 
                         final isSelected = _selectedSubjectId == subject.id;
                         final isAnySelected = _selectedSubjectId != null;
 
                         return Dismissible(
                           key: ValueKey(subject.id),
-                          direction: isAnySelected ? DismissDirection.none : DismissDirection.horizontal,
+                          direction: isAnySelected
+                              ? DismissDirection.none
+                              : DismissDirection.horizontal,
 
                           confirmDismiss: (direction) async {
                             if (direction == DismissDirection.startToEnd) {
@@ -917,11 +943,15 @@ class _SubjectPageState extends State<SubjectPage> {
                                   }
                                 : null,
                             child: AnimatedScale(
-                              scale: isSelected ? 1.02 : (isAnySelected ? 0.95 : 1.0),
+                              scale: isSelected
+                                  ? 1.02
+                                  : (isAnySelected ? 0.95 : 1.0),
                               duration: const Duration(milliseconds: 200),
                               curve: Curves.easeOutCubic,
                               child: AnimatedOpacity(
-                                opacity: isAnySelected && !isSelected ? 0.4 : 1.0,
+                                opacity: isAnySelected && !isSelected
+                                    ? 0.4
+                                    : 1.0,
                                 duration: const Duration(milliseconds: 200),
                                 child: Padding(
                                   key: index == 0
@@ -931,200 +961,224 @@ class _SubjectPageState extends State<SubjectPage> {
                                       : null,
                                   padding: const EdgeInsets.only(bottom: 14),
                                   child: Row(
-                              children: [
-                                /// ATTENDANCE PILL
-                                Container(
-                                  width: 100,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 39,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: tintedColor,
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(20),
-                                      topRight: Radius.circular(5),
-                                      bottomLeft: Radius.circular(20),
-                                      bottomRight: Radius.circular(5),
-                                    ),
-                                  ),
-                                  child: stats.total == 0
-                                      ? Text(
-                                          "-%",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                fontSize: 18,
-                                                color: lowAttendance
-                                                    ? scheme.error
-                                                    : scheme
-                                                          .onSecondaryContainer,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        )
-                                      : RichText(
-                                          text: TextSpan(
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge
-                                                ?.copyWith(
-                                                  fontSize: 24,
-                                                  color: lowAttendance
-                                                      ? scheme.error
-                                                      : scheme
-                                                            .onSecondaryContainer,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                            children: [
-                                              TextSpan(
-                                                text: percent
-                                                    .toStringAsFixed(2)
-                                                    .split('.')[0],
-                                              ),
-                                              TextSpan(
-                                                text:
-                                                    ".${percent.toStringAsFixed(2).split('.')[1]}%",
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                ),
-
-                                const SizedBox(width: 8),
-
-                                /// SUBJECT PILL
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
                                     children: [
-                                      GestureDetector(
-                                        onTap: isAnySelected
-                                            ? null
-                                            : () {
-                                                showSubjectInfo(
-                                                  context,
-                                                  subject,
-                                                  stats,
-                                                );
-                                              },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 20,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: tintedColor,
-                                            borderRadius:
-                                                const BorderRadius.only(
-                                                  topRight: Radius.circular(20),
-                                                  topLeft: Radius.circular(5),
-                                                  bottomLeft: Radius.circular(
-                                                    5,
-                                                  ),
-                                                  bottomRight: Radius.circular(
-                                                      5,
-                                                    ),
-                                                  ),
-                                                  border: (themeProvider.pookieMode)
-                                                      ? Border.all(
-                                                          color: scheme.primary.withValues(alpha: 0.15),
-                                                          width: 1,
-                                                        )
-                                                      : null,
-                                                ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            subject.name,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge
-                                                ?.copyWith(
-                                                  color: scheme
-                                                      .onSecondaryContainer,
-                                                  fontWeight: FontWeight.w800,
-                                                ),
+                                      /// ATTENDANCE PILL
+                                      Container(
+                                        width: 100,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 39,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: tintedColor,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(20),
+                                            topRight: Radius.circular(5),
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(5),
                                           ),
                                         ),
+                                        child: stats.total == 0
+                                            ? Text(
+                                                "-%",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.copyWith(
+                                                      fontSize: 18,
+                                                      color: lowAttendance
+                                                          ? scheme.error
+                                                          : scheme
+                                                                .onSecondaryContainer,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                              )
+                                            : RichText(
+                                                text: TextSpan(
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge
+                                                      ?.copyWith(
+                                                        fontSize: 24,
+                                                        color: lowAttendance
+                                                            ? scheme.error
+                                                            : scheme
+                                                                  .onSecondaryContainer,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                  children: [
+                                                    TextSpan(
+                                                      text: percent
+                                                          .toStringAsFixed(2)
+                                                          .split('.')[0],
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          ".${percent.toStringAsFixed(2).split('.')[1]}%",
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                       ),
 
-                                      const SizedBox(height: 4),
+                                      const SizedBox(width: 8),
 
-                                      Builder(
-                                        builder: (context) {
-                                          int attended = stats.attended;
-                                          int total = stats.total;
-
-                                          int bunk = canBunk(
-                                            attended,
-                                            total,
-                                            minAttendance,
-                                          );
-                                          int need = needToAttend(
-                                            attended,
-                                            total,
-                                            minAttendance,
-                                          );
-
-                                          bool lowAttendance =
-                                              percent < minAttendance;
-
-                                          return Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 10,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: tintedColor,
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                    topLeft: Radius.circular(5),
-                                                    topRight: Radius.circular(
-                                                      5,
+                                      /// SUBJECT PILL
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: isAnySelected
+                                                  ? null
+                                                  : () {
+                                                      showSubjectInfo(
+                                                        context,
+                                                        subject,
+                                                        stats,
+                                                      );
+                                                    },
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 20,
                                                     ),
-                                                    bottomLeft: Radius.circular(
-                                                      5,
-                                                    ),
-                                                    bottomRight:
-                                                        Radius.circular(20),
-                                                  ),
-                                                  border: (themeProvider.pookieMode)
+                                                decoration: BoxDecoration(
+                                                  color: tintedColor,
+                                                  borderRadius:
+                                                      const BorderRadius.only(
+                                                        topRight:
+                                                            Radius.circular(20),
+                                                        topLeft:
+                                                            Radius.circular(5),
+                                                        bottomLeft:
+                                                            Radius.circular(5),
+                                                        bottomRight:
+                                                            Radius.circular(5),
+                                                      ),
+                                                  border:
+                                                      (themeProvider.pookieMode)
                                                       ? Border.all(
-                                                          color: scheme.primary.withValues(alpha: 0.15),
+                                                          color: scheme.primary
+                                                              .withValues(
+                                                                alpha: 0.15,
+                                                              ),
                                                           width: 1,
                                                         )
                                                       : null,
                                                 ),
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              lowAttendance
-                                                  ? "Needs to attend $need class${need == 1 ? "" : "es"}"
-                                                  : "Can bunk $bunk class${bunk == 1 ? "" : "es"}",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                color: lowAttendance
-                                                    ? scheme.error
-                                                    : scheme
-                                                          .onSecondaryContainer,
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  subject.name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleLarge
+                                                      ?.copyWith(
+                                                        color: scheme
+                                                            .onSecondaryContainer,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                      ),
+                                                ),
                                               ),
                                             ),
-                                          );
-                                        },
+
+                                            const SizedBox(height: 4),
+
+                                            Builder(
+                                              builder: (context) {
+                                                int attended = stats.attended;
+                                                int total = stats.total;
+
+                                                int bunk = canBunk(
+                                                  attended,
+                                                  total,
+                                                  minAttendance,
+                                                );
+                                                int need = needToAttend(
+                                                  attended,
+                                                  total,
+                                                  minAttendance,
+                                                );
+
+                                                bool lowAttendance =
+                                                    percent < minAttendance;
+
+                                                return Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 10,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: tintedColor,
+                                                    borderRadius:
+                                                        const BorderRadius.only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                          bottomLeft:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                20,
+                                                              ),
+                                                        ),
+                                                    border:
+                                                        (themeProvider
+                                                            .pookieMode)
+                                                        ? Border.all(
+                                                            color: scheme
+                                                                .primary
+                                                                .withValues(
+                                                                  alpha: 0.15,
+                                                                ),
+                                                            width: 1,
+                                                          )
+                                                        : null,
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    lowAttendance
+                                                        ? "Needs to attend $need class${need == 1 ? "" : "es"}"
+                                                        : "Can bunk $bunk class${bunk == 1 ? "" : "es"}",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: lowAttendance
+                                                          ? scheme.error
+                                                          : scheme
+                                                                .onSecondaryContainer,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  );
+                        );
                       },
                     ),
                   ),
@@ -1143,10 +1197,7 @@ class _SubjectPageState extends State<SubjectPage> {
             left: 24,
             right: 24,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               decoration: BoxDecoration(
                 color: scheme.surface,
                 borderRadius: BorderRadius.circular(28),
@@ -1228,6 +1279,7 @@ class _SubjectPageState extends State<SubjectPage> {
       ),
     );
   }
+
   Widget _selectionActionButton({
     required BuildContext context,
     required IconData icon,
@@ -1251,11 +1303,7 @@ class _SubjectPageState extends State<SubjectPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: color,
-              ),
+              Icon(icon, size: 18, color: color),
               const SizedBox(height: 3),
               FittedBox(
                 fit: BoxFit.scaleDown,

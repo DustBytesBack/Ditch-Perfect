@@ -107,11 +107,11 @@ class DayTimetable extends StatelessWidget {
         final tintedColor = (themeProvider.pookieMode || isAbsolute)
             ? scheme.surfaceContainerHigh
             : (lowAttendance
-                ? Color.alphaBlend(
-                    scheme.error.withValues(alpha: .12),
-                    scheme.secondaryContainer,
-                  )
-                : scheme.secondaryContainer);
+                  ? Color.alphaBlend(
+                      scheme.error.withValues(alpha: .12),
+                      scheme.secondaryContainer,
+                    )
+                  : scheme.secondaryContainer);
 
         final isExtra = index >= baseCount;
 
@@ -184,7 +184,9 @@ class DayTimetable extends StatelessWidget {
                               ? Border.all(
                                   color: themeProvider.pookieMode || isAbsolute
                                       ? scheme.primary.withValues(alpha: 0.10)
-                                      : scheme.outlineVariant.withValues(alpha: 0.2),
+                                      : scheme.outlineVariant.withValues(
+                                          alpha: 0.2,
+                                        ),
                                   width: 1,
                                 )
                               : null,
@@ -198,7 +200,8 @@ class DayTimetable extends StatelessWidget {
                                     ? subject.name
                                     : subject.shortName,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
                                       color: lowAttendance
                                           ? scheme.error
                                           : scheme.onSecondaryContainer,

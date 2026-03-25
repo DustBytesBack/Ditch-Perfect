@@ -2,16 +2,32 @@ import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  bool isDark = false;
-
+  ThemeMode themeMode = ThemeMode.system;
+  bool isDynamicMode = false;
+  bool absoluteMode = false;
+  bool pookieMode = false;
   Color seedColor = Colors.indigo;
 
-  bool pookieMode = false;
-  bool absoluteMode = false;
-
   void loadTheme() {
-    isDark = DatabaseService.settingsBox.get(
-      "darkMode",
+    final modeName = DatabaseService.settingsBox.get(
+      "themeMode",
+      defaultValue: "system",
+    );
+    themeMode = ThemeMode.values.firstWhere(
+      (e) => e.name == modeName,
+      orElse: () => ThemeMode.system,
+    );
+
+    isDynamicMode = DatabaseService.settingsBox.get(
+      "isDynamicMode",
+      defaultValue: false,
+    );
+    absoluteMode = DatabaseService.settingsBox.get(
+      "absoluteMode",
+      defaultValue: false,
+    );
+    pookieMode = DatabaseService.settingsBox.get(
+      "pookieMode",
       defaultValue: false,
     );
 
@@ -19,138 +35,78 @@ class ThemeProvider extends ChangeNotifier {
       "seedColor",
       defaultValue: Colors.indigo.toARGB32(),
     );
-
-    pookieMode = DatabaseService.settingsBox.get(
-      "pookieMode",
-      defaultValue: false,
-    );
-
-    absoluteMode = DatabaseService.settingsBox.get(
-      "absoluteMode",
-      defaultValue: false,
-    );
+    seedColor = Color(colorValue);
 
     if (pookieMode) {
-      if (isDark) {
-        /// Emo Pookie (Dark Pink + Absolute Black)
-        absoluteMode = true;
-        seedColor = const Color(0xFFF7A5E1);
-      } else {
-        /// Standard Pookie (Light Pink)
-        absoluteMode = false;
-        seedColor = const Color(0xFFFF8AD6);
-      }
-    } else {
-      seedColor = Color(colorValue);
+      // Pookie mode logic remains for backward compatibility or future use
+      // but in the new UI it will likely be locked when Dynamic is on.
+      seedColor = const Color(0xFFFF8AD6);
     }
   }
 
-  void toggleTheme(bool value) {
-    isDark = value;
+  void setThemeMode(ThemeMode mode) {
+    themeMode = mode;
+    DatabaseService.settingsBox.put("themeMode", mode.name);
 
-    if (pookieMode) {
-      if (value) {
-        /// Switch to Emo Pookie (Dark)
-        seedColor = const Color(0xFFF7A5E1);
-        absoluteMode = true;
-      } else {
-        /// Switch to Standard Pookie (Light)
-        seedColor = const Color(0xFFFF8AD6);
-        absoluteMode = false;
-      }
-    } else {
-      /// Standard Absolute mode logic
-      if (!value) {
-        absoluteMode = false;
-        DatabaseService.settingsBox.put("absoluteMode", false);
-      }
-    }
-
-    DatabaseService.settingsBox.put("darkMode", value);
-
-    notifyListeners();
-  }
-
-  void setSeedColor(Color color) {
-    pookieMode = false;
-
-    seedColor = color;
-
-    DatabaseService.settingsBox.put("seedColor", color.toARGB32());
-    DatabaseService.settingsBox.put("pookieMode", false);
-
-    notifyListeners();
-  }
-
-  void togglePookie(bool value) {
-    pookieMode = value;
-
-    DatabaseService.settingsBox.put("pookieMode", value);
-
-    if (value) {
-      /// Default to Light Pookie mode
-      isDark = false;
-      DatabaseService.settingsBox.put("darkMode", false);
-
+    // Safety: If switching to light mode, ensure absolute mode is off
+    if (mode == ThemeMode.light) {
       absoluteMode = false;
       DatabaseService.settingsBox.put("absoluteMode", false);
+    }
 
-      seedColor = const Color(0xFFFF8AD6);
-    } else {
-      /// Restore previous settings
-      final storedDark = DatabaseService.settingsBox.get(
-        "darkMode",
-        defaultValue: false,
-      );
+    notifyListeners();
+  }
 
-      isDark = storedDark;
+  void toggleDynamicMode(bool value) {
+    isDynamicMode = value;
+    DatabaseService.settingsBox.put("isDynamicMode", value);
 
-      final storedAbsolute = DatabaseService.settingsBox.get(
-        "absoluteMode",
-        defaultValue: false,
-      );
-
-      absoluteMode = storedAbsolute;
-
-      final storedColor = DatabaseService.settingsBox.get(
-        "seedColor",
-        defaultValue: Colors.indigo.toARGB32(),
-      );
-
-      seedColor = Color(storedColor);
+    if (value) {
+      pookieMode = false;
+      DatabaseService.settingsBox.put("pookieMode", false);
     }
 
     notifyListeners();
   }
 
   void toggleAbsoluteMode(bool value) {
-    if (pookieMode) {
-      /// If user turns on Absolute mode while in Pookie mode,
-      /// it forces Emo Pookie (Dark Mode).
-      if (value) {
-        isDark = true;
-        DatabaseService.settingsBox.put("darkMode", true);
-
-        seedColor = const Color(0xFFF7A5E1);
-      } else {
-        /// If turning off Absolute mode while in Pookie mode, 
-        /// it reverts to Light Pookie.
-        isDark = false;
-        DatabaseService.settingsBox.put("darkMode", false);
-
-        seedColor = const Color(0xFFFF8AD6);
-      }
-    }
-
-    /// Absolute mode can be turned on only in dark mode normally
-    if (!pookieMode && value && !isDark) {
-      absoluteMode = false;
-      DatabaseService.settingsBox.put("absoluteMode", false);
-      return;
-    }
-
     absoluteMode = value;
     DatabaseService.settingsBox.put("absoluteMode", value);
+    notifyListeners();
+  }
+
+  void setSeedColor(Color color) {
+    if (isDynamicMode) return;
+
+    pookieMode = false;
+    seedColor = color;
+    DatabaseService.settingsBox.put("seedColor", color.toARGB32());
+    DatabaseService.settingsBox.put("pookieMode", false);
+    notifyListeners();
+  }
+
+  void togglePookie(bool value) {
+    if (isDynamicMode && value) {
+      isDynamicMode = false;
+      DatabaseService.settingsBox.put("isDynamicMode", false);
+    }
+
+    pookieMode = value;
+    DatabaseService.settingsBox.put("pookieMode", value);
+
+    if (value) {
+      themeMode = ThemeMode.light;
+      DatabaseService.settingsBox.put("themeMode", "light");
+      absoluteMode = false;
+      DatabaseService.settingsBox.put("absoluteMode", false);
+      seedColor = const Color(0xFFFF8AD6);
+    } else {
+      final colorValue = DatabaseService.settingsBox.get(
+        "seedColor",
+        defaultValue: Colors.indigo.toARGB32(),
+      );
+      seedColor = Color(colorValue);
+    }
 
     notifyListeners();
   }

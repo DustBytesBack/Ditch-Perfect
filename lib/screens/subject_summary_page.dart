@@ -9,11 +9,7 @@ import '../providers/attendance_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/attendance_utils.dart';
 
-enum SortOption {
-  dateNewest,
-  dateOldest,
-  status,
-}
+enum SortOption { dateNewest, dateOldest, status }
 
 class SubjectSummaryPage extends StatefulWidget {
   final Subject subject;
@@ -31,7 +27,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
 
   void _showSortOptions(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    
+
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -60,14 +56,16 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                   icon: Icons.calendar_today_outlined,
                   isSelected: _sortOption == SortOption.dateNewest,
                   isFirst: true,
-                  onTap: () => setState(() => _sortOption = SortOption.dateNewest),
+                  onTap: () =>
+                      setState(() => _sortOption = SortOption.dateNewest),
                 ),
                 _optionTile(
                   context: context,
                   label: "Oldest First",
                   icon: Icons.history_outlined,
                   isSelected: _sortOption == SortOption.dateOldest,
-                  onTap: () => setState(() => _sortOption = SortOption.dateOldest),
+                  onTap: () =>
+                      setState(() => _sortOption = SortOption.dateOldest),
                 ),
                 _optionTile(
                   context: context,
@@ -87,7 +85,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
 
   void _showFilterOptions(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    
+
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -123,14 +121,16 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                   label: "Attended Only",
                   icon: Icons.check,
                   isSelected: _filterStatus == AttendanceStatus.present,
-                  onTap: () => setState(() => _filterStatus = AttendanceStatus.present),
+                  onTap: () =>
+                      setState(() => _filterStatus = AttendanceStatus.present),
                 ),
                 _optionTile(
                   context: context,
                   label: "Missed Only",
                   icon: Icons.close_rounded,
                   isSelected: _filterStatus == AttendanceStatus.absent,
-                  onTap: () => setState(() => _filterStatus = AttendanceStatus.absent),
+                  onTap: () =>
+                      setState(() => _filterStatus = AttendanceStatus.absent),
                 ),
                 _optionTile(
                   context: context,
@@ -138,7 +138,9 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                   icon: Icons.block,
                   isSelected: _filterStatus == AttendanceStatus.cancelled,
                   isLast: true,
-                  onTap: () => setState(() => _filterStatus = AttendanceStatus.cancelled),
+                  onTap: () => setState(
+                    () => _filterStatus = AttendanceStatus.cancelled,
+                  ),
                 ),
               ],
             ),
@@ -158,7 +160,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     bool isLast = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    
+
     BorderRadius borderRadius;
     if (isSelected) {
       borderRadius = BorderRadius.circular(28);
@@ -171,10 +173,13 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     }
 
     return Padding(
-      padding: EdgeInsets.only(bottom: isSelected ? 4 : 2, top: isSelected ? 4 : 0),
+      padding: EdgeInsets.only(
+        bottom: isSelected ? 4 : 2,
+        top: isSelected ? 4 : 0,
+      ),
       child: Material(
-        color: isSelected 
-            ? scheme.tertiaryContainer 
+        color: isSelected
+            ? scheme.tertiaryContainer
             : scheme.tertiaryContainer.withValues(alpha: .3),
         borderRadius: borderRadius,
         child: InkWell(
@@ -189,21 +194,29 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
             child: Row(
               children: [
                 Icon(
-                  icon, 
-                  color: isSelected ? scheme.onTertiaryContainer : scheme.onSurfaceVariant,
+                  icon,
+                  color: isSelected
+                      ? scheme.onTertiaryContainer
+                      : scheme.onSurfaceVariant,
                   size: 24,
                 ),
                 const SizedBox(width: 16),
                 Text(
                   label,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: isSelected ? scheme.onTertiaryContainer : scheme.onSurface,
+                    color: isSelected
+                        ? scheme.onTertiaryContainer
+                        : scheme.onSurface,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
                 ),
                 const Spacer(),
                 if (isSelected)
-                  Icon(Icons.check_circle, color: scheme.onTertiaryContainer, size: 24),
+                  Icon(
+                    Icons.check_circle,
+                    color: scheme.onTertiaryContainer,
+                    size: 24,
+                  ),
               ],
             ),
           ),
@@ -212,16 +225,18 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
     final attendanceProvider = context.watch<AttendanceProvider>();
-    
-    final stats = calculateStats(widget.subject.id, attendanceProvider.records.values);
-    
+
+    final stats = calculateStats(
+      widget.subject.id,
+      attendanceProvider.records.values,
+    );
+
     List<Attendance> records = attendanceProvider.records.values
         .where((r) => r.subjectId == widget.subject.id)
         .toList();
@@ -248,8 +263,12 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
         break;
     }
 
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
 
     return Scaffold(
@@ -263,10 +282,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    topGradientColor,
-                    bottomGradientColor,
-                  ],
+                  colors: [topGradientColor, bottomGradientColor],
                 ),
               ),
             ),
@@ -287,13 +303,18 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
-                          border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: Text(
                           widget.subject.shortName,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -303,9 +324,13 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                       // Back Button Pill
                       Container(
                         decoration: BoxDecoration(
-                          color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
-                          border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: IconButton(
                           iconSize: 28,
@@ -337,28 +362,58 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                           child: Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surfaceContainerHighest.withValues(alpha: .4),
+                              color: isAbsolute
+                                  ? scheme.surfaceContainerHigh
+                                  : scheme.surfaceContainerHighest.withValues(
+                                      alpha: .4,
+                                    ),
                               borderRadius: BorderRadius.circular(28),
-                              border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                              border: isAbsolute
+                                  ? Border.all(color: scheme.outlineVariant)
+                                  : null,
                             ),
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
-                                    _statItem(context, "Attended", stats.attended, Colors.green),
-                                    _statItem(context, "Missed", stats.total - stats.attended, Colors.red),
-                                    _statItem(context, "Percent", "${(stats.total == 0 ? 100 : (stats.attended / stats.total) * 100).toStringAsFixed(1)}%", scheme.primary),
+                                    _statItem(
+                                      context,
+                                      "Attended",
+                                      stats.attended,
+                                      Colors.green,
+                                    ),
+                                    _statItem(
+                                      context,
+                                      "Missed",
+                                      stats.total - stats.attended,
+                                      Colors.red,
+                                    ),
+                                    _statItem(
+                                      context,
+                                      "Percent",
+                                      "${(stats.total == 0 ? 100 : (stats.attended / stats.total) * 100).toStringAsFixed(1)}%",
+                                      scheme.primary,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 20),
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: LinearProgressIndicator(
-                                    value: stats.total == 0 ? 1 : (stats.attended / stats.total),
+                                    value: stats.total == 0
+                                        ? 1
+                                        : (stats.attended / stats.total),
                                     minHeight: 10,
-                                    backgroundColor: scheme.surfaceContainerHighest,
-                                    color: (stats.total == 0 || (stats.attended / stats.total) >= 0.75) ? Colors.green : scheme.error,
+                                    backgroundColor:
+                                        scheme.surfaceContainerHighest,
+                                    color:
+                                        (stats.total == 0 ||
+                                            (stats.attended / stats.total) >=
+                                                0.75)
+                                        ? Colors.green
+                                        : scheme.error,
                                   ),
                                 ),
                               ],
@@ -374,9 +429,12 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                               Expanded(
                                 child: FilledButton.tonalIcon(
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: scheme.tertiaryContainer.withValues(alpha: .6),
+                                    backgroundColor: scheme.tertiaryContainer
+                                        .withValues(alpha: .6),
                                     foregroundColor: scheme.onTertiaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.horizontal(
                                         left: Radius.circular(24),
@@ -389,16 +447,24 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                                     _showSortOptions(context);
                                   },
                                   icon: const Icon(Icons.sort, size: 20),
-                                  label: const Text("Sort", style: TextStyle(fontWeight: FontWeight.bold)),
+                                  label: const Text(
+                                    "Sort",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: FilledButton.tonalIcon(
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: scheme.tertiaryContainer.withValues(alpha: .6),
+                                    backgroundColor: scheme.tertiaryContainer
+                                        .withValues(alpha: .6),
                                     foregroundColor: scheme.onTertiaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.horizontal(
                                         left: Radius.circular(4),
@@ -411,12 +477,18 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                                     _showFilterOptions(context);
                                   },
                                   icon: Icon(
-                                    _filterStatus == null ? Icons.filter_list : Icons.filter_alt,
+                                    _filterStatus == null
+                                        ? Icons.filter_list
+                                        : Icons.filter_alt,
                                     size: 20,
                                   ),
                                   label: Text(
-                                    _filterStatus == null ? "Filter" : "Filtered",
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    _filterStatus == null
+                                        ? "Filter"
+                                        : "Filtered",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -432,59 +504,78 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                                 return Center(
                                   child: Text(
                                     "No attendance records yet",
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodyLarge
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
                                   ),
                                 );
                               }
 
                               final List<Widget> listItems = [];
-                              
+
                               // Group records by month for positional context
                               final Map<String, List<Attendance>> grouped = {};
                               for (var r in records) {
-                                final key = DateFormat('MMMM yyyy').format(r.date).toUpperCase();
+                                final key = DateFormat(
+                                  'MMMM yyyy',
+                                ).format(r.date).toUpperCase();
                                 grouped.putIfAbsent(key, () => []).add(r);
                               }
-                              
+
                               for (var entry in grouped.entries) {
                                 final monthYear = entry.key;
                                 final monthRecords = entry.value;
-                                final isCollapsed = _collapsedMonths.contains(monthYear);
-                                
-                                listItems.add(_monthHeader(
-                                  context, 
-                                  monthYear, 
-                                  isCollapsed,
-                                  onToggle: () {
-                                    HapticFeedback.mediumImpact();
-                                    setState(() {
-                                      if (isCollapsed) {
-                                        _collapsedMonths.remove(monthYear);
-                                      } else {
-                                        _collapsedMonths.add(monthYear);
-                                      }
-                                    });
-                                  },
-                                ));
-                                
+                                final isCollapsed = _collapsedMonths.contains(
+                                  monthYear,
+                                );
+
+                                listItems.add(
+                                  _monthHeader(
+                                    context,
+                                    monthYear,
+                                    isCollapsed,
+                                    onToggle: () {
+                                      HapticFeedback.mediumImpact();
+                                      setState(() {
+                                        if (isCollapsed) {
+                                          _collapsedMonths.remove(monthYear);
+                                        } else {
+                                          _collapsedMonths.add(monthYear);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                );
+
                                 if (!isCollapsed) {
-                                  for (int i = 0; i < monthRecords.length; i++) {
-                                    listItems.add(_recordTile(
-                                      context: context, 
-                                      record: monthRecords[i],
-                                      isFirst: i == 0,
-                                      isLast: i == monthRecords.length - 1,
-                                    ));
+                                  for (
+                                    int i = 0;
+                                    i < monthRecords.length;
+                                    i++
+                                  ) {
+                                    listItems.add(
+                                      _recordTile(
+                                        context: context,
+                                        record: monthRecords[i],
+                                        isFirst: i == 0,
+                                        isLast: i == monthRecords.length - 1,
+                                      ),
+                                    );
                                   }
                                 }
                               }
 
                               return ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  12,
+                                  20,
+                                  100,
+                                ),
                                 itemCount: listItems.length,
-                                itemBuilder: (context, index) => listItems[index],
+                                itemBuilder: (context, index) =>
+                                    listItems[index],
                               );
                             },
                           ),
@@ -501,7 +592,12 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     );
   }
 
-  Widget _monthHeader(BuildContext context, String label, bool isCollapsed, {required VoidCallback onToggle}) {
+  Widget _monthHeader(
+    BuildContext context,
+    String label,
+    bool isCollapsed, {
+    required VoidCallback onToggle,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 24, 0, 8),
@@ -515,14 +611,16 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
               Text(
                 label,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
               ),
               const Spacer(),
               Icon(
-                isCollapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                isCollapsed
+                    ? Icons.keyboard_arrow_down
+                    : Icons.keyboard_arrow_up,
                 color: scheme.primary,
               ),
             ],
@@ -532,7 +630,12 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     );
   }
 
-  Widget _statItem(BuildContext context, String label, dynamic value, Color color) {
+  Widget _statItem(
+    BuildContext context,
+    String label,
+    dynamic value,
+    Color color,
+  ) {
     return Column(
       children: [
         Text(
@@ -555,7 +658,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
   }
 
   Widget _recordTile({
-    required BuildContext context, 
+    required BuildContext context,
     required Attendance record,
     bool isFirst = false,
     bool isLast = false,
@@ -564,7 +667,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
     final dateStr = DateFormat('EEE, d').format(record.date);
-    
+
     Color statusColor;
     IconData statusIcon;
     String statusName;
@@ -595,9 +698,15 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     if (isFirst && isLast) {
       borderRadius = BorderRadius.circular(24);
     } else if (isFirst) {
-      borderRadius = const BorderRadius.vertical(top: Radius.circular(24), bottom: Radius.circular(10));
+      borderRadius = const BorderRadius.vertical(
+        top: Radius.circular(24),
+        bottom: Radius.circular(10),
+      );
     } else if (isLast) {
-      borderRadius = const BorderRadius.vertical(bottom: Radius.circular(24),top: Radius.circular(10));
+      borderRadius = const BorderRadius.vertical(
+        bottom: Radius.circular(24),
+        top: Radius.circular(10),
+      );
     } else {
       borderRadius = BorderRadius.circular(10);
     }
@@ -606,11 +715,13 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
       margin: EdgeInsets.only(bottom: isLast ? 16 : 2),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: isAbsolute 
-            ? scheme.surfaceContainerHigh 
+        color: isAbsolute
+            ? scheme.surfaceContainerHigh
             : scheme.tertiaryContainer.withValues(alpha: .3),
         borderRadius: borderRadius,
-        border: isAbsolute ? Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)) : null,
+        border: isAbsolute
+            ? Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5))
+            : null,
       ),
       child: Row(
         children: [

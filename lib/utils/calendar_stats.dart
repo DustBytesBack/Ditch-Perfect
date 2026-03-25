@@ -58,17 +58,19 @@ CalendarStats calculateMonthStats(
 
     if (none == totalSubjects) {
       stats.notMarked++;
-    } 
-    else if (cancelled == totalSubjects) {
+    } else if (cancelled == totalSubjects) {
       stats.cancelled++;
-    } 
-    else if (present > 0 && absent > 0 && ((present + absent + cancelled) == totalSubjects)) {
+    } else if (present > 0 &&
+        absent > 0 &&
+        ((present + absent + cancelled) == totalSubjects)) {
       stats.mixed++;
-    } 
-    else if (present > 0 && absent == 0 && ((present + absent + cancelled) == totalSubjects)) {
+    } else if (present > 0 &&
+        absent == 0 &&
+        ((present + absent + cancelled) == totalSubjects)) {
       stats.attended++;
-    } 
-    else if (absent > 0 && present == 0 && ((present + absent + cancelled) == totalSubjects)) {
+    } else if (absent > 0 &&
+        present == 0 &&
+        ((present + absent + cancelled) == totalSubjects)) {
       stats.missed++;
     }
   }

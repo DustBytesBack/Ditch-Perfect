@@ -259,8 +259,8 @@ class NotificationService {
       final t = total[sid] ?? 0;
       final requiredBunks = occurrencesBySubject[sid] ?? 0;
 
-      // canBunk = floor(attended / p) - total
-      final bunk = t == 0 ? 0 : ((a / p) - t).floor();
+      // If no records yet, assume safe to bunk today's occurrences.
+      final bunk = t == 0 ? requiredBunks : ((a / p) - t).floor();
 
       if (bunk < requiredBunks) {
         allSafeToBunk = false;

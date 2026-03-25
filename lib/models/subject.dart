@@ -24,16 +24,16 @@ class Subject {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'shortName': shortName,
-        'minAttendance': minAttendance,
-      };
+    'id': id,
+    'name': name,
+    'shortName': shortName,
+    'minAttendance': minAttendance,
+  };
 
   factory Subject.fromJson(Map<String, dynamic> json) => Subject(
-        id: json['id'],
-        name: json['name'],
-        shortName: json['shortName'],
-        minAttendance: (json['minAttendance'] as num).toDouble(),
-      );
+    id: json['id'],
+    name: json['name'],
+    shortName: json['shortName'],
+    minAttendance: (json['minAttendance'] as num).toDouble(),
+  );
 }

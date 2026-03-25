@@ -10,7 +10,9 @@ class RankingUtils {
   /// Checks for internet and automatically uploads ranking data if a username is set.
   static Future<void> checkAndAutoUpload() async {
     final username = DatabaseService.settingsBox.get("username") as String?;
-    final isUsernameSet = DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false) as bool;
+    final isUsernameSet =
+        DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false)
+            as bool;
 
     if (!isUsernameSet || username == null || username.isEmpty) return;
 

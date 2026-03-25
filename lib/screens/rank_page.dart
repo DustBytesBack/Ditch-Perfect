@@ -35,7 +35,9 @@ class _RankPageState extends State<RankPage> {
     if (!mounted) return;
     setState(() {
       _username = DatabaseService.settingsBox.get("username") as String?;
-      _isUsernameSet = DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false) as bool;
+      _isUsernameSet =
+          DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false)
+              as bool;
     });
   }
 
@@ -88,9 +90,9 @@ class _RankPageState extends State<RankPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error uploading data: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error uploading data: $e')));
       }
     } finally {
       if (mounted) {
@@ -105,8 +107,12 @@ class _RankPageState extends State<RankPage> {
     final isAbsolute = themeProvider.absoluteMode;
     final scheme = Theme.of(context).colorScheme;
 
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
 
     return Scaffold(
@@ -120,10 +126,7 @@ class _RankPageState extends State<RankPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    topGradientColor,
-                    bottomGradientColor,
-                  ],
+                  colors: [topGradientColor, bottomGradientColor],
                 ),
               ),
             ),
@@ -147,12 +150,15 @@ class _RankPageState extends State<RankPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.10),
+                                )
                               : null,
                         ),
                         child: Text(
                           "Rankings (BETA)",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -167,8 +173,12 @@ class _RankPageState extends State<RankPage> {
                                 : scheme.surface,
                             borderRadius: BorderRadius.circular(18),
                             border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                              : null,
+                                ? Border.all(
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.10,
+                                    ),
+                                  )
+                                : null,
                           ),
                           child: IconButton(
                             iconSize: 28,
@@ -178,7 +188,9 @@ class _RankPageState extends State<RankPage> {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => const EditUsernamePage()),
+                                  builder: (context) =>
+                                      const EditUsernamePage(),
+                                ),
                               );
                               _loadUsername();
                             },
@@ -216,6 +228,7 @@ class _RankPageState extends State<RankPage> {
               ],
             ),
           ),
+
           /// NAV BAR COLOR FIX
           Align(
             alignment: Alignment.bottomCenter,
@@ -230,7 +243,10 @@ class _RankPageState extends State<RankPage> {
   }
 
   Widget _buildSubmissionForm(
-      BuildContext context, bool isAbsolute, ColorScheme scheme) {
+    BuildContext context,
+    bool isAbsolute,
+    ColorScheme scheme,
+  ) {
     final hasUsername = _username != null && _username!.isNotEmpty;
 
     return Column(
@@ -240,7 +256,9 @@ class _RankPageState extends State<RankPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surfaceContainerLow,
+            color: isAbsolute
+                ? scheme.surfaceContainerHigh
+                : scheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
             border: isAbsolute
                 ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
@@ -280,12 +298,17 @@ class _RankPageState extends State<RankPage> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: WavyCircularProgressIndicator(size: 24, strokeWidth: 3),
+                        child: WavyCircularProgressIndicator(
+                          size: 24,
+                          strokeWidth: 3,
+                        ),
                       )
                     : IconButton(
                         onPressed: () => _submitRankingData(),
-                        icon: Icon(Icons.cloud_upload_outlined,
-                            color: scheme.primary),
+                        icon: Icon(
+                          Icons.cloud_upload_outlined,
+                          color: scheme.primary,
+                        ),
                         tooltip: "Sync Now",
                       ),
             ],
@@ -296,7 +319,10 @@ class _RankPageState extends State<RankPage> {
   }
 
   Widget _buildLeaderboard(
-      BuildContext context, bool isAbsolute, ColorScheme scheme) {
+    BuildContext context,
+    bool isAbsolute,
+    ColorScheme scheme,
+  ) {
     return FutureBuilder(
       future: Firebase.initializeApp(),
       builder: (context, firebaseSnapshot) {
@@ -329,17 +355,16 @@ class _RankPageState extends State<RankPage> {
                     Text(
                       "Leaderboard",
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (updatedAt != null) ...[
                       const SizedBox(width: 8),
                       Text(
                         _formatRelativeTime(updatedAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color:
-                                  scheme.onSurfaceVariant.withValues(alpha: .7),
-                            ),
+                          color: scheme.onSurfaceVariant.withValues(alpha: .7),
+                        ),
                       ),
                     ],
                     const Spacer(),
@@ -354,8 +379,8 @@ class _RankPageState extends State<RankPage> {
                 Text(
                   "Users closest to 75% attendance rank higher.",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (snapshot.hasError)
@@ -381,8 +406,9 @@ class _RankPageState extends State<RankPage> {
                     itemBuilder: (context, index) {
                       final data = docs[index].data() as Map<String, dynamic>;
                       final username = data['username'] as String? ?? "Unknown";
-                      final attendance = (data['attendance'] ?? 0).toDouble();
-                      final score = (data['score'] ?? 0).toDouble();
+                      final attendance = (data['attendancePercent'] ?? 0)
+                          .toDouble();
+                      final score = (data['rankingScore'] ?? 0).toDouble();
                       final rank = index + 1;
 
                       final isRank1 = rank == 1;
@@ -396,16 +422,16 @@ class _RankPageState extends State<RankPage> {
                       final Color rankColor = isRank1
                           ? const Color(0xFFFFD700)
                           : isRank2
-                              ? const Color(0xFFC0C0C0)
-                              : isRank3
-                                  ? const Color(0xFFCD7F32)
-                                  : scheme.onSurfaceVariant;
+                          ? const Color(0xFFC0C0C0)
+                          : isRank3
+                          ? const Color(0xFFCD7F32)
+                          : scheme.onSurfaceVariant;
 
                       final IconData rankIcon = isRank1
                           ? Icons.emoji_events
                           : isRank2
-                              ? Icons.workspace_premium
-                              : Icons.military_tech;
+                          ? Icons.workspace_premium
+                          : Icons.military_tech;
 
                       final pill = Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -416,7 +442,10 @@ class _RankPageState extends State<RankPage> {
                               : scheme.surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(16),
                           border: index < 3
-                              ? Border.all(color: rankColor.withValues(alpha: 0.5), width: 1.5)
+                              ? Border.all(
+                                  color: rankColor.withValues(alpha: 0.5),
+                                  width: 1.5,
+                                )
                               : null,
                         ),
                         child: Row(
@@ -432,11 +461,7 @@ class _RankPageState extends State<RankPage> {
                               ),
                               child: Center(
                                 child: index < 3
-                                    ? Icon(
-                                        rankIcon,
-                                        color: rankColor,
-                                        size: 24,
-                                      )
+                                    ? Icon(rankIcon, color: rankColor, size: 24)
                                     : Text(
                                         "$rank",
                                         style: TextStyle(
@@ -498,8 +523,9 @@ class _RankPageState extends State<RankPage> {
                       if (shimmerColor != null) {
                         return ShimmeringRankPill(
                           shimmerColor: shimmerColor,
-                          duration:
-                              Duration(milliseconds: isRank1 ? 3000 : 6000),
+                          duration: Duration(
+                            milliseconds: isRank1 ? 3000 : 6000,
+                          ),
                           child: pill,
                         );
                       }
@@ -538,10 +564,8 @@ class _ShimmeringRankPillState extends State<ShimmeringRankPill>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat();
   }
 
   @override

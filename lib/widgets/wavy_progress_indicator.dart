@@ -28,7 +28,9 @@ class _WavyCircularProgressIndicatorState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1333 * 2222 ~/ 1000), // Approximate duration logic
+      duration: const Duration(
+        milliseconds: 1333 * 2222 ~/ 1000,
+      ), // Approximate duration logic
     )..repeat();
   }
 
@@ -85,18 +87,26 @@ class _WavyProgressPainter extends CustomPainter {
 
     // Standard Indeterminate Logic:
     // We break the 1.0 animationValue into parts just like official flutter logic.
-    final double headValue = const Interval(0.0, 0.5, curve: Curves.fastOutSlowIn).transform(animationValue);
-    final double tailValue = const Interval(0.5, 1.0, curve: Curves.fastOutSlowIn).transform(animationValue);
+    final double headValue = const Interval(
+      0.0,
+      0.5,
+      curve: Curves.fastOutSlowIn,
+    ).transform(animationValue);
+    final double tailValue = const Interval(
+      0.5,
+      1.0,
+      curve: Curves.fastOutSlowIn,
+    ).transform(animationValue);
     final double stepValue = animationValue;
 
     // Head and Tail give the arc boundaries.
     // The "sweep" is the distance between them.
     double arcStart = tailValue * 1.5 * pi;
     double arcSweep = (headValue - tailValue) * 1.5 * pi;
-    
+
     // Add rotational offset
     arcStart += (stepValue * 2 * pi);
-    
+
     // Ensure minimum sweep visibility
     if (arcSweep.abs() < _kMinSweep * pi) {
       arcSweep = arcSweep.sign * _kMinSweep * pi;
@@ -108,11 +118,12 @@ class _WavyProgressPainter extends CustomPainter {
     for (int i = 0; i <= segments; i++) {
       final double progress = i / segments;
       final double angle = arcStart + (progress * arcSweep);
-      
+
       // WAVE LOGIC:
       // Frequency: 8 cycles
       // Amplitude: scaled by stroke width
-      final double wave = sin(angle * 8 - (animationValue * 10)) * (strokeWidth * 0.45);
+      final double wave =
+          sin(angle * 8 - (animationValue * 10)) * (strokeWidth * 0.45);
       final double r = radius + wave;
 
       final double x = center.dx + r * cos(angle);
@@ -134,4 +145,3 @@ class _WavyProgressPainter extends CustomPainter {
         oldDelegate.color != color;
   }
 }
-

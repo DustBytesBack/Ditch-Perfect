@@ -38,7 +38,8 @@ class DatabaseService {
       if (!Hive.isBoxOpen(attendanceBoxName)) Hive.openBox(attendanceBoxName),
       if (!Hive.isBoxOpen(timetableBoxName)) Hive.openBox(timetableBoxName),
       if (!Hive.isBoxOpen(settingsBoxName)) Hive.openBox(settingsBoxName),
-      if (!Hive.isBoxOpen(timetableRemovalsBoxName)) Hive.openBox(timetableRemovalsBoxName),
+      if (!Hive.isBoxOpen(timetableRemovalsBoxName))
+        Hive.openBox(timetableRemovalsBoxName),
     ]);
 
     final settings = Hive.box(settingsBoxName);

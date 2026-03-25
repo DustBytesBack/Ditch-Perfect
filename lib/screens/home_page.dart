@@ -164,40 +164,53 @@ class HomePage extends StatelessWidget {
                                   const SizedBox(height: 16),
                                   ...weekdays.map((day) {
                                     final isSelected = selectedDayKey == day.$1;
-                                    final daySlots = timetable.getDaySlots(day.$1);
+                                    final daySlots = timetable.getDaySlots(
+                                      day.$1,
+                                    );
 
                                     return Padding(
-                                      padding: const EdgeInsets.only(bottom: 12),
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
                                       child: Container(
                                         padding: const EdgeInsets.all(16),
                                         decoration: BoxDecoration(
                                           color: isSelected
                                               ? scheme.secondaryContainer
                                               : scheme.surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             InkWell(
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                               onTap: () {
                                                 HapticFeedback.lightImpact();
                                                 setModalState(() {
-                                                  selectedDayKey = isSelected ? null : day.$1;
+                                                  selectedDayKey = isSelected
+                                                      ? null
+                                                      : day.$1;
                                                 });
                                               },
                                               child: Padding(
-                                                padding: const EdgeInsets.symmetric(
-                                                  vertical: 4,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 4,
+                                                    ),
                                                 child: Row(
                                                   children: [
                                                     Icon(
                                                       Icons.view_week,
                                                       color: isSelected
-                                                          ? scheme.onSecondaryContainer
-                                                          : scheme.onSurfaceVariant,
+                                                          ? scheme
+                                                                .onSecondaryContainer
+                                                          : scheme
+                                                                .onSurfaceVariant,
                                                     ),
                                                     const SizedBox(width: 12),
                                                     Expanded(
@@ -207,10 +220,14 @@ class HomePage extends StatelessWidget {
                                                             .textTheme
                                                             .titleMedium
                                                             ?.copyWith(
-                                                              fontWeight: FontWeight.w600,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
                                                               color: isSelected
-                                                                  ? scheme.onSecondaryContainer
-                                                                  : scheme.onSurface,
+                                                                  ? scheme
+                                                                        .onSecondaryContainer
+                                                                  : scheme
+                                                                        .onSurface,
                                                             ),
                                                       ),
                                                     ),
@@ -219,8 +236,10 @@ class HomePage extends StatelessWidget {
                                                           ? Icons.expand_less
                                                           : Icons.chevron_right,
                                                       color: isSelected
-                                                          ? scheme.onSecondaryContainer
-                                                          : scheme.onSurfaceVariant,
+                                                          ? scheme
+                                                                .onSecondaryContainer
+                                                          : scheme
+                                                                .onSurfaceVariant,
                                                     ),
                                                   ],
                                                 ),
@@ -235,29 +254,38 @@ class HomePage extends StatelessWidget {
                                                       .textTheme
                                                       .bodyMedium
                                                       ?.copyWith(
-                                                        color: scheme.onSecondaryContainer,
+                                                        color: scheme
+                                                            .onSecondaryContainer,
                                                       ),
                                                 )
                                               else ...[
                                                 Wrap(
                                                   spacing: 10,
                                                   runSpacing: 10,
-                                                  children: daySlots.map((subjectId) {
+                                                  children: daySlots.map((
+                                                    subjectId,
+                                                  ) {
                                                     return Container(
-                                                      padding: const EdgeInsets.symmetric(
-                                                        horizontal: 20,
-                                                        vertical: 14,
-                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 20,
+                                                            vertical: 14,
+                                                          ),
                                                       decoration: BoxDecoration(
                                                         color: scheme.surface,
-                                                        borderRadius: BorderRadius.circular(18),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              18,
+                                                            ),
                                                       ),
                                                       child: Text(
                                                         shortLabel(subjectId),
                                                         style: TextStyle(
                                                           fontSize: 16,
-                                                          color: scheme.onSurface,
-                                                          fontWeight: FontWeight.w700,
+                                                          color:
+                                                              scheme.onSurface,
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                         ),
                                                       ),
                                                     );
@@ -268,15 +296,19 @@ class HomePage extends StatelessWidget {
                                                   width: double.infinity,
                                                   child: FilledButton.icon(
                                                     onPressed: () {
-                                                      for (final subjectId in daySlots) {
-                                                        timetable.addSubjectToDate(
-                                                          date,
-                                                          subjectId,
-                                                        );
+                                                      for (final subjectId
+                                                          in daySlots) {
+                                                        timetable
+                                                            .addSubjectToDate(
+                                                              date,
+                                                              subjectId,
+                                                            );
                                                       }
                                                       Navigator.pop(context);
                                                     },
-                                                    icon: const Icon(Icons.copy_all),
+                                                    icon: const Icon(
+                                                      Icons.copy_all,
+                                                    ),
                                                     label: Text(
                                                       daySlots.length == 1
                                                           ? 'Add 1 Subject'
@@ -364,7 +396,9 @@ class HomePage extends StatelessWidget {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.10),
+                                )
                               : null,
                           boxShadow: isAbsolute
                               ? null
@@ -379,7 +413,8 @@ class HomePage extends StatelessWidget {
                         ),
                         child: Text(
                           formatDate(today),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -396,7 +431,9 @@ class HomePage extends StatelessWidget {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.10),
+                                )
                               : null,
                         ),
                         child: IconButton(
@@ -419,7 +456,9 @@ class HomePage extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
+                      color: isAbsolute
+                          ? scheme.surfaceContainer
+                          : scheme.surface,
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: isAbsolute
                           ? null
@@ -450,25 +489,23 @@ class HomePage extends StatelessWidget {
                             ),
                           )
                         : slots.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                  ),
-                                  child: Text(
-                                    "Add a subject",
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  ),
-                                ),
-                              )
-                            : Column(
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                              ),
+                              child: Text(
+                                "Add a subject",
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          )
+                        : Column(
                             children: [
                               /// BULK ACTION BUTTONS
                               Align(
@@ -482,11 +519,20 @@ class HomePage extends StatelessWidget {
 
                                   child: SegmentedButton<BulkAction>(
                                     style: SegmentedButton.styleFrom(
-                                      selectedBackgroundColor: scheme.tertiaryContainer,
-                                      selectedForegroundColor: scheme.onTertiaryContainer,
-                                      backgroundColor: scheme.tertiaryContainer.withValues(alpha: .5),
-                                      foregroundColor: scheme.onTertiaryContainer.withValues(alpha: .8),
-                                      side: BorderSide(color: scheme.tertiary.withValues(alpha: 0.8)),
+                                      selectedBackgroundColor:
+                                          scheme.tertiaryContainer,
+                                      selectedForegroundColor:
+                                          scheme.onTertiaryContainer,
+                                      backgroundColor: scheme.tertiaryContainer
+                                          .withValues(alpha: .5),
+                                      foregroundColor: scheme
+                                          .onTertiaryContainer
+                                          .withValues(alpha: .8),
+                                      side: BorderSide(
+                                        color: scheme.tertiary.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                      ),
                                     ),
                                     segments: const [
                                       ButtonSegment(
@@ -573,7 +619,6 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
-
         ],
       ),
     );

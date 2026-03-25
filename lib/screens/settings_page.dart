@@ -31,9 +31,9 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final path = await BackupService.exportBackup();
       if (path != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Data exported to $path")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Data exported to $path")));
       }
     } catch (e) {
       if (mounted) {
@@ -104,7 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     try {
       final success = await BackupService.importBackup();
-      
+
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
       }
@@ -114,7 +114,7 @@ class _SettingsPageState extends State<SettingsPage> {
         context.read<SubjectProvider>().loadSubjects();
         context.read<TimetableProvider>().loadTimetable();
         context.read<AttendanceProvider>().loadAllAttendance();
-        
+
         final settingsProvider = context.read<SettingsProvider>();
         settingsProvider.loadSettings();
         // Ensure notifications are rescheduled according to imported settings
@@ -156,7 +156,21 @@ class _SettingsPageState extends State<SettingsPage> {
             ? scheme.surfaceContainerHigh
             : scheme.secondaryContainer,
         borderRadius: BorderRadius.circular(10),
-        border: isAbsolute ? Border.all(color: scheme.primary.withValues(alpha: 0.10)) : null,
+        border: Border.all(
+          color: isAbsolute
+              ? scheme.primary.withValues(alpha: 0.2)
+              : scheme.primary.withValues(alpha: 0.1),
+          width: 1.5,
+        ),
+        boxShadow: isAbsolute
+            ? null
+            : [
+                BoxShadow(
+                  color: scheme.primary.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -164,7 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: const EdgeInsets.symmetric(vertical: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -187,13 +201,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   late double minAttendance;
-  late final PageController _pageController;
-  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
 
     final storedAttendance = DatabaseService.settingsBox.get(
       "minAttendance",
@@ -205,7 +216,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void dispose() {
-    _pageController.dispose();
     super.dispose();
   }
 
@@ -246,7 +256,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: isAbsolute ? scheme.primary.withValues(alpha: 0.1) : scheme.primaryContainer,
+                  color: isAbsolute
+                      ? scheme.primary.withValues(alpha: 0.1)
+                      : scheme.primaryContainer,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: ClipRRect(
@@ -266,13 +278,16 @@ class _SettingsPageState extends State<SettingsPage> {
               Text(
                 "Ditch Perfect",
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.onSurface,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurface,
+                ),
               ),
               const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -280,9 +295,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "v${packageInfo.version}",
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -290,17 +305,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 "Attendance Tracker Application.",
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 "Licensed under MIT",
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 32),
               Row(
@@ -364,19 +379,23 @@ class _SettingsPageState extends State<SettingsPage> {
 
             TextButton(
               onPressed: () async {
-                // Instead of extreme deleteFromDisk which kills everything, 
+                // Instead of extreme deleteFromDisk which kills everything,
                 // let's clear each box and re-init settings.
                 await DatabaseService.subjectsBox.clear();
                 await DatabaseService.attendanceBox.clear();
                 await DatabaseService.timetableBox.clear();
                 await DatabaseService.timetableRemovalsBox.clear();
-                
+
                 // Specifically reset the username lock
                 await DatabaseService.settingsBox.put("isUsernameSet", false);
-                
+
                 // Generate a new random username so it feels truly reset
-                final randomId = (DateTime.now().millisecondsSinceEpoch % 9000) + 1000;
-                await DatabaseService.settingsBox.put("username", "User_$randomId");
+                final randomId =
+                    (DateTime.now().millisecondsSinceEpoch % 9000) + 1000;
+                await DatabaseService.settingsBox.put(
+                  "username",
+                  "User_$randomId",
+                );
 
                 if (!context.mounted) return;
 
@@ -388,7 +407,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 Navigator.pop(context);
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("All data deleted and username reset")),
+                  const SnackBar(
+                    content: Text("All data deleted and username reset"),
+                  ),
                 );
               },
               child: Text(
@@ -410,10 +431,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final scheme = Theme.of(context).colorScheme;
     final themeProvider = context.watch<ThemeProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
-
-    final modeLabel = themeProvider.isDark ? "Light Mode" : "Dark Mode";
-
-    final modeIcon = themeProvider.isDark ? Icons.light_mode : Icons.dark_mode;
 
     final isAbsolute = themeProvider.absoluteMode;
 
@@ -455,14 +472,17 @@ class _SettingsPageState extends State<SettingsPage> {
                           color: isAbsolute
                               ? scheme.surfaceContainerHigh
                               : scheme.surface,
-                          borderRadius: BorderRadius.circular(40),
+                          borderRadius: BorderRadius.circular(30),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.10),
+                                )
                               : null,
                         ),
                         child: Text(
                           "Settings",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -478,7 +498,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(18),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.10),
+                                )
                               : null,
                         ),
                         child: IconButton(
@@ -501,7 +523,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
+                      color: isAbsolute
+                          ? scheme.surfaceContainer
+                          : scheme.surface,
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: isAbsolute
                           ? null
@@ -521,17 +545,31 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 18,
+                            horizontal: 24,
+                            vertical: 20,
                           ),
                           decoration: BoxDecoration(
                             color: isAbsolute
                                 ? scheme.surfaceContainerHigh
                                 : scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(28),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: isAbsolute
+                                  ? scheme.primary.withValues(alpha: 0.2)
+                                  : scheme.primary.withValues(alpha: 0.1),
+                              width: 1.5,
+                            ),
+                            boxShadow: isAbsolute
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                           ),
 
                           child: Column(
@@ -590,23 +628,37 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 16),
 
                         sectionTitle(context, "Profile"),
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
+                            horizontal: 24,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: isAbsolute
                                 ? scheme.surfaceContainerHigh
                                 : scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(28),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: isAbsolute
+                                  ? scheme.primary.withValues(alpha: 0.2)
+                                  : scheme.primary.withValues(alpha: 0.1),
+                              width: 1.5,
+                            ),
+                            boxShadow: isAbsolute
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                           ),
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -619,20 +671,25 @@ class _SettingsPageState extends State<SettingsPage> {
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
-                              (DatabaseService.settingsBox.get("username") as String?) ?? "Not set",
+                              (DatabaseService.settingsBox.get("username")
+                                      as String?) ??
+                                  "Not set",
                             ),
                             onTap: () async {
                               HapticFeedback.lightImpact();
                               await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const EditUsernamePage()),
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const EditUsernamePage(),
+                                ),
                               );
                               if (mounted) setState(() {});
                             },
                           ),
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 16),
 
                         sectionTitle(context, "Tutorial"),
 
@@ -641,17 +698,31 @@ class _SettingsPageState extends State<SettingsPage> {
                             TutorialTargets.settingsTutorialRestart,
                           ),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
+                            horizontal: 24,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: isAbsolute
                                 ? scheme.surfaceContainerHigh
                                 : scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(28),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: isAbsolute
+                                  ? scheme.primary.withValues(alpha: 0.2)
+                                  : scheme.primary.withValues(alpha: 0.1),
+                              width: 1.5,
+                            ),
+                            boxShadow: isAbsolute
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                           ),
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -673,62 +744,31 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 16),
 
                         /// NOTIFICATION
                         sectionTitle(context, "Notification"),
 
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isAbsolute
-                                ? scheme.surfaceContainerHigh
-                                : scheme.secondaryContainer,
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(28),
-                              topRight: const Radius.circular(28),
-                              bottomLeft: Radius.circular(
-                                settingsProvider.notificationsEnabled ? 10 : 28,
-                              ),
-                              bottomRight: Radius.circular(
-                                settingsProvider.notificationsEnabled ? 10 : 28,
-                              ),
-                            ),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
-                          ),
-
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.notifications_outlined,
-                                color: scheme.onSecondaryContainer,
-                              ),
-
-                              const SizedBox(width: 18),
-
-                              const Expanded(
-                                child: Text(
-                                  "Daily Reminder",
-                                  style: TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                              ),
-
-                              Switch.adaptive(
-                                value: settingsProvider.notificationsEnabled,
-                                onChanged: (value) {
-                                  HapticFeedback.lightImpact();
-                                  context
-                                      .read<SettingsProvider>()
-                                      .setNotificationsEnabled(value);
-                                },
-                              ),
-                            ],
-                          ),
+                        _buildSelectionTile(
+                          context,
+                          title: "Daily Reminder",
+                          subtitle: "Never forget your purpose.",
+                          icon: Icons.notifications_none_rounded,
+                          value: settingsProvider.notificationsEnabled,
+                          borderRadius: settingsProvider.notificationsEnabled
+                              ? const BorderRadius.only(
+                                  topLeft: Radius.circular(30),
+                                  topRight: Radius.circular(30),
+                                  bottomLeft: Radius.circular(10),
+                                  bottomRight: Radius.circular(10),
+                                )
+                              : BorderRadius.circular(30),
+                          onChanged: (value) {
+                            HapticFeedback.lightImpact();
+                            context
+                                .read<SettingsProvider>()
+                                .setNotificationsEnabled(value);
+                          },
                         ),
 
                         if (settingsProvider.notificationsEnabled) ...[
@@ -751,7 +791,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
+                                horizontal: 24,
                                 vertical: 22,
                               ),
                               decoration: BoxDecoration(
@@ -761,12 +801,26 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(10),
                                   topRight: Radius.circular(10),
-                                  bottomLeft: Radius.circular(28),
-                                  bottomRight: Radius.circular(28),
+                                  bottomLeft: Radius.circular(30),
+                                  bottomRight: Radius.circular(30),
                                 ),
-                                border: isAbsolute
-                                    ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                    : null,
+                                border: Border.all(
+                                  color: isAbsolute
+                                      ? scheme.primary.withValues(alpha: 0.2)
+                                      : scheme.primary.withValues(alpha: 0.1),
+                                  width: 1.5,
+                                ),
+                                boxShadow: isAbsolute
+                                    ? null
+                                    : [
+                                        BoxShadow(
+                                          color: scheme.primary.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                               ),
 
                               child: Row(
@@ -802,293 +856,295 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ],
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 16),
 
                         /// APPEARANCE
                         sectionTitle(context, "Appearance"),
 
-                        SizedBox(
-                          height: 75, // Standard container height
-                          child: PageView(
-                            controller: _pageController,
-                            physics: themeProvider.isDark
-                                ? const BouncingScrollPhysics()
-                                : const NeverScrollableScrollPhysics(),
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentPage = index;
-                              });
-                            },
-                            children: [
-                              /// PAGE 1: Theme Mode
-                              Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 2,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 14,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isAbsolute
-                                      ? scheme.surfaceContainerHigh
-                                      : scheme.secondaryContainer,
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(25),
-                                    topRight: Radius.circular(25),
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
-                                  ),
-                                  border: isAbsolute
-                                      ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                      : null,
-                                ),
-                                child: Row(
+                        Column(
+                          children: [
+                            /// APP THEME PILL
+                            _buildAppThemePill(context, themeProvider),
+
+                            const SizedBox(height: 12),
+
+                            /// DYNAMIC MODE (Wallpaper Colors)
+                            _buildSelectionTile(
+                              context,
+                              title: "Dynamic Mode",
+                              subtitle: "Use system wallpaper colors",
+                              icon: Icons.wallpaper_rounded,
+                              value: themeProvider.isDynamicMode,
+                              onChanged: (value) {
+                                HapticFeedback.lightImpact();
+                                themeProvider.toggleDynamicMode(value);
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            /// OTHER SETTINGS (Locked when Dynamic is on)
+                            IgnorePointer(
+                              ignoring: themeProvider.isDynamicMode,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 250),
+                                opacity: themeProvider.isDynamicMode
+                                    ? 0.35
+                                    : 1.0,
+                                child: Column(
                                   children: [
-                                    Icon(
-                                      modeIcon,
-                                      color: scheme.onSecondaryContainer,
-                                    ),
-                                    const SizedBox(width: 18),
-                                    Expanded(
-                                      child: Text(
-                                        modeLabel,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
+                                    /// POOKIE MODE
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isAbsolute
+                                            ? scheme.surfaceContainerHigh
+                                            : scheme.secondaryContainer,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isAbsolute
+                                              ? scheme.primary.withValues(
+                                                  alpha: 0.2,
+                                                )
+                                              : scheme.primary.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                          width: 1.5,
                                         ),
+                                        boxShadow: isAbsolute
+                                            ? null
+                                            : [
+                                                BoxShadow(
+                                                  color: scheme.primary
+                                                      .withValues(alpha: 0.05),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            themeProvider.pookieMode &&
+                                                    themeProvider.themeMode ==
+                                                        ThemeMode.dark
+                                                ? "🖤"
+                                                : "🎀",
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 18),
+                                          Expanded(
+                                            child: Text(
+                                              themeProvider.pookieMode &&
+                                                      themeProvider.themeMode ==
+                                                          ThemeMode.dark
+                                                  ? "Emo Pookie Mode 🕸️"
+                                                  : "Pookie Mode",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          Switch.adaptive(
+                                            value: themeProvider.pookieMode,
+                                            onChanged: (value) {
+                                              HapticFeedback.lightImpact();
+                                              context
+                                                  .read<ThemeProvider>()
+                                                  .togglePookie(value);
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    Switch.adaptive(
-                                      value: themeProvider.isDark,
-                                      onChanged: (value) {
-                                        HapticFeedback.lightImpact();
-                                        if (!value && _currentPage == 1) {
-                                          _pageController.animateToPage(
-                                            0,
-                                            duration: const Duration(
-                                              milliseconds: 300,
+
+                                    const SizedBox(height: 12),
+
+                                    /// COLOR SCHEME
+                                    IgnorePointer(
+                                      ignoring: themeProvider.pookieMode,
+                                      child: AnimatedOpacity(
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        opacity: themeProvider.pookieMode
+                                            ? 0.4
+                                            : 1.0,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 18,
+                                            vertical: 18,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isAbsolute
+                                                ? scheme.surfaceContainerHigh
+                                                : scheme.secondaryContainer,
+                                            borderRadius:
+                                                const BorderRadius.only(
+                                                  topLeft: Radius.circular(10),
+                                                  topRight: Radius.circular(10),
+                                                  bottomLeft: Radius.circular(
+                                                    30,
+                                                  ),
+                                                  bottomRight: Radius.circular(
+                                                    30,
+                                                  ),
+                                                ),
+                                            border: Border.all(
+                                              color: isAbsolute
+                                                  ? scheme.primary.withValues(
+                                                      alpha: 0.2,
+                                                    )
+                                                  : scheme.primary.withValues(
+                                                      alpha: 0.1,
+                                                    ),
+                                              width: 1.5,
                                             ),
-                                            curve: Curves.easeInOut,
-                                          );
-                                        }
-                                        context
-                                            .read<ThemeProvider>()
-                                            .toggleTheme(value);
-                                      },
+                                            boxShadow: isAbsolute
+                                                ? null
+                                                : [
+                                                    BoxShadow(
+                                                      color: scheme.primary
+                                                          .withValues(
+                                                            alpha: 0.05,
+                                                          ),
+                                                      blurRadius: 10,
+                                                      offset: const Offset(
+                                                        0,
+                                                        4,
+                                                      ),
+                                                    ),
+                                                  ],
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.palette,
+                                                    color: scheme
+                                                        .onSecondaryContainer,
+                                                  ),
+                                                  const SizedBox(width: 18),
+                                                  const Text(
+                                                    "Color Scheme",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Wrap(
+                                                alignment: WrapAlignment.center,
+                                                spacing: 16,
+                                                runSpacing: 16,
+                                                children: [
+                                                  colorOption(
+                                                    context,
+                                                    Colors.indigo,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.blue,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.cyan,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.teal,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.green,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.lime,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.amber,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.orange,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.deepOrange,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.red,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.pink,
+                                                  ),
+                                                  colorOption(
+                                                    context,
+                                                    Colors.deepPurple,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-
-                              /// PAGE 2: Absolute Mode
-                              if (themeProvider.isDark)
-                                Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 2,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 14,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isAbsolute
-                                        ? scheme.surfaceContainerHigh
-                                        : scheme.secondaryContainer,
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(25),
-                                      topRight: Radius.circular(25),
-                                      bottomLeft: Radius.circular(10),
-                                      bottomRight: Radius.circular(10),
-                                    ),
-                                    border: isAbsolute
-                                        ? Border.all(
-                                          color: scheme.primary.withValues(alpha: 0.10),
-                                        )
-                                        : null,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.settings_brightness,
-                                        color: scheme.onSecondaryContainer,
-                                      ),
-                                      const SizedBox(width: 18),
-                                      const Expanded(
-                                        child: Text(
-                                          "Absolute Mode",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                      Switch.adaptive(
-                                        value: themeProvider.absoluteMode,
-                                        onChanged: (value) {
-                                          HapticFeedback.lightImpact();
-                                          context
-                                              .read<ThemeProvider>()
-                                              .toggleAbsoluteMode(value);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else
-                                const SizedBox.shrink(),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isAbsolute
-                                ? scheme.surfaceContainerHigh
-                                : scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(10),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
-                          ),
-
-                          child: Row(
-                            children: [
-                              Text(
-                                themeProvider.pookieMode && themeProvider.isDark
-                                    ? "🖤"
-                                    : "🎀",
-                                style: const TextStyle(fontSize: 20),
-                              ),
-
-                              const SizedBox(width: 18),
-
-                              Expanded(
-                                child: Text(
-                                  themeProvider.pookieMode && themeProvider.isDark
-                                      ? "Emo Pookie Mode 🕸️"
-                                      : "Pookie Mode",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-
-                              Switch.adaptive(
-                                value: themeProvider.pookieMode,
-                                onChanged: (value) {
-                                  HapticFeedback.lightImpact();
-                                  context.read<ThemeProvider>().togglePookie(
-                                    value,
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        /// COLOR SCHEME
-                        IgnorePointer(
-                          ignoring: themeProvider.pookieMode,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 200),
-                            opacity: themeProvider.pookieMode ? 0.4 : 1.0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 18,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isAbsolute
-                                    ? scheme.surfaceContainerHigh
-                                    : scheme.secondaryContainer,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  topRight: Radius.circular(10),
-                                  bottomLeft: Radius.circular(28),
-                                  bottomRight: Radius.circular(28),
-                                ),
-                                border: isAbsolute
-                                    ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                    : null,
-                              ),
-
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.palette,
-                                        color: scheme.onSecondaryContainer,
-                                      ),
-
-                                      const SizedBox(width: 18),
-
-                                      Text(
-                                        themeProvider.pookieMode
-                                            ? "Color Scheme (Pookie Mode)"
-                                            : "Color Scheme",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: 16,
-                                    runSpacing: 16,
-                                    children: [
-                                      colorOption(context, Colors.indigo),
-                                      colorOption(context, Colors.blue),
-                                      colorOption(context, Colors.cyan),
-                                      colorOption(context, Colors.teal),
-                                      colorOption(context, Colors.green),
-                                      colorOption(context, Colors.lime),
-                                      colorOption(context, Colors.amber),
-                                      colorOption(context, Colors.orange),
-                                      colorOption(context, Colors.deepOrange),
-                                      colorOption(context, Colors.red),
-                                      colorOption(context, Colors.pink),
-                                      colorOption(context, Colors.deepPurple),
-                                    ],
-                                  ),
-                                ],
-                              ),
                             ),
-                          ),
+                          ],
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 16),
 
                         /// RESOURCES
                         sectionTitle(context, "Resources"),
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
+                            horizontal: 24,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: isAbsolute
                                 ? scheme.surfaceContainerHigh
                                 : scheme.secondaryContainer,
                             borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(28),
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
                               bottomLeft: Radius.circular(10),
                               bottomRight: Radius.circular(10),
                             ),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
+                            border: Border.all(
+                              color: isAbsolute
+                                  ? scheme.primary.withValues(alpha: 0.2)
+                                  : scheme.primary.withValues(alpha: 0.1),
+                              width: 1.5,
+                            ),
+                            boxShadow: isAbsolute
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                           ),
 
                           child: ListTile(
@@ -1101,21 +1157,35 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
+                            horizontal: 24,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: isAbsolute
                                 ? scheme.surfaceContainerHigh
                                 : scheme.secondaryContainer,
                             borderRadius: BorderRadius.circular(10),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
+                            border: Border.all(
+                              color: isAbsolute
+                                  ? scheme.primary.withValues(alpha: 0.2)
+                                  : scheme.primary.withValues(alpha: 0.1),
+                              width: 1.5,
+                            ),
+                            boxShadow: isAbsolute
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                           ),
 
                           child: ListTile(
@@ -1140,9 +1210,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                       const SizedBox(height: 24),
                                       Text(
                                         "Fetching notes…",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
                                       ),
                                       const SizedBox(height: 8),
                                     ],
@@ -1173,7 +1243,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
 
                         Row(
                           children: [
@@ -1201,24 +1271,25 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
+                            horizontal: 24,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: scheme.errorContainer,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(10),
                               topRight: Radius.circular(10),
-                              bottomLeft: Radius.circular(28),
-                              bottomRight: Radius.circular(28),
+                              bottomLeft: Radius.circular(30),
+                              bottomRight: Radius.circular(30),
                             ),
-                            border: isAbsolute
-                                ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
-                                : null,
+                            border: Border.all(
+                              color: scheme.error.withValues(alpha: 0.2),
+                              width: 1.5,
+                            ),
                           ),
 
                           child: ListTile(
@@ -1251,7 +1322,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-
         ],
       ),
     );
@@ -1306,6 +1376,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
   Widget _buildReleaseNotesDialog(
     BuildContext context,
     String version,
@@ -1321,10 +1392,9 @@ class _SettingsPageState extends State<SettingsPage> {
           Expanded(
             child: Text(
               "Release Notes — v$version",
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -1351,24 +1421,18 @@ class _SettingsPageState extends State<SettingsPage> {
                         }
                       },
                       styleSheet:
-                          MarkdownStyleSheet.fromTheme(Theme.of(context))
-                              .copyWith(
-                                p: Theme.of(context).textTheme.bodyMedium,
-                                h1: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                h2: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                h3: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                listBullet:
-                                    Theme.of(context).textTheme.bodyMedium,
-                              ),
+                          MarkdownStyleSheet.fromTheme(
+                            Theme.of(context),
+                          ).copyWith(
+                            p: Theme.of(context).textTheme.bodyMedium,
+                            h1: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                            h2: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                            h3: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                            listBullet: Theme.of(context).textTheme.bodyMedium,
+                          ),
                     ),
                   ),
                 );
@@ -1384,6 +1448,319 @@ class _SettingsPageState extends State<SettingsPage> {
           child: const Text("Got it"),
         ),
       ],
+    );
+  }
+
+  Widget _buildSelectionTile(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    BorderRadius? borderRadius,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final isAbsolute = context.read<ThemeProvider>().absoluteMode;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: isAbsolute
+            ? scheme.surfaceContainerHigh
+            : scheme.secondaryContainer,
+        borderRadius: borderRadius ?? BorderRadius.circular(10),
+        border: Border.all(
+          color: isAbsolute
+              ? scheme.primary.withValues(alpha: 0.2)
+              : scheme.primary.withValues(alpha: 0.1),
+          width: 1.5,
+        ),
+        boxShadow: isAbsolute
+            ? null
+            : [
+                BoxShadow(
+                  color: scheme.primary.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: scheme.onSecondaryContainer),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSecondaryContainer.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppThemePill(BuildContext context, ThemeProvider themeProvider) {
+    final scheme = Theme.of(context).colorScheme;
+    final isAbsolute = themeProvider.absoluteMode;
+
+    final brightness = MediaQuery.platformBrightnessOf(context);
+    final isCurrentDark = themeProvider.themeMode == ThemeMode.system
+        ? brightness == Brightness.dark
+        : themeProvider.themeMode == ThemeMode.dark;
+
+    String themeLabel;
+    IconData themeIcon;
+
+    switch (themeProvider.themeMode) {
+      case ThemeMode.light:
+        themeLabel = "Light Mode";
+        themeIcon = Icons.light_mode_rounded;
+        break;
+      case ThemeMode.dark:
+        themeLabel = "Dark Mode";
+        themeIcon = Icons.dark_mode_rounded;
+        break;
+      case ThemeMode.system:
+        themeLabel = "Auto Mode";
+        themeIcon = Icons.brightness_auto_rounded;
+        break;
+    }
+
+    return GestureDetector(
+      onTap: () => _showThemeSelectionModal(context, themeProvider),
+      onHorizontalDragEnd: (details) {
+        // Swipe to toggle Absolute Mode (only if in dark/auto-dark)
+        if (isCurrentDark) {
+          if (details.primaryVelocity != null &&
+              details.primaryVelocity!.abs() > 300) {
+            HapticFeedback.mediumImpact();
+            themeProvider.toggleAbsoluteMode(!themeProvider.absoluteMode);
+          }
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: isAbsolute
+              ? scheme.surfaceContainerHigh
+              : scheme.secondaryContainer,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+            bottomLeft: Radius.circular(10),
+            bottomRight: Radius.circular(10),
+          ),
+          border: Border.all(
+            color: isAbsolute
+                ? scheme.primary.withValues(alpha: 0.2)
+                : scheme.primary.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+          boxShadow: isAbsolute
+              ? null
+              : [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Row(
+          children: [
+            Icon(themeIcon, color: scheme.primary, size: 28),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "App theme",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    isAbsolute && isCurrentDark ? "Absolute Dark" : themeLabel,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isCurrentDark)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 16,
+                  color: scheme.primary.withValues(alpha: 0.6),
+                ),
+              ),
+            const SizedBox(width: 8),
+            Icon(Icons.expand_more_rounded, color: scheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showThemeSelectionModal(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final isAbsolute = themeProvider.absoluteMode;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "Select Theme",
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 24),
+            _buildThemeOption(
+              context,
+              title: "Light Mode",
+              icon: Icons.light_mode_rounded,
+              selected: themeProvider.themeMode == ThemeMode.light,
+              onTap: () {
+                themeProvider.setThemeMode(ThemeMode.light);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildThemeOption(
+              context,
+              title: "Dark Mode",
+              icon: Icons.dark_mode_rounded,
+              selected: themeProvider.themeMode == ThemeMode.dark,
+              onTap: () {
+                themeProvider.setThemeMode(ThemeMode.dark);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildThemeOption(
+              context,
+              title: "Auto Mode",
+              icon: Icons.brightness_auto_rounded,
+              selected: themeProvider.themeMode == ThemeMode.system,
+              onTap: () {
+                themeProvider.setThemeMode(ThemeMode.system);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final isAbsolute = context.read<ThemeProvider>().absoluteMode;
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: selected
+              ? scheme.primaryContainer
+              : (isAbsolute
+                    ? scheme.surfaceContainer
+                    : scheme.surfaceContainerHighest.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? scheme.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: selected
+                  ? scheme.onPrimaryContainer
+                  : scheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                  color: selected
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurface,
+                ),
+              ),
+            ),
+            if (selected)
+              Icon(Icons.check_circle_rounded, color: scheme.primary),
+          ],
+        ),
+      ),
     );
   }
 }

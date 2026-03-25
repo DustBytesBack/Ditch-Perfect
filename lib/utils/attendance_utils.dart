@@ -12,7 +12,7 @@ class AttendanceStats {
   });
 
   double get percentage {
-    if (total == 0) return 0;
+    if (total == 0) return 100.0;
     return (attended / total) * 100;
   }
 

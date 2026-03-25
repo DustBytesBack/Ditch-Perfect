@@ -21,7 +21,9 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
   @override
   void initState() {
     super.initState();
-    final isLocked = DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false) as bool;
+    final isLocked =
+        DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false)
+            as bool;
     if (isLocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pop(context);
@@ -29,7 +31,8 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
       return;
     }
 
-    final savedUsername = DatabaseService.settingsBox.get("username") as String?;
+    final savedUsername =
+        DatabaseService.settingsBox.get("username") as String?;
     if (savedUsername != null) {
       _controller.text = savedUsername;
     }
@@ -64,7 +67,7 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
           .collection("leaderboard")
           .doc(username)
           .get();
-      
+
       if (leaderboardDoc.exists) {
         setState(() => _error = "Username is already taken");
         return;
@@ -88,10 +91,18 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text("Set Username?"),
-            content: const Text("Are you sure? You will have to pay if you want to change it later."),
+            content: const Text(
+              "Are you sure? You will have to pay if you want to change it later.",
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Continue")),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text("Continue"),
+              ),
             ],
           ),
         );
@@ -104,10 +115,18 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text("Final Check!"),
-            content: const Text("Just Kidding !. Your username is permanent, just like your name irl. Confirm to save?"),
+            content: const Text(
+              "Just Kidding !. Your username is permanent, just like your name irl. Confirm to save?",
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Go Back")),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Confirm & Save")),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("Go Back"),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text("Confirm & Save"),
+              ),
             ],
           ),
         );
@@ -117,10 +136,12 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
       // If it doesn't exist in either and user confirmed twice, it's unique and final
       await DatabaseService.settingsBox.put("username", username);
       await DatabaseService.settingsBox.put("isUsernameSet", true);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Username locked and saved successfully")),
+          const SnackBar(
+            content: Text("Username locked and saved successfully"),
+          ),
         );
         Navigator.pop(context);
       }
@@ -166,15 +187,15 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
                   Text(
                     "Pick a unique name",
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "This name will be displayed on the global leaderboard.",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 32),
                   TextField(
@@ -189,7 +210,9 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
                       prefixIcon: const Icon(Icons.alternate_email),
                     ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Z0-9_]'),
+                      ),
                       LengthLimitingTextInputFormatter(20),
                     ],
                     onChanged: (val) {
@@ -200,14 +223,14 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
                   FilledButton.icon(
                     onPressed: _isLoading ? null : _saveUsername,
                     icon: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: WavyCircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: WavyCircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Icon(Icons.check),
                     label: const Text("Save Username"),
                     style: FilledButton.styleFrom(

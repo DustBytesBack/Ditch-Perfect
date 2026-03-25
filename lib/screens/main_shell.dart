@@ -227,18 +227,25 @@ class _MainShellState extends State<MainShell> {
     int displayIndex = index;
     if (index < _allDestinations.length) {
       final label = _allDestinations[index].label;
-      if (label == "Home") { displayIndex = 0; }
-      else if (label == "Calendar") { displayIndex = 1; }
-      else if (label == "Subjects") { displayIndex = 2; }
-      else if (label == "Timetable") { displayIndex = 3; }
-      else if (label == "Settings") { displayIndex = 4; }
-      else if (label == "Calc") { displayIndex = 5; }
-      else if (label == "Rank") { displayIndex = 6; }
+      if (label == "Home") {
+        displayIndex = 0;
+      } else if (label == "Calendar") {
+        displayIndex = 1;
+      } else if (label == "Subjects") {
+        displayIndex = 2;
+      } else if (label == "Timetable") {
+        displayIndex = 3;
+      } else if (label == "Settings") {
+        displayIndex = 4;
+      } else if (label == "Calc") {
+        displayIndex = 5;
+      } else if (label == "Rank") {
+        displayIndex = 6;
+      }
     }
     if (displayIndex >= pages.length) displayIndex = 0;
     return displayIndex;
   }
-
 
   Future<void> _onLaunchChecks() async {
     // Show release notes first if the app was just updated.
@@ -300,14 +307,13 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(
-            index: _currentDisplayIndex,
-            children: pages,
-          ),
+          IndexedStack(index: _currentDisplayIndex, children: pages),
 
           PeekingPony(
             active: context.watch<ThemeProvider>().pookieMode,
-            navbarHeight: isReordering ? 225.0 : (isNavExpanded ? 189.0 : 115.0),
+            navbarHeight: isReordering
+                ? 225.0
+                : (isNavExpanded ? 189.0 : 115.0),
           ),
 
           Positioned(
@@ -377,9 +383,13 @@ class _MainShellState extends State<MainShell> {
                           children: [
                             if (isReordering)
                               Padding(
-                                padding: const EdgeInsets.only(top: 8, bottom: 4),
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  bottom: 4,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Padding(
                                       padding: const EdgeInsets.only(left: 16),
@@ -415,236 +425,271 @@ class _MainShellState extends State<MainShell> {
                                   ],
                                 ),
                               ),
-                        if (isReordering)
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 0,
-                                runSpacing: 0,
-                                children: List.generate(
-                                  _allDestinations.length,
-                                  (index) {
-                                    final dest = _allDestinations[index];
-                                    return LongPressDraggable<int>(
-                                      data: index,
-                                      feedback: Material(
-                                        color: Colors.transparent,
-                                        child: Opacity(
-                                          opacity: 0.8,
-                                          child: SizedBox(
-                                            width: itemWidth,
-                                            height: 65,
-                                            child: Center(
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    (dest.icon as Icon).icon,
-                                                    size: 24,
-                                                    color: scheme.primary,
+                            if (isReordering)
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 0,
+                                    runSpacing: 0,
+                                    children: List.generate(
+                                      _allDestinations.length,
+                                      (index) {
+                                        final dest = _allDestinations[index];
+                                        return LongPressDraggable<int>(
+                                          data: index,
+                                          feedback: Material(
+                                            color: Colors.transparent,
+                                            child: Opacity(
+                                              opacity: 0.8,
+                                              child: SizedBox(
+                                                width: itemWidth,
+                                                height: 65,
+                                                child: Center(
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                        (dest.icon as Icon)
+                                                            .icon,
+                                                        size: 24,
+                                                        color: scheme.primary,
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        dest.label,
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                          color: scheme.primary,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    dest.label,
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: scheme.primary,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
+                                          childWhenDragging: SizedBox(
+                                            width: itemWidth,
+                                            height: 65,
+                                            child: Center(
+                                              child: Icon(
+                                                (dest.icon as Icon).icon,
+                                                size: 20,
+                                                color: scheme.onSurfaceVariant
+                                                    .withValues(alpha: 0.3),
+                                              ),
+                                            ),
+                                          ),
+                                          onDragStarted: () {
+                                            HapticFeedback.lightImpact();
+                                          },
+                                          child: DragTarget<int>(
+                                            onWillAcceptWithDetails: (_) =>
+                                                true,
+                                            onAcceptWithDetails: (details) {
+                                              final oldIndex = details.data;
+                                              final newIndex = index;
+                                              if (oldIndex == newIndex) return;
+                                              HapticFeedback.selectionClick();
+                                              setState(() {
+                                                final item = _allDestinations
+                                                    .removeAt(oldIndex);
+                                                _allDestinations.insert(
+                                                  newIndex,
+                                                  item,
+                                                );
+
+                                                if (currentIndex == oldIndex) {
+                                                  currentIndex = newIndex;
+                                                } else if (oldIndex <
+                                                        newIndex &&
+                                                    currentIndex > oldIndex &&
+                                                    currentIndex <= newIndex) {
+                                                  currentIndex--;
+                                                } else if (oldIndex >
+                                                        newIndex &&
+                                                    currentIndex < oldIndex &&
+                                                    currentIndex >= newIndex) {
+                                                  currentIndex++;
+                                                }
+                                              });
+                                              _saveNavOrder();
+                                            },
+                                            builder:
+                                                (
+                                                  context,
+                                                  candidateData,
+                                                  rejectedData,
+                                                ) {
+                                                  final isHovered =
+                                                      candidateData.isNotEmpty;
+                                                  return AnimatedContainer(
+                                                    duration: const Duration(
+                                                      milliseconds: 150,
+                                                    ),
+                                                    width: itemWidth,
+                                                    height: 65,
+                                                    decoration: BoxDecoration(
+                                                      color: isHovered
+                                                          ? scheme
+                                                                .primaryContainer
+                                                                .withValues(
+                                                                  alpha: 0.5,
+                                                                )
+                                                          : Colors.transparent,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            16,
+                                                          ),
+                                                    ),
+                                                    child: navItem(
+                                                      dest,
+                                                      index,
+                                                      isReordering: true,
+                                                    ),
+                                                  );
+                                                },
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else ...[
+                              SizedBox(
+                                height: 65,
+                                child: Stack(
+                                  children: [
+                                    /// SLIDING INDICATOR
+                                    AnimatedAlign(
+                                      duration: const Duration(
+                                        milliseconds: 300,
                                       ),
-                                      childWhenDragging: SizedBox(
+                                      curve: Curves.easeOutCubic,
+                                      alignment: Alignment(
+                                        -1 +
+                                            (primaryIndex *
+                                                2 /
+                                                (_primaryNavCount - 1)),
+                                        0,
+                                      ),
+                                      child: Container(
                                         width: itemWidth,
                                         height: 65,
-                                        child: Center(
-                                          child: Icon(
-                                            (dest.icon as Icon).icon,
-                                            size: 20,
-                                            color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
+                                        decoration: BoxDecoration(
+                                          color: isSecondarySelected
+                                              ? Colors.transparent
+                                              : scheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            40,
                                           ),
                                         ),
                                       ),
-                                      onDragStarted: () {
-                                        HapticFeedback.lightImpact();
-                                      },
-                                      child: DragTarget<int>(
-                                        onWillAcceptWithDetails: (_) => true,
-                                        onAcceptWithDetails: (details) {
-                                          final oldIndex = details.data;
-                                          final newIndex = index;
-                                          if (oldIndex == newIndex) return;
-                                          HapticFeedback.selectionClick();
-                                          setState(() {
-                                            final item = _allDestinations.removeAt(oldIndex);
-                                            _allDestinations.insert(newIndex, item);
+                                    ),
 
-                                            if (currentIndex == oldIndex) {
-                                              currentIndex = newIndex;
-                                            } else if (oldIndex < newIndex &&
-                                                currentIndex > oldIndex &&
-                                                currentIndex <= newIndex) {
-                                              currentIndex--;
-                                            } else if (oldIndex > newIndex &&
-                                                currentIndex < oldIndex &&
-                                                currentIndex >= newIndex) {
-                                              currentIndex++;
-                                            }
-                                          });
-                                          _saveNavOrder();
-                                        },
-                                        builder: (context, candidateData, rejectedData) {
-                                          final isHovered = candidateData.isNotEmpty;
-                                          return AnimatedContainer(
-                                            duration: const Duration(milliseconds: 150),
-                                            width: itemWidth,
-                                            height: 65,
-                                            decoration: BoxDecoration(
-                                              color: isHovered
-                                                  ? scheme.primaryContainer.withValues(alpha: 0.5)
-                                                  : Colors.transparent,
-                                              borderRadius: BorderRadius.circular(16),
-                                            ),
-                                            child: navItem(
-                                              dest,
-                                              index,
-                                              isReordering: true,
-                                            ),
-                                          );
-                                        },
+                                    /// NAV ITEMS
+                                    Row(
+                                      children: List.generate(
+                                        _primaryNavCount,
+                                        (index) => Expanded(
+                                          child: navItem(
+                                            _allDestinations[index],
+                                            index,
+                                          ),
+                                        ),
                                       ),
-                                    );
-                                  },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 280),
+                                curve: Curves.easeOutCubic,
+                                child: isNavExpanded
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: SizedBox(
+                                          height: 49,
+                                          child: Row(
+                                            children: [
+                                              const Spacer(),
+                                              secondaryNavItem(
+                                                _allDestinations[_primaryNavCount],
+                                                _primaryNavCount,
+                                                tutorialTargetId:
+                                                    TutorialTargets
+                                                        .navCalculator,
+                                              ),
+                                              const SizedBox(width: 14),
+                                              secondaryNavItem(
+                                                _allDestinations[_primaryNavCount +
+                                                    1],
+                                                _primaryNavCount + 1,
+                                                tutorialTargetId:
+                                                    TutorialTargets.navRank,
+                                              ),
+                                              const Spacer(),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      // Chevron pill floating on top of navbar
+                      if (!isReordering)
+                        Positioned(
+                          top: -10,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() {
+                                  isNavExpanded = !isNavExpanded;
+                                });
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: scheme.onInverseSurface,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: scheme.shadow.withValues(
+                                        alpha: .15,
+                                      ),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  isNavExpanded
+                                      ? Icons.keyboard_arrow_down
+                                      : Icons.keyboard_arrow_up,
+                                  size: 18,
+                                  color: scheme.primary,
                                 ),
                               ),
                             ),
-                          )
-                        else ...[
-                          SizedBox(
-                            height: 65,
-                            child: Stack(
-                              children: [
-                                /// SLIDING INDICATOR
-                                AnimatedAlign(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOutCubic,
-                                  alignment: Alignment(
-                                    -1 +
-                                        (primaryIndex *
-                                            2 /
-                                            (_primaryNavCount - 1)),
-                                    0,
-                                  ),
-                                  child: Container(
-                                    width: itemWidth,
-                                    height: 65,
-                                    decoration: BoxDecoration(
-                                      color: isSecondarySelected
-                                          ? Colors.transparent
-                                          : scheme.primaryContainer,
-                                      borderRadius: BorderRadius.circular(40),
-                                    ),
-                                  ),
-                                ),
-  
-                                /// NAV ITEMS
-                                Row(
-                                  children: List.generate(
-                                    _primaryNavCount,
-                                    (index) => Expanded(
-                                      child: navItem(
-                                        _allDestinations[index],
-                                        index,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 280),
-                            curve: Curves.easeOutCubic,
-                            child: isNavExpanded
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: SizedBox(
-                                      height: 49,
-                                      child: Row(
-                                        children: [
-                                          const Spacer(),
-                                          secondaryNavItem(
-                                            _allDestinations[_primaryNavCount],
-                                            _primaryNavCount,
-                                            tutorialTargetId:
-                                                TutorialTargets.navCalculator,
-                                          ),
-                                          const SizedBox(width: 14),
-                                          secondaryNavItem(
-                                            _allDestinations[_primaryNavCount + 1],
-                                            _primaryNavCount + 1,
-                                            tutorialTargetId:
-                                                TutorialTargets.navRank,
-                                          ),
-                                          const Spacer(),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // Chevron pill floating on top of navbar
-                  if (!isReordering)
-                    Positioned(
-                      top: -10,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            setState(() {
-                              isNavExpanded = !isNavExpanded;
-                            });
-                          },
-                          child: Container(
-                            width: 40,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: scheme.onInverseSurface,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: scheme.shadow.withValues(alpha: .15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              isNavExpanded
-                                  ? Icons.keyboard_arrow_down
-                                  : Icons.keyboard_arrow_up,
-                              size: 18,
-                              color: scheme.primary,
-                            ),
                           ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
-            );
+                    ],
+                  ),
+                );
               },
             ),
           ),
@@ -740,10 +785,7 @@ class _MainShellState extends State<MainShell> {
             HapticFeedback.lightImpact();
             _selectTab(index);
           },
-          child: SizedBox(
-            height: double.infinity,
-            child: content,
-          ),
+          child: SizedBox(height: double.infinity, child: content),
         ),
       ),
     );
@@ -850,8 +892,7 @@ class _MainShellState extends State<MainShell> {
         // Primary item selected — undo any active swap, UNLESS
         // the user tapped the slot that holds the swapped-in item
         // (they want to stay on that page, not switch away).
-        if (_swappedSecondaryIndex != null &&
-            index != _primaryNavCount - 1) {
+        if (_swappedSecondaryIndex != null && index != _primaryNavCount - 1) {
           final temp = _allDestinations[_primaryNavCount - 1];
           _allDestinations[_primaryNavCount - 1] =
               _allDestinations[_swappedSecondaryIndex!];
@@ -885,7 +926,7 @@ class _MainShellState extends State<MainShell> {
       currentIndex = 0;
       previousIndex = 0;
       isNavExpanded = false;
-      
+
       int nextDisplayIndex = _getDisplayIndex();
       if (nextDisplayIndex != _currentDisplayIndex) {
         _currentDisplayIndex = nextDisplayIndex;
@@ -907,7 +948,7 @@ class _MainShellState extends State<MainShell> {
       if (step.pageIndex != _rankPageIndex) {
         previousIndex = step.pageIndex;
       }
-      
+
       int nextDisplayIndex = _getDisplayIndex();
       if (nextDisplayIndex != _currentDisplayIndex) {
         _currentDisplayIndex = nextDisplayIndex;
@@ -1000,13 +1041,18 @@ class _TutorialStep {
 class PeekingPony extends StatefulWidget {
   final bool active;
   final double navbarHeight;
-  const PeekingPony({super.key, required this.active, required this.navbarHeight});
+  const PeekingPony({
+    super.key,
+    required this.active,
+    required this.navbarHeight,
+  });
 
   @override
   State<PeekingPony> createState() => _PeekingPonyState();
 }
 
-class _PeekingPonyState extends State<PeekingPony> with SingleTickerProviderStateMixin {
+class _PeekingPonyState extends State<PeekingPony>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _isVisible = false;
@@ -1079,21 +1125,14 @@ class _PeekingPonyState extends State<PeekingPony> with SingleTickerProviderStat
         animation: _animation,
         builder: (context, child) {
           return Transform.translate(
-            offset: Offset(
-              0,
-              100 * (1 - _animation.value),
-            ),
+            offset: Offset(0, 100 * (1 - _animation.value)),
             child: Opacity(
               opacity: _animation.value.clamp(0.0, 1.0),
               child: child,
             ),
           );
         },
-        child: Image.asset(
-          'assets/gif/pony.gif',
-          height: 100,
-          width: 100,
-        ),
+        child: Image.asset('assets/gif/pony.gif', height: 100, width: 100),
       ),
     );
   }

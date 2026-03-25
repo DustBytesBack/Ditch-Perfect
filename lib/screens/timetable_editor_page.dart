@@ -148,8 +148,12 @@ class TimetableEditorPage extends StatelessWidget {
     final timetable = context.watch<TimetableProvider>();
     final subjects = context.watch<SubjectProvider>().subjects;
 
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
 
     return DefaultTabController(
@@ -166,10 +170,7 @@ class TimetableEditorPage extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      topGradientColor,
-                      bottomGradientColor,
-                    ],
+                    colors: [topGradientColor, bottomGradientColor],
                   ),
                 ),
               ),

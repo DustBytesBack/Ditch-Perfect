@@ -44,16 +44,16 @@ class Attendance {
   });
 
   Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'subjectId': subjectId,
-        'slotIndex': slotIndex,
-        'status': status.toJson(),
-      };
+    'date': date.toIso8601String(),
+    'subjectId': subjectId,
+    'slotIndex': slotIndex,
+    'status': status.toJson(),
+  };
 
   factory Attendance.fromJson(Map<String, dynamic> json) => Attendance(
-        date: DateTime.parse(json['date']),
-        subjectId: json['subjectId'],
-        slotIndex: json['slotIndex'],
-        status: AttendanceStatus.fromJson(json['status']),
-      );
+    date: DateTime.parse(json['date']),
+    subjectId: json['subjectId'],
+    slotIndex: json['slotIndex'],
+    status: AttendanceStatus.fromJson(json['status']),
+  );
 }

@@ -161,10 +161,16 @@ class _CalendarPageState extends State<CalendarPage> {
 
     // Use simple conditional logic for colors while keeping a single structural layout
     final bgColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
-    final headerColor = isAbsolute ? scheme.surfaceContainerHigh : scheme.surface;
+    final headerColor = isAbsolute
+        ? scheme.surfaceContainerHigh
+        : scheme.surface;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -177,10 +183,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    topGradientColor,
-                    bottomGradientColor,
-                  ],
+                  colors: [topGradientColor, bottomGradientColor],
                 ),
               ),
             ),
@@ -202,15 +205,15 @@ class _CalendarPageState extends State<CalendarPage> {
                         decoration: BoxDecoration(
                           color: headerColor,
                           borderRadius: BorderRadius.circular(40),
-                          border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                          border: isAbsolute
+                              ? Border.all(color: scheme.outlineVariant)
+                              : null,
                         ),
                         child: Text(
                           isMultiSelectMode
                               ? '${selectedDates.length} selected'
                               : "Calendar",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
@@ -329,9 +332,11 @@ class _CalendarPageState extends State<CalendarPage> {
                                       boxShadow: (isAbsolute && color != null)
                                           ? [
                                               BoxShadow(
-                                                color: color.withValues(alpha: .25),
+                                                color: color.withValues(
+                                                  alpha: .25,
+                                                ),
                                                 blurRadius: 8,
-                                              )
+                                              ),
                                             ]
                                           : null,
                                     ),
@@ -367,9 +372,10 @@ class _CalendarPageState extends State<CalendarPage> {
                                       boxShadow: isAbsolute
                                           ? [
                                               BoxShadow(
-                                                color: scheme.primary.withValues(alpha: .5),
+                                                color: scheme.primary
+                                                    .withValues(alpha: .5),
                                                 blurRadius: 10,
-                                              )
+                                              ),
                                             ]
                                           : null,
                                     ),
@@ -421,8 +427,12 @@ class _CalendarPageState extends State<CalendarPage> {
                             ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
-                              color: isAbsolute ? null : scheme.secondaryContainer,
-                              border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                              color: isAbsolute
+                                  ? null
+                                  : scheme.secondaryContainer,
+                              border: isAbsolute
+                                  ? Border.all(color: scheme.outlineVariant)
+                                  : null,
                               gradient: isAbsolute
                                   ? LinearGradient(
                                       colors: [
@@ -441,13 +451,39 @@ class _CalendarPageState extends State<CalendarPage> {
                             child: Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
-                                    statTile(context, stats.notMarked, "Not marked", Colors.grey),
-                                    statTile(context, stats.cancelled, "Off", Colors.orange),
-                                    statTile(context, stats.missed, "Missed", Colors.red),
-                                    statTile(context, stats.attended, "Attended", Colors.green),
-                                    statTile(context, stats.mixed, "Mixed", Colors.purple),
+                                    statTile(
+                                      context,
+                                      stats.notMarked,
+                                      "Not marked",
+                                      Colors.grey,
+                                    ),
+                                    statTile(
+                                      context,
+                                      stats.cancelled,
+                                      "Off",
+                                      Colors.orange,
+                                    ),
+                                    statTile(
+                                      context,
+                                      stats.missed,
+                                      "Missed",
+                                      Colors.red,
+                                    ),
+                                    statTile(
+                                      context,
+                                      stats.attended,
+                                      "Attended",
+                                      Colors.green,
+                                    ),
+                                    statTile(
+                                      context,
+                                      stats.mixed,
+                                      "Mixed",
+                                      Colors.purple,
+                                    ),
                                   ],
                                 ),
                                 if (!isAbsolute) ...[
@@ -496,9 +532,13 @@ class _CalendarPageState extends State<CalendarPage> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+                    color: isAbsolute
+                        ? scheme.surfaceContainerHigh
+                        : scheme.surface,
                     borderRadius: BorderRadius.circular(28),
-                    border: isAbsolute ? Border.all(color: scheme.outlineVariant) : null,
+                    border: isAbsolute
+                        ? Border.all(color: scheme.outlineVariant)
+                        : null,
                     boxShadow: [
                       if (isAbsolute)
                         BoxShadow(
@@ -524,8 +564,8 @@ class _CalendarPageState extends State<CalendarPage> {
                           onTap: selectedDates.isEmpty
                               ? null
                               : () => _applySelectionMarking(
-                                    AttendanceStatus.present,
-                                  ),
+                                  AttendanceStatus.present,
+                                ),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -537,8 +577,8 @@ class _CalendarPageState extends State<CalendarPage> {
                           onTap: selectedDates.isEmpty
                               ? null
                               : () => _applySelectionMarking(
-                                    AttendanceStatus.absent,
-                                  ),
+                                  AttendanceStatus.absent,
+                                ),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -550,8 +590,8 @@ class _CalendarPageState extends State<CalendarPage> {
                           onTap: selectedDates.isEmpty
                               ? null
                               : () => _applySelectionMarking(
-                                    AttendanceStatus.cancelled,
-                                  ),
+                                  AttendanceStatus.cancelled,
+                                ),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -612,8 +652,11 @@ class _CalendarPageState extends State<CalendarPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon,
-                    size: 18, color: enabled ? color : scheme.onSurfaceVariant),
+                Icon(
+                  icon,
+                  size: 18,
+                  color: enabled ? color : scheme.onSurfaceVariant,
+                ),
                 const SizedBox(height: 3),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -621,8 +664,8 @@ class _CalendarPageState extends State<CalendarPage> {
                     label,
                     maxLines: 1,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -660,11 +703,9 @@ class _CalendarPageState extends State<CalendarPage> {
                   label,
                   maxLines: 1,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: enabled
-                            ? scheme.onSurface
-                            : scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: enabled ? scheme.onSurface : scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -689,9 +730,9 @@ class _CalendarPageState extends State<CalendarPage> {
         children: [
           Text(
             value.toString(),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Container(
@@ -701,10 +742,7 @@ class _CalendarPageState extends State<CalendarPage> {
               color: dotColor,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(
-                  color: dotColor.withValues(alpha: .6),
-                  blurRadius: 6,
-                )
+                BoxShadow(color: dotColor.withValues(alpha: .6), blurRadius: 6),
               ],
             ),
           ),
@@ -721,9 +759,9 @@ class _CalendarPageState extends State<CalendarPage> {
           Text(
             value.toString(),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSecondaryContainer,
-                ),
+              fontWeight: FontWeight.w600,
+              color: scheme.onSecondaryContainer,
+            ),
           ),
           const SizedBox(height: 4),
           Container(

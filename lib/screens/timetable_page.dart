@@ -27,7 +27,9 @@ class TimetablePage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      backgroundColor: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+      backgroundColor: isAbsolute
+          ? scheme.surfaceContainerHigh
+          : scheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
@@ -142,8 +144,12 @@ class TimetablePage extends StatelessWidget {
     final timetable = context.watch<TimetableProvider>();
     final subjects = context.watch<SubjectProvider>().subjects;
 
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
 
     return Scaffold(
@@ -157,10 +163,7 @@ class TimetablePage extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    topGradientColor,
-                    bottomGradientColor,
-                  ],
+                  colors: [topGradientColor, bottomGradientColor],
                 ),
               ),
             ),
@@ -191,7 +194,8 @@ class TimetablePage extends StatelessWidget {
                         ),
                         child: Text(
                           "Timetable",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -215,7 +219,6 @@ class TimetablePage extends StatelessWidget {
                           padding: const EdgeInsets.all(14),
                           icon: Icon(Icons.edit, color: scheme.onSurface),
                           onPressed: () => _showEditOptions(context),
-
                         ),
                       ),
                     ],
@@ -235,7 +238,6 @@ class TimetablePage extends StatelessWidget {
                     child: ListView(
                       children: [
                         ...timetable.days.map((day) {
-
                           final slots = timetable.getDaySlots(day);
 
                           return Padding(
@@ -244,16 +246,11 @@ class TimetablePage extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
                                 /// DAY TITLE
                                 Text(
                                   dayNames[day] ?? day,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
 
                                 const SizedBox(height: 12),
@@ -264,40 +261,42 @@ class TimetablePage extends StatelessWidget {
                                   runSpacing: 10,
 
                                   children: slots.map((subjectId) {
-
-                                    final subject = subjects.where((s) => s.id == subjectId).isNotEmpty
-                                        ? subjects.firstWhere((s) => s.id == subjectId)
+                                    final subject =
+                                        subjects
+                                            .where((s) => s.id == subjectId)
+                                            .isNotEmpty
+                                        ? subjects.firstWhere(
+                                            (s) => s.id == subjectId,
+                                          )
                                         : null;
 
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 14,
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isAbsolute
+                                            ? scheme.surfaceContainerHigh
+                                            : scheme.secondaryContainer,
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      child: Text(
+                                        subject?.shortName ?? "?",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: scheme.onSecondaryContainer,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: isAbsolute
-                                              ? scheme.surfaceContainerHigh
-                                              : scheme.secondaryContainer,
-                                          borderRadius: BorderRadius.circular(18),
-                                        ),
-                                        child: Text(
-                                          subject?.shortName ?? "?",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: scheme.onSecondaryContainer,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      );
-
+                                      ),
+                                    );
                                   }).toList(),
                                 ),
                               ],
                             ),
                           );
-
                         }),
-                        const SizedBox(height: 60,)
+                        const SizedBox(height: 60),
                       ],
                     ),
                   ),

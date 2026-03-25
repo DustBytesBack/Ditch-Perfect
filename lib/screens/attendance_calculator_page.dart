@@ -104,8 +104,12 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
       minAttendance: minAttendance,
     );
 
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
 
     return Scaffold(
@@ -119,10 +123,7 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    topGradientColor,
-                    bottomGradientColor,
-                  ],
+                  colors: [topGradientColor, bottomGradientColor],
                 ),
               ),
             ),
@@ -161,7 +162,8 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                         ),
                         child: Text(
                           'Calculator',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -224,50 +226,80 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                           width: constraints.maxWidth,
                                           initialSelection: selectedSubject?.id,
                                           menuStyle: MenuStyle(
-                                            backgroundColor: WidgetStatePropertyAll(scheme.surface),
-                                            elevation: const WidgetStatePropertyAll(4),
+                                            backgroundColor:
+                                                WidgetStatePropertyAll(
+                                                  scheme.surface,
+                                                ),
+                                            elevation:
+                                                const WidgetStatePropertyAll(4),
                                             shape: WidgetStatePropertyAll(
                                               RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(20),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
                                               ),
                                             ),
                                           ),
-                                          inputDecorationTheme: InputDecorationTheme(
-                                            filled: true,
-                                            fillColor: scheme.surface,
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: BorderSide(
-                                                color: scheme.primary,
-                                                width: 2,
+                                          inputDecorationTheme:
+                                              InputDecorationTheme(
+                                                filled: true,
+                                                fillColor: scheme.surface,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(18),
+                                                  borderSide: BorderSide.none,
+                                                ),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            18,
+                                                          ),
+                                                      borderSide:
+                                                          BorderSide.none,
+                                                    ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            18,
+                                                          ),
+                                                      borderSide: BorderSide(
+                                                        color: scheme.primary,
+                                                        width: 2,
+                                                      ),
+                                                    ),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 18,
+                                                    ),
                                               ),
-                                            ),
-                                            contentPadding: const EdgeInsets.symmetric(
-                                              horizontal: 20, 
-                                              vertical: 18,
-                                            ),
-                                          ),
-                                          textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: scheme.onSurface,
-                                          ),
-                                          dropdownMenuEntries: subjects.map((subject) {
+                                          textStyle: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: scheme.onSurface,
+                                              ),
+                                          dropdownMenuEntries: subjects.map((
+                                            subject,
+                                          ) {
                                             return DropdownMenuEntry<String>(
                                               value: subject.id,
                                               label: subject.name,
                                               style: MenuItemButton.styleFrom(
-                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                                textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 14,
+                                                    ),
+                                                textStyle: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
                                               ),
                                             );
                                           }).toList(),
@@ -280,7 +312,7 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                             }
                                           },
                                         );
-                                      }
+                                      },
                                     ),
                                     const SizedBox(height: 18),
                                     Text(

@@ -91,11 +91,24 @@ class AttendanceProvider extends ChangeNotifier {
   }
 
   void markAll(DateTime date, List<String> subjects, AttendanceStatus status) {
+    final box = DatabaseService.attendanceBox;
+
     for (int i = 0; i < subjects.length; i++) {
       final subjectId = subjects[i];
+      final key = buildKey(date, i);
 
-      markAttendance(date, subjectId, i, status);
+      final record = Attendance(
+        date: DateTime(date.year, date.month, date.day),
+        subjectId: subjectId,
+        slotIndex: i,
+        status: status,
+      );
+
+      box.put(key, record);
+      _records[key] = record;
     }
+
+    notifyListeners();
   }
 
   /// Delete all attendance records for a specific subject.

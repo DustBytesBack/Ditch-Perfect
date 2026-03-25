@@ -390,8 +390,12 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
     final isHolidayDay = isHoliday(date, timetable);
     final isNoTimetableDay = isNoTimetable(date, timetable);
 
-    final topGradientColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
-    final bottomGradientColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
+    final topGradientColor = isAbsolute
+        ? scheme.surface
+        : scheme.primaryContainer;
+    final bottomGradientColor = isAbsolute
+        ? scheme.surfaceContainer
+        : scheme.surface;
     final panelColor = isAbsolute ? scheme.surfaceContainer : scheme.surface;
 
     return Scaffold(
@@ -405,10 +409,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    topGradientColor,
-                    bottomGradientColor,
-                  ],
+                  colors: [topGradientColor, bottomGradientColor],
                 ),
               ),
             ),
@@ -433,7 +434,9 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                               : scheme.surface,
                           borderRadius: BorderRadius.circular(40),
                           border: isAbsolute
-                              ? Border.all(color: scheme.primary.withValues(alpha: 0.10))
+                              ? Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.10),
+                                )
                               : null,
                           boxShadow: isAbsolute
                               ? null
@@ -448,7 +451,8 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                         ),
                         child: Text(
                           formatDate(date),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: scheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -542,11 +546,20 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
 
                                   child: SegmentedButton<BulkAction>(
                                     style: SegmentedButton.styleFrom(
-                                      selectedBackgroundColor: scheme.tertiaryContainer,
-                                      selectedForegroundColor: scheme.onTertiaryContainer,
-                                      backgroundColor: scheme.tertiaryContainer.withValues(alpha: .6),
-                                      foregroundColor: scheme.onTertiaryContainer.withValues(alpha: .8),
-                                      side: BorderSide(color: scheme.tertiary.withValues(alpha: 0.7)),
+                                      selectedBackgroundColor:
+                                          scheme.tertiaryContainer,
+                                      selectedForegroundColor:
+                                          scheme.onTertiaryContainer,
+                                      backgroundColor: scheme.tertiaryContainer
+                                          .withValues(alpha: .6),
+                                      foregroundColor: scheme
+                                          .onTertiaryContainer
+                                          .withValues(alpha: .8),
+                                      side: BorderSide(
+                                        color: scheme.tertiary.withValues(
+                                          alpha: 0.7,
+                                        ),
+                                      ),
                                     ),
                                     segments: const [
                                       ButtonSegment(
