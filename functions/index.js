@@ -29,17 +29,17 @@ exports.computeRanking = onDocumentCreated(
 
       const db = getFirestore();
 
-      // We use the name as ID so each user only has one entry
-      const name = data.name || "Anonymous";
+      // We use the username as ID so each user only has one entry
+      const username = data.username || "Anonymous";
 
-      await db.collection("leaderboard").doc(name).set({
-        name: name,
-        attendancePercentage: attendancePercentage,
+      await db.collection("leaderboard").doc(username).set({
+        username: username,
+        attendancePercent: attendancePercentage,
         rankingScore: rankingScore,
-        timestamp: event.data.updateTime || new Date(),
+        updatedAt: event.data.updateTime || new Date(),
       });
 
-      console.log(`Updated leaderboard for ${name}: ` +
+      console.log(`Updated leaderboard for ${username}: ` +
             `Score ${rankingScore.toFixed(2)}`);
     },
 );
