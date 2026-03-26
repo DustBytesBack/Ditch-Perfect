@@ -114,12 +114,15 @@ class BackupService {
       }
 
       // Restore other data
-      if (timetableJson.isNotEmpty)
+      if (timetableJson.isNotEmpty) {
         await DatabaseService.timetableBox.putAll(timetableJson);
-      if (settingsJson.isNotEmpty)
+      }
+      if (settingsJson.isNotEmpty) {
         await DatabaseService.settingsBox.putAll(settingsJson);
-      if (removalsJson.isNotEmpty)
+      }
+      if (removalsJson.isNotEmpty) {
         await DatabaseService.timetableRemovalsBox.putAll(removalsJson);
+      }
 
       // Ensure default settings exist just in case they were missing from the backup
       final settingsBox = DatabaseService.settingsBox;
