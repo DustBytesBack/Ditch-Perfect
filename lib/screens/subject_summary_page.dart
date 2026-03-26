@@ -22,7 +22,11 @@ class SubjectSummaryPage extends StatefulWidget {
 
 class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
   SortOption _sortOption = SortOption.dateNewest;
-  AttendanceStatus? _filterStatus; // null means "All"
+  Set<AttendanceStatus> _selectedFilters = {
+    AttendanceStatus.present,
+    AttendanceStatus.absent,
+    AttendanceStatus.cancelled,
+  };
   final Set<String> _collapsedMonths = {};
 
   void _showSortOptions(BuildContext context) {
@@ -94,57 +98,114 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Filter Records",
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final allSelected = _selectedFilters.length >= 3;
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Filter Records",
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _optionTile(
+                      context: context,
+                      label: "All Statuses",
+                      icon: Icons.all_inclusive,
+                      isSelected: allSelected,
+                      isFirst: true,
+                      closeOnTap: false,
+                      onTap: () {
+                        setState(() {
+                          if (allSelected) {
+                            _selectedFilters.clear();
+                          } else {
+                            _selectedFilters = {
+                              AttendanceStatus.present,
+                              AttendanceStatus.absent,
+                              AttendanceStatus.cancelled,
+                            };
+                          }
+                        });
+                        setModalState(() {});
+                      },
+                    ),
+                    _optionTile(
+                      context: context,
+                      label: "Attended Only",
+                      icon: Icons.check,
+                      isSelected: _selectedFilters.contains(
+                        AttendanceStatus.present,
+                      ),
+                      closeOnTap: false,
+                      onTap: () {
+                        setState(() {
+                          if (_selectedFilters.contains(
+                            AttendanceStatus.present,
+                          )) {
+                            _selectedFilters.remove(AttendanceStatus.present);
+                          } else {
+                            _selectedFilters.add(AttendanceStatus.present);
+                          }
+                        });
+                        setModalState(() {});
+                      },
+                    ),
+                    _optionTile(
+                      context: context,
+                      label: "Missed Only",
+                      icon: Icons.close_rounded,
+                      isSelected: _selectedFilters.contains(
+                        AttendanceStatus.absent,
+                      ),
+                      closeOnTap: false,
+                      onTap: () {
+                        setState(() {
+                          if (_selectedFilters.contains(
+                            AttendanceStatus.absent,
+                          )) {
+                            _selectedFilters.remove(AttendanceStatus.absent);
+                          } else {
+                            _selectedFilters.add(AttendanceStatus.absent);
+                          }
+                        });
+                        setModalState(() {});
+                      },
+                    ),
+                    _optionTile(
+                      context: context,
+                      label: "Cancelled Only",
+                      icon: Icons.block,
+                      isSelected: _selectedFilters.contains(
+                        AttendanceStatus.cancelled,
+                      ),
+                      isLast: true,
+                      closeOnTap: false,
+                      onTap: () {
+                        setState(() {
+                          if (_selectedFilters.contains(
+                            AttendanceStatus.cancelled,
+                          )) {
+                            _selectedFilters.remove(AttendanceStatus.cancelled);
+                          } else {
+                            _selectedFilters.add(AttendanceStatus.cancelled);
+                          }
+                        });
+                        setModalState(() {});
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                _optionTile(
-                  context: context,
-                  label: "All Statuses",
-                  icon: Icons.all_inclusive,
-                  isSelected: _filterStatus == null,
-                  isFirst: true,
-                  onTap: () => setState(() => _filterStatus = null),
-                ),
-                _optionTile(
-                  context: context,
-                  label: "Attended Only",
-                  icon: Icons.check,
-                  isSelected: _filterStatus == AttendanceStatus.present,
-                  onTap: () =>
-                      setState(() => _filterStatus = AttendanceStatus.present),
-                ),
-                _optionTile(
-                  context: context,
-                  label: "Missed Only",
-                  icon: Icons.close_rounded,
-                  isSelected: _filterStatus == AttendanceStatus.absent,
-                  onTap: () =>
-                      setState(() => _filterStatus = AttendanceStatus.absent),
-                ),
-                _optionTile(
-                  context: context,
-                  label: "Cancelled Only",
-                  icon: Icons.block,
-                  isSelected: _filterStatus == AttendanceStatus.cancelled,
-                  isLast: true,
-                  onTap: () => setState(
-                    () => _filterStatus = AttendanceStatus.cancelled,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -158,6 +219,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     required VoidCallback onTap,
     bool isFirst = false,
     bool isLast = false,
+    bool closeOnTap = true,
   }) {
     final scheme = Theme.of(context).colorScheme;
 
@@ -186,7 +248,9 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
           onTap: () {
             HapticFeedback.lightImpact();
             onTap();
-            Navigator.pop(context);
+            if (closeOnTap) {
+              Navigator.pop(context);
+            }
           },
           borderRadius: borderRadius,
           child: Padding(
@@ -242,9 +306,9 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
         .toList();
 
     // Filter Logic
-    if (_filterStatus != null) {
-      records = records.where((r) => r.status == _filterStatus).toList();
-    }
+    records = records
+        .where((r) => _selectedFilters.contains(r.status))
+        .toList();
 
     // Sorting Logic
     switch (_sortOption) {
@@ -477,13 +541,13 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                                     _showFilterOptions(context);
                                   },
                                   icon: Icon(
-                                    _filterStatus == null
+                                    _selectedFilters.length >= 3
                                         ? Icons.filter_list
                                         : Icons.filter_alt,
                                     size: 20,
                                   ),
                                   label: Text(
-                                    _filterStatus == null
+                                    _selectedFilters.length >= 3
                                         ? "Filter"
                                         : "Filtered",
                                     style: const TextStyle(
