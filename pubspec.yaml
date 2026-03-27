@@ -33,6 +33,8 @@ dependencies:
   home_widget: ^0.9.0
   google_fonts: ^8.0.2
   dynamic_color: ^1.8.1
+  app_links: ^6.3.2
+  uri_file_reader: ^1.0.3
   flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:

@@ -30,6 +30,38 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!--
+                Intent filters for .dpbk custom backup files.
+                
+                IMPORTANT: Android's pathPattern does NOT work with content:// URIs
+                (the URI path contains a document ID, not the filename).
+                For content:// we must use */* and validate the file in app code.
+                The app will check the display name for .dpbk extension and validate
+                metadata before processing.
+            -->
+            <!-- 1. Handle file:// URIs using strict extension matching -->
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.dpbk" />
+                <data android:pathPattern=".*\\..*\\.dpbk" />
+            </intent-filter>
+
+            <!-- 2. Handle content:// URIs using compatible MIME types (JSON/Text) -->
+            <!-- We don't use pathPattern here because content URIs often use IDs instead of names -->
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <!-- SNIFFED TYPES: .dpbk is JSON, likely identified as text or json -->
+                <data android:mimeType="application/json" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/x-dpbk" />
+            </intent-filter>
         </activity>
         <!-- flutter_local_notifications scheduled notification receiver -->
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />

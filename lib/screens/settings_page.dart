@@ -51,59 +51,51 @@ class _SettingsPageState extends State<SettingsPage> {
     HapticFeedback.mediumImpact();
     final scheme = Theme.of(context).colorScheme;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Import Data?"),
-        content: const Text(
-          "This will REPLACE all current subjects, attendance, and settings with the data from the backup file. This cannot be undone.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              "Import & Replace",
-              style: TextStyle(
-                color: scheme.error,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    // Show loading dialog
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        content: Row(
-          children: [
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: WavyCircularProgressIndicator(strokeWidth: 2.5),
-            ),
-            const SizedBox(width: 20),
-            Text(
-              "Importing backup...",
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
-    );
-
     try {
-      final success = await BackupService.importBackup();
+      // 1. Pick the file and get JSON string
+      final jsonString = await BackupService.pickBackupJson();
+      if (jsonString == null) return;
+
+      // 2. Peek at metadata for preview
+      final metadata = BackupService.peekMetadataFromJson(jsonString);
+      if (metadata == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to read backup metadata.")),
+          );
+        }
+        return;
+      }
+
+      // 3. Show detailed preview and confirm
+      if (!mounted) return;
+      final bool? confirm = await _showImportPreviewDialog(metadata);
+      if (confirm != true) return;
+
+      // 4. Show loading dialog and proceed with restoration
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: WavyCircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 20),
+              Text(
+                "Importing backup...",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final success = await BackupService.processBackupJson(jsonString);
 
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
@@ -131,7 +123,8 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        // If the loading dialog was open, close it (Navigator might fail if not open, but usually fine)
+        // We'll just show the error snackbar.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Import failed: $e"),
@@ -140,6 +133,83 @@ class _SettingsPageState extends State<SettingsPage> {
         );
       }
     }
+  }
+
+  Future<bool?> _showImportPreviewDialog(Map<String, dynamic> metadata) {
+    final String date =
+        metadata['exportedAt'] != null
+            ? DateTime.parse(metadata['exportedAt'])
+                .toLocal()
+                .toString()
+                .split('.')[0]
+            : 'Unknown';
+    final int version = metadata['version'];
+    final int subjectsCount = metadata['subjectsCount'];
+    final List<String> subjects = List<String>.from(metadata['subjects']);
+    final String app = metadata['app'] ?? 'Unknown';
+
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final scheme = Theme.of(ctx).colorScheme;
+        return AlertDialog(
+          title: const Text("Confirm Restore"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "This will replace all current data. Review the backup details below:",
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("• App: $app"),
+                    Text("• Date: $date"),
+                    Text("• Version: v$version"),
+                    Text("• Subjects ($subjectsCount):"),
+                    if (subjects.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 4),
+                        child: Text(
+                          subjects.join(", "),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Cancel"),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(
+                foregroundColor: scheme.error,
+                backgroundColor: scheme.errorContainer,
+              ),
+              child: const Text("Restore & Replace"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildBackupButton(

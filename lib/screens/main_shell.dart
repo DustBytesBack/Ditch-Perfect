@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:app_links/app_links.dart';
 
+import '../services/backup_service.dart';
 import '../services/tutorial_service.dart';
 import 'home_page.dart';
 import 'calendar_page.dart';
@@ -16,8 +18,13 @@ import '../services/database_service.dart';
 import '../services/update_service.dart';
 import '../utils/update_checker.dart';
 import '../widgets/tutorial_overlay.dart';
+import '../widgets/wavy_progress_indicator.dart';
 import '../utils/ranking_utils.dart';
 import '../providers/theme_provider.dart';
+import '../providers/subject_provider.dart';
+import '../providers/timetable_provider.dart';
+import '../providers/settings_provider.dart';
+import '../providers/attendance_provider.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -39,6 +46,9 @@ class _MainShellState extends State<MainShell> {
   int _tutorialStepIndex = 0;
   Rect? _currentTutorialRect;
   Rect? _previousTutorialRect;
+
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
 
   List<_TutorialStep> get _tutorialSteps => const [
     _TutorialStep(
@@ -189,9 +199,159 @@ class _MainShellState extends State<MainShell> {
     _currentDisplayIndex = _getDisplayIndex();
 
     TutorialService.restartListenable.addListener(_handleTutorialRestart);
+    _initAppLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onLaunchChecks();
     });
+  }
+
+  void _initAppLinks() async {
+    _appLinks = AppLinks();
+
+    // Check for initial link
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleBackupLink(initialUri);
+      }
+    } catch (e) {
+      debugPrint("Error getting initial link: $e");
+    }
+
+    // Subscribe to incoming links
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleBackupLink(uri);
+    });
+  }
+
+  void _handleBackupLink(Uri uri) {
+    // We rely on BackupService.peekMetadataFromUri to validate the file.
+    // content:// URIs often don't end with the extension, so we skip the strict check.
+    _showRestoreConfirmation(uri);
+  }
+
+  void _showRestoreConfirmation(Uri uri) async {
+    if (!mounted) return;
+
+    // Show a temporary loading indicator while we peek at the file
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator.adaptive()),
+    );
+
+    Map<String, dynamic>? metadata;
+    try {
+      metadata = await BackupService.peekMetadataFromUri(uri);
+    } finally {
+      if (mounted) Navigator.pop(context); // Dismiss loading indicator
+    }
+
+    if (metadata == null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to read backup metadata.")),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    final String date = metadata!['exportedAt'] != null
+        ? DateTime.parse(metadata['exportedAt'])
+            .toLocal()
+            .toString()
+            .split('.')[0]
+        : 'Unknown';
+    final int version = metadata['version'];
+    final int subjects = metadata['subjectsCount'];
+    final String app = metadata['app'];
+
+    final bool? result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Restore Backup?"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "This will replace all your current attendance data. This action cannot be undone.",
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Backup Details:",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text("• App: $app"),
+            Text("• Date: $date"),
+            Text("• Version: v$version"),
+            Text("• Subjects: $subjects"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Restore"),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      // Show another loading dialog for the actual import
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: WavyCircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 20),
+              Text(
+                "Restoring backup...",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      try {
+        final success = await BackupService.importFromUri(uri);
+        if (mounted) Navigator.pop(context); // Dismiss loading dialog
+
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Backup restored successfully!")),
+          );
+          // Refresh all providers to reflect the new data
+          context.read<SubjectProvider>().loadSubjects();
+          context.read<AttendanceProvider>().loadAllAttendance();
+          context.read<TimetableProvider>().loadTimetable();
+          context.read<SettingsProvider>().loadSettings();
+          context.read<ThemeProvider>().loadTheme();
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Dismiss loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to restore backup: $e")),
+          );
+        }
+      }
+    }
   }
 
   void _loadNavOrder() {
@@ -219,6 +379,7 @@ class _MainShellState extends State<MainShell> {
   @override
   void dispose() {
     TutorialService.restartListenable.removeListener(_handleTutorialRestart);
+    _linkSubscription?.cancel();
     super.dispose();
   }
 
