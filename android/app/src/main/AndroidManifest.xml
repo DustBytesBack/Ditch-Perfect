@@ -54,13 +54,16 @@
             <!-- We don't use pathPattern here because content URIs often use IDs instead of names -->
             <intent-filter android:label="Ditch Perfect Backup">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="content" />
-                <!-- SNIFFED TYPES: .dpbk is JSON, likely identified as text or json -->
+
+                <data android:mimeType="application/x-dpbk" />
                 <data android:mimeType="application/json" />
                 <data android:mimeType="text/plain" />
-                <data android:mimeType="application/x-dpbk" />
+                <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
         <!-- flutter_local_notifications scheduled notification receiver -->

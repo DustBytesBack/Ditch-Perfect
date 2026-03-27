@@ -47,7 +47,12 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  bool _isImporting = false;
+
   Future<void> _handleImport() async {
+    if (_isImporting) return;
+    _isImporting = true;
+
     HapticFeedback.mediumImpact();
     final scheme = Theme.of(context).colorScheme;
 
@@ -70,10 +75,9 @@ class _SettingsPageState extends State<SettingsPage> {
       // 3. Show detailed preview and confirm
       if (!mounted) return;
       final bool? confirm = await _showImportPreviewDialog(metadata);
-      if (confirm != true) return;
+      if (confirm != true || !mounted) return;
 
       // 4. Show loading dialog and proceed with restoration
-      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -95,36 +99,48 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       );
 
-      final success = await BackupService.processBackupJson(jsonString);
+      try {
+        final success = await BackupService.processBackupJson(jsonString);
 
-      if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-      }
+        if (mounted) {
+          final nav = Navigator.of(context, rootNavigator: true);
+          if (nav.canPop()) nav.pop(); // safe dismiss loading
+        }
 
-      if (success && mounted) {
-        // Refresh all providers to reflect imported data
-        context.read<SubjectProvider>().loadSubjects();
-        context.read<TimetableProvider>().loadTimetable();
-        context.read<AttendanceProvider>().loadAllAttendance();
+        if (success && mounted) {
+          // Refresh all providers to reflect imported data
+          context.read<SubjectProvider>().loadSubjects();
+          context.read<TimetableProvider>().loadTimetable();
+          context.read<AttendanceProvider>().loadAllAttendance();
 
-        final settingsProvider = context.read<SettingsProvider>();
-        settingsProvider.loadSettings();
-        // Ensure notifications are rescheduled according to imported settings
-        settingsProvider.rescheduleNotificationIfEnabled();
+          final settingsProvider = context.read<SettingsProvider>();
+          settingsProvider.loadSettings();
+          // Ensure notifications are rescheduled according to imported settings
+          settingsProvider.rescheduleNotificationIfEnabled();
 
-        context.read<ThemeProvider>().loadTheme();
+          context.read<ThemeProvider>().loadTheme();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Data restored successfully!")),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Data restored successfully!")),
+          );
 
-        // Force UI update
-        setState(() {});
+          // Force UI update
+          setState(() {});
+        }
+      } catch (e) {
+        if (mounted) {
+          final nav = Navigator.of(context, rootNavigator: true);
+          if (nav.canPop()) nav.pop(); // safe dismiss loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Import failed: $e"),
+              backgroundColor: scheme.error,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-        // If the loading dialog was open, close it (Navigator might fail if not open, but usually fine)
-        // We'll just show the error snackbar.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Import failed: $e"),
@@ -132,6 +148,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         );
       }
+    } finally {
+      _isImporting = false;
     }
   }
 
@@ -145,53 +163,112 @@ class _SettingsPageState extends State<SettingsPage> {
             : 'Unknown';
     final int version = metadata['version'];
     final int subjectsCount = metadata['subjectsCount'];
-    final List<String> subjects = List<String>.from(metadata['subjects']);
+    final List<Map<String, dynamic>> subjects =
+        List<Map<String, dynamic>>.from(metadata['subjects']);
     final String app = metadata['app'] ?? 'Unknown';
 
     return showDialog<bool>(
       context: context,
       builder: (ctx) {
         final scheme = Theme.of(ctx).colorScheme;
+
         return AlertDialog(
           title: const Text("Confirm Restore"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "This will replace all current data. Review the backup details below:",
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "This will replace all current data. Review the backup details below:",
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("• App: $app"),
-                    Text("• Date: $date"),
-                    Text("• Version: v$version"),
-                    Text("• Subjects ($subjectsCount):"),
-                    if (subjects.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, top: 4),
-                        child: Text(
-                          subjects.join(", "),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("• App: $app"),
+                      Text("• Date: $date"),
+                      Text("• Version: v$version"),
+                      Text("• Subjects Total: $subjectsCount"),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Detailed Subject Preview:",
+                  style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.3,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: scheme.outlineVariant),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(11),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: subjects.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          color: scheme.outlineVariant,
+                        ),
+                        itemBuilder: (context, index) {
+                          final s = subjects[index];
+                          final double perc = s['percentage'];
+                          final bool isLow = perc < s['minAttendance'];
+
+                          return ListTile(
+                            dense: true,
+                            visualDensity: VisualDensity.compact,
+                            title: Text(
+                              s['name'],
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              "Present: ${s['present']} | Absent: ${s['absent']}",
+                              style: Theme.of(ctx).textTheme.labelSmall,
+                            ),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "${perc.toStringAsFixed(1)}%",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isLow ? scheme.error : scheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  "Min: ${s['minAttendance'].toInt()}%",
+                                  style: Theme.of(ctx).textTheme.labelSmall,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

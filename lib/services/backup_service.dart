@@ -141,16 +141,50 @@ class BackupService {
   static Map<String, dynamic>? peekMetadataFromJson(String jsonString) {
     try {
       final Map<String, dynamic> backup = jsonDecode(jsonString);
+      final List<dynamic> subjectsJson = backup['subjects'] ?? [];
+      final Map<String, dynamic> attendanceJson = backup['attendance'] ?? {};
+
+      final List<Map<String, dynamic>> detailedSubjects = [];
+
+      for (var sJson in subjectsJson) {
+        final String id = sJson['id'] ?? '';
+        final String name = sJson['name'] ?? 'Unknown';
+        final double minAtt = (sJson['minAttendance'] as num?)?.toDouble() ?? 75.0;
+
+        int present = 0;
+        int absent = 0;
+
+        // Count attendance for this subject
+        for (var att in attendanceJson.values) {
+          if (att['subjectId'] == id) {
+            final status = att['status'];
+            if (status == 'present') {
+              present++;
+            } else if (status == 'absent') {
+              absent++;
+            }
+          }
+        }
+
+        final int total = present + absent;
+        final double percentage = total > 0 ? (present / total) * 100 : 100.0;
+
+        detailedSubjects.add({
+          'name': name,
+          'present': present,
+          'absent': absent,
+          'total': total,
+          'percentage': percentage,
+          'minAttendance': minAtt,
+        });
+      }
 
       return {
         'version': backup['version'] ?? 1,
         'exportedAt': backup['exportedAt'],
-        'subjectsCount': (backup['subjects'] as List?)?.length ?? 0,
+        'subjectsCount': subjectsJson.length,
         'app': backup['app'],
-        'subjects': (backup['subjects'] as List?)
-                ?.map((s) => s['name']?.toString() ?? 'Unknown')
-                .toList() ??
-            [],
+        'subjects': detailedSubjects,
       };
     } catch (e) {
       debugPrint('Peek Metadata JSON Error: $e');

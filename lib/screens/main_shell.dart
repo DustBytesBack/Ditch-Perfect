@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -49,6 +50,11 @@ class _MainShellState extends State<MainShell> {
 
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+
+  // Flags to prevent concurrent or duplicate restore triggers
+  bool _isProcessingRestore = false;
+  Uri? _lastProcessedUri;
+  DateTime? _lastRestoreTime;
 
   List<_TutorialStep> get _tutorialSteps => const [
     _TutorialStep(
@@ -208,10 +214,13 @@ class _MainShellState extends State<MainShell> {
   void _initAppLinks() async {
     _appLinks = AppLinks();
 
+    if (kDebugMode) print("AppLinks initialized, checking initial link...");
+
     // Check for initial link
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
+        if (kDebugMode) print("Initial link found: $initialUri");
         _handleBackupLink(initialUri);
       }
     } catch (e) {
@@ -220,11 +229,31 @@ class _MainShellState extends State<MainShell> {
 
     // Subscribe to incoming links
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      if (kDebugMode) print("Steam link received: $uri");
       _handleBackupLink(uri);
     });
   }
 
   void _handleBackupLink(Uri uri) {
+    if (kDebugMode) print("Received backup link: $uri");
+    
+    // Debounce identical URIs arriving in short succession (common on Android)
+    final now = DateTime.now();
+    if (_lastProcessedUri == uri &&
+        _lastRestoreTime != null &&
+        now.difference(_lastRestoreTime!) < const Duration(seconds: 2)) {
+      if (kDebugMode) print("Ignoring duplicate backup link: $uri");
+      return;
+    }
+
+    if (_isProcessingRestore) {
+      if (kDebugMode) print("Already processing a restore, ignoring: $uri");
+      return;
+    }
+
+    _lastProcessedUri = uri;
+    _lastRestoreTime = now;
+
     // We rely on BackupService.peekMetadataFromUri to validate the file.
     // content:// URIs often don't end with the extension, so we skip the strict check.
     _showRestoreConfirmation(uri);
@@ -232,80 +261,91 @@ class _MainShellState extends State<MainShell> {
 
   void _showRestoreConfirmation(Uri uri) async {
     if (!mounted) return;
+    if (kDebugMode) print("Starting restore confirmation flow for: $uri");
 
-    // Show a temporary loading indicator while we peek at the file
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator.adaptive()),
-    );
+    _isProcessingRestore = true;
 
-    Map<String, dynamic>? metadata;
     try {
-      metadata = await BackupService.peekMetadataFromUri(uri);
-    } finally {
-      if (mounted) Navigator.pop(context); // Dismiss loading indicator
-    }
-
-    if (metadata == null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to read backup metadata.")),
+      // Show a temporary loading indicator while we peek at the file
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+            const Center(child: CircularProgressIndicator.adaptive()),
       );
-      return;
-    }
 
-    if (!mounted) return;
+      Map<String, dynamic>? metadata;
+      try {
+        metadata = await BackupService.peekMetadataFromUri(uri);
+      } finally {
+        if (mounted) {
+          final nav = Navigator.of(context, rootNavigator: true);
+          if (nav.canPop()) nav.pop(); // safe dismiss loading
+        }
+      }
 
-    final String date = metadata!['exportedAt'] != null
-        ? DateTime.parse(metadata['exportedAt'])
-            .toLocal()
-            .toString()
-            .split('.')[0]
-        : 'Unknown';
-    final int version = metadata['version'];
-    final int subjects = metadata['subjectsCount'];
-    final String app = metadata['app'];
+      if (metadata == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to read backup metadata.")),
+          );
+        }
+        return;
+      }
 
-    final bool? result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Restore Backup?"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "This will replace all your current attendance data. This action cannot be undone.",
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "Backup Details:",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
+      if (!mounted) return;
+
+      final String date = metadata['exportedAt'] != null
+          ? DateTime.parse(metadata['exportedAt'])
+              .toLocal()
+              .toString()
+              .split('.')[0]
+          : 'Unknown';
+      final int version = metadata['version'];
+      final int subjects = metadata['subjectsCount'];
+      final String app = metadata['app'];
+
+      final bool? result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Restore Backup?"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "This will replace all your current attendance data. This action cannot be undone.",
               ),
+              const SizedBox(height: 16),
+              Text(
+                "Backup Details:",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text("• App: $app"),
+              Text("• Date: $date"),
+              Text("• Version: v$version"),
+              Text("• Subjects: $subjects"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
             ),
-            const SizedBox(height: 8),
-            Text("• App: $app"),
-            Text("• Date: $date"),
-            Text("• Version: v$version"),
-            Text("• Subjects: $subjects"),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Restore"),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Restore"),
-          ),
-        ],
-      ),
-    );
+      );
 
-    if (result == true && mounted) {
+      if (result != true || !mounted) return;
+
       // Show another loading dialog for the actual import
       showDialog(
         context: context,
@@ -313,7 +353,7 @@ class _MainShellState extends State<MainShell> {
         builder: (context) => AlertDialog(
           content: Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 24,
                 height: 24,
                 child: WavyCircularProgressIndicator(strokeWidth: 2.5),
@@ -330,7 +370,10 @@ class _MainShellState extends State<MainShell> {
 
       try {
         final success = await BackupService.importFromUri(uri);
-        if (mounted) Navigator.pop(context); // Dismiss loading dialog
+        if (mounted) {
+          final nav = Navigator.of(context, rootNavigator: true);
+          if (nav.canPop()) nav.pop(); // safe dismiss loading
+        }
 
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -345,12 +388,15 @@ class _MainShellState extends State<MainShell> {
         }
       } catch (e) {
         if (mounted) {
-          Navigator.pop(context); // Dismiss loading dialog
+          final nav = Navigator.of(context, rootNavigator: true);
+          if (nav.canPop()) nav.pop(); // safe dismiss loading
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Failed to restore backup: $e")),
           );
         }
       }
+    } finally {
+      _isProcessingRestore = false;
     }
   }
 
