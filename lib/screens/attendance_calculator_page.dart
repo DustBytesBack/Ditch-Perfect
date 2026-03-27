@@ -325,28 +325,107 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                           ),
                                     ),
                                     const SizedBox(height: 12),
-                                    TextField(
-                                      controller: _futureClassesController,
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                      onChanged: (_) => setState(() {}),
-                                      decoration: InputDecoration(
-                                        hintText:
-                                            'Enter number of upcoming classes',
-                                        prefixIcon: const Icon(
-                                          Icons.calculate_outlined,
-                                        ),
-                                        filled: true,
-                                        fillColor: scheme.surface,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            18,
+                                    Row(
+                                      children: [
+                                        IconButton.filledTonal(
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                scheme.tertiaryContainer,
+                                            foregroundColor:
+                                                scheme.onTertiaryContainer,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
                                           ),
-                                          borderSide: BorderSide.none,
+                                          onPressed: () {
+                                            final current = _futureClasses;
+                                            if (current > 0) {
+                                              HapticFeedback.lightImpact();
+                                              setState(() {
+                                                _futureClassesController.text =
+                                                    (current - 1).toString();
+                                              });
+                                            }
+                                          },
+                                          icon: const Icon(Icons.remove),
                                         ),
-                                      ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextField(
+                                            controller:
+                                                _futureClassesController,
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
+                                            ],
+                                            onChanged: (_) => setState(() {}),
+                                            decoration: InputDecoration(
+                                              hintText: 'Classes',
+                                              filled: true,
+                                              fillColor: scheme.surface,
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                borderSide: BorderSide.none,
+                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton.filledTonal(
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                scheme.tertiaryContainer,
+                                            foregroundColor:
+                                                scheme.onTertiaryContainer,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            final current = _futureClasses;
+                                            HapticFeedback.lightImpact();
+                                            setState(() {
+                                              _futureClassesController.text =
+                                                  (current + 1).toString();
+                                            });
+                                          },
+                                          icon: const Icon(Icons.add),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Slider(
+                                      // ignore: deprecated_member_use
+                                      year2023: false,
+                                      value: _futureClasses
+                                          .clamp(0, 20)
+                                          .toDouble(),
+                                      min: 0,
+                                      max: 20,
+                                      divisions: 20,
+                                      label: _futureClasses.toString(),
+                                      onChanged: (value) {
+                                        HapticFeedback.selectionClick();
+                                        setState(() {
+                                          _futureClassesController.text =
+                                              value.toInt().toString();
+                                        });
+                                      },
                                     ),
                                   ],
                                 ),
