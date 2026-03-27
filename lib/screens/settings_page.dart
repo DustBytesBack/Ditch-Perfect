@@ -1647,7 +1647,7 @@ class _SettingsPageState extends State<SettingsPage> {
           color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        padding: const EdgeInsets.fromLTRB(40, 12, 40, 48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1660,11 +1660,17 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              "Select Theme",
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Select Theme",
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: scheme.onSurface,
+                  fontSize: 28,
+                  letterSpacing: 0.8,
+                ),
+              ),
             ),
             const SizedBox(height: 24),
             _buildThemeOption(
@@ -1723,14 +1729,14 @@ class _SettingsPageState extends State<SettingsPage> {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         decoration: BoxDecoration(
           color: selected
               ? scheme.primaryContainer
               : (isAbsolute
                     ? scheme.surfaceContainer
                     : scheme.surfaceContainerHighest.withValues(alpha: 0.3)),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: selected ? scheme.primary : Colors.transparent,
             width: 2,
@@ -1749,7 +1755,8 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text(
                 title,
                 style: TextStyle(
-                  fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                  fontSize: 18,
                   color: selected
                       ? scheme.onPrimaryContainer
                       : scheme.onSurface,
