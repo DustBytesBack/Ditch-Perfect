@@ -967,236 +967,185 @@ class _SettingsPageState extends State<SettingsPage> {
                               subtitle: "Use system wallpaper colors",
                               icon: Icons.wallpaper_rounded,
                               value: themeProvider.isDynamicMode,
+                              borderRadius: themeProvider.isDynamicMode
+                                  ? const BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(30),
+                                      bottomRight: Radius.circular(30),
+                                    )
+                                  : BorderRadius.circular(10),
                               onChanged: (value) {
                                 HapticFeedback.lightImpact();
                                 themeProvider.toggleDynamicMode(value);
                               },
                             ),
 
-                            const SizedBox(height: 12),
+                            if (!themeProvider.isDynamicMode) ...[
+                              const SizedBox(height: 12),
 
-                            /// OTHER SETTINGS (Locked when Dynamic is on)
-                            IgnorePointer(
-                              ignoring: themeProvider.isDynamicMode,
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 250),
-                                opacity: themeProvider.isDynamicMode
-                                    ? 0.35
-                                    : 1.0,
-                                child: Column(
-                                  children: [
-                                    /// POOKIE MODE
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 14,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isAbsolute
-                                            ? scheme.surfaceContainerHigh
-                                            : scheme.secondaryContainer,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: isAbsolute
-                                              ? scheme.primary.withValues(
-                                                  alpha: 0.2,
-                                                )
-                                              : scheme.primary.withValues(
-                                                  alpha: 0.1,
-                                                ),
-                                          width: 1.5,
-                                        ),
-                                        boxShadow: isAbsolute
-                                            ? null
-                                            : [
-                                                BoxShadow(
-                                                  color: scheme.primary
-                                                      .withValues(alpha: 0.05),
-                                                  blurRadius: 10,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            themeProvider.pookieMode &&
-                                                    themeProvider.themeMode ==
-                                                        ThemeMode.dark
-                                                ? "🖤"
-                                                : "🎀",
-                                            style: const TextStyle(
-                                              fontSize: 20,
+                              /// POOKIE MODE
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isAbsolute
+                                      ? scheme.surfaceContainerHigh
+                                      : scheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isAbsolute
+                                        ? scheme.primary.withValues(alpha: 0.2)
+                                        : scheme.primary.withValues(alpha: 0.1),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: isAbsolute
+                                      ? null
+                                      : [
+                                          BoxShadow(
+                                            color: scheme.primary.withValues(
+                                              alpha: 0.05,
                                             ),
-                                          ),
-                                          const SizedBox(width: 18),
-                                          Expanded(
-                                            child: Text(
-                                              themeProvider.pookieMode &&
-                                                      themeProvider.themeMode ==
-                                                          ThemeMode.dark
-                                                  ? "Emo Pookie Mode 🕸️"
-                                                  : "Pookie Mode",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          Switch.adaptive(
-                                            value: themeProvider.pookieMode,
-                                            onChanged: (value) {
-                                              HapticFeedback.lightImpact();
-                                              context
-                                                  .read<ThemeProvider>()
-                                                  .togglePookie(value);
-                                            },
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
                                           ),
                                         ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      themeProvider.pookieMode &&
+                                              themeProvider.themeMode ==
+                                                  ThemeMode.dark
+                                          ? "🖤"
+                                          : "🎀",
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                    const SizedBox(width: 18),
+                                    Expanded(
+                                      child: Text(
+                                        themeProvider.pookieMode &&
+                                                themeProvider.themeMode ==
+                                                    ThemeMode.dark
+                                            ? "Emo Pookie Mode 🕸️"
+                                            : "Pookie Mode",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-
-                                    const SizedBox(height: 12),
-
-                                    /// COLOR SCHEME
-                                    IgnorePointer(
-                                      ignoring: themeProvider.pookieMode,
-                                      child: AnimatedOpacity(
-                                        duration: const Duration(
-                                          milliseconds: 200,
-                                        ),
-                                        opacity: themeProvider.pookieMode
-                                            ? 0.4
-                                            : 1.0,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 18,
-                                            vertical: 18,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isAbsolute
-                                                ? scheme.surfaceContainerHigh
-                                                : scheme.secondaryContainer,
-                                            borderRadius:
-                                                const BorderRadius.only(
-                                                  topLeft: Radius.circular(10),
-                                                  topRight: Radius.circular(10),
-                                                  bottomLeft: Radius.circular(
-                                                    30,
-                                                  ),
-                                                  bottomRight: Radius.circular(
-                                                    30,
-                                                  ),
-                                                ),
-                                            border: Border.all(
-                                              color: isAbsolute
-                                                  ? scheme.primary.withValues(
-                                                      alpha: 0.2,
-                                                    )
-                                                  : scheme.primary.withValues(
-                                                      alpha: 0.1,
-                                                    ),
-                                              width: 1.5,
-                                            ),
-                                            boxShadow: isAbsolute
-                                                ? null
-                                                : [
-                                                    BoxShadow(
-                                                      color: scheme.primary
-                                                          .withValues(
-                                                            alpha: 0.05,
-                                                          ),
-                                                      blurRadius: 10,
-                                                      offset: const Offset(
-                                                        0,
-                                                        4,
-                                                      ),
-                                                    ),
-                                                  ],
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.palette,
-                                                    color: scheme
-                                                        .onSecondaryContainer,
-                                                  ),
-                                                  const SizedBox(width: 18),
-                                                  const Text(
-                                                    "Color Scheme",
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Wrap(
-                                                alignment: WrapAlignment.center,
-                                                spacing: 16,
-                                                runSpacing: 16,
-                                                children: [
-                                                  colorOption(
-                                                    context,
-                                                    Colors.indigo,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.blue,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.cyan,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.teal,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.green,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.lime,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.amber,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.orange,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.deepOrange,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.red,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.pink,
-                                                  ),
-                                                  colorOption(
-                                                    context,
-                                                    Colors.deepPurple,
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                                    Switch.adaptive(
+                                      value: themeProvider.pookieMode,
+                                      onChanged: (value) {
+                                        HapticFeedback.lightImpact();
+                                        context
+                                            .read<ThemeProvider>()
+                                            .togglePookie(value);
+                                      },
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
+
+                              const SizedBox(height: 12),
+
+                              /// COLOR SCHEME
+                              IgnorePointer(
+                                ignoring: themeProvider.pookieMode,
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 200),
+                                  opacity: themeProvider.pookieMode ? 0.4 : 1.0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
+                                      vertical: 18,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isAbsolute
+                                          ? scheme.surfaceContainerHigh
+                                          : scheme.secondaryContainer,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(10),
+                                        topRight: Radius.circular(10),
+                                        bottomLeft: Radius.circular(30),
+                                        bottomRight: Radius.circular(30),
+                                      ),
+                                      border: Border.all(
+                                        color: isAbsolute
+                                            ? scheme.primary.withValues(
+                                                alpha: 0.2,
+                                              )
+                                            : scheme.primary.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: isAbsolute
+                                          ? null
+                                          : [
+                                              BoxShadow(
+                                                color: scheme.primary
+                                                    .withValues(alpha: 0.05),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.palette,
+                                              color: scheme
+                                                  .onSecondaryContainer,
+                                            ),
+                                            const SizedBox(width: 18),
+                                            const Text(
+                                              "Color Scheme",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Wrap(
+                                          alignment: WrapAlignment.center,
+                                          spacing: 16,
+                                          runSpacing: 16,
+                                          children: [
+                                            colorOption(
+                                              context,
+                                              Colors.indigo,
+                                            ),
+                                            colorOption(context, Colors.blue),
+                                            colorOption(context, Colors.cyan),
+                                            colorOption(context, Colors.teal),
+                                            colorOption(context, Colors.green),
+                                            colorOption(context, Colors.lime),
+                                            colorOption(context, Colors.amber),
+                                            colorOption(context, Colors.orange),
+                                            colorOption(
+                                              context,
+                                              Colors.deepOrange,
+                                            ),
+                                            colorOption(context, Colors.red),
+                                            colorOption(context, Colors.pink),
+                                            colorOption(
+                                              context,
+                                              Colors.deepPurple,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
 
