@@ -10,6 +10,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _notificationsEnabled = true;
   int _notificationHour = 7;
   int _notificationMinute = 0;
+  Map<String, dynamic>? _updateInfo;
 
   StreamSubscription<BoxEvent>? _boxSubscription;
 
@@ -29,6 +30,13 @@ class SettingsProvider extends ChangeNotifier {
 
   TimeOfDay get notificationTime =>
       TimeOfDay(hour: _notificationHour, minute: _notificationMinute);
+
+  Map<String, dynamic>? get updateInfo => _updateInfo;
+
+  void setUpdateInfo(Map<String, dynamic>? info) {
+    _updateInfo = info;
+    notifyListeners();
+  }
 
   void loadSettings() {
     final box = DatabaseService.settingsBox;

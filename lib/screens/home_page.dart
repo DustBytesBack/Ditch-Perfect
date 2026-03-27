@@ -8,6 +8,9 @@ import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
 import '../widgets/day_timetable.dart';
+import '../widgets/animated_update_icon.dart';
+import '../providers/settings_provider.dart';
+import '../utils/update_checker.dart';
 
 enum BulkAction { present, absent, cancelled, clear }
 
@@ -420,6 +423,35 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
+
+                      // UPDATE NOTIFICATION ICON
+                      Consumer<SettingsProvider>(
+                        builder: (context, settings, child) {
+                          final update = settings.updateInfo;
+                          if (update == null) return const SizedBox.shrink();
+
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.transparent,
+                              ),
+                              child: IconButton(
+                                iconSize: 26,
+                                padding: const EdgeInsets.all(12),
+                                icon: AnimatedUpdateIcon(
+                                  color: scheme.tertiary,
+                                  size: 26,
+                                ),
+                                onPressed: () {
+                                  showUpdateDialog(context, update);
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
                       Container(
                         decoration: BoxDecoration(
                           color: isAbsolute

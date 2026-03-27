@@ -39,7 +39,11 @@ class UpdateService {
     final currentVersion = packageInfo.version;
 
     if (_isNewer(latestVersion, currentVersion)) {
-      return {"version": latestVersion, "url": downloadUrl};
+      return {
+        "version": latestVersion,
+        "url": downloadUrl,
+        "notes": data["body"] as String?,
+      };
     }
 
     return null;

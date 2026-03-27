@@ -4,6 +4,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/update_service.dart';
 import '../services/database_service.dart';
+import '../providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 import '../widgets/wavy_progress_indicator.dart';
 
 /// Silent check — used on app launch. Shows dialog only if update exists.
@@ -13,10 +15,15 @@ Future<void> checkForUpdate(BuildContext context) async {
     if (update == null) return;
     if (!context.mounted) return;
 
+    context.read<SettingsProvider>().setUpdateInfo(update);
+
     showDialog(
       context: context,
-      builder: (_) =>
-          _UpdateResultDialog(version: update["version"], url: update["url"]),
+      builder: (_) => _UpdateResultDialog(
+        version: update["version"],
+        url: update["url"],
+        notes: update["notes"],
+      ),
     );
   } catch (_) {
     // Silent — don't bother the user on launch failures.
@@ -62,6 +69,18 @@ Future<void> checkForPostUpdateNotes(BuildContext context) async {
   }
 }
 
+/// Shows the update result dialog with the provided [update] info.
+void showUpdateDialog(BuildContext context, Map<String, dynamic> update) {
+  showDialog(
+    context: context,
+    builder: (_) => _UpdateResultDialog(
+      version: update["version"],
+      url: update["url"],
+      notes: update["notes"],
+    ),
+  );
+}
+
 /// Manual check — used from Settings. Shows a dialog with loading → result.
 void checkForUpdateManual(BuildContext context) {
   showDialog(
@@ -104,6 +123,10 @@ class _ManualUpdateCheckDialogState extends State<_ManualUpdateCheckDialog> {
         _loading = false;
         _update = result;
       });
+
+      if (mounted && result != null) {
+        context.read<SettingsProvider>().setUpdateInfo(result);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -155,6 +178,7 @@ class _ManualUpdateCheckDialogState extends State<_ManualUpdateCheckDialog> {
       return _UpdateResultDialog(
         version: _update!["version"],
         url: _update!["url"],
+        notes: _update!["notes"],
       );
     }
 
@@ -180,26 +204,83 @@ class _ManualUpdateCheckDialogState extends State<_ManualUpdateCheckDialog> {
 class _UpdateResultDialog extends StatelessWidget {
   final String version;
   final String url;
+  final String? notes;
 
-  const _UpdateResultDialog({required this.version, required this.url});
+  const _UpdateResultDialog({
+    required this.version,
+    required this.url,
+    this.notes,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return AlertDialog(
-      title: const Text("Update Available"),
-      content: Text("A new version ($version) is available."),
+      title: Row(
+        children: [
+          Icon(Icons.system_update_alt_rounded, color: scheme.primary),
+          const SizedBox(width: 10),
+          const Expanded(child: Text("Update Available")),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "A new version ($version) is available.",
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          if (notes != null && notes!.trim().isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              "What's New:",
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 250, maxWidth: 400),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  child: MarkdownBody(
+                    data: notes!,
+                    selectable: true,
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(
+                          Uri.parse(href),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                    styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                        .copyWith(
+                          p: Theme.of(context).textTheme.bodyMedium,
+                          listBullet: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text("Later"),
         ),
-
         FilledButton(
           onPressed: () async {
             final uri = Uri.parse(url);
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           },
-          child: const Text("View Release"),
+          child: const Text("Update Now"),
         ),
       ],
     );
