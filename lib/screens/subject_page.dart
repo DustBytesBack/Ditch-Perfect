@@ -7,7 +7,6 @@ import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
-import '../services/tutorial_service.dart';
 import '../utils/attendance_utils.dart';
 import '../models/subject.dart';
 import '../models/attendance.dart';
@@ -697,8 +696,8 @@ class _SubjectPageState extends State<SubjectPage> {
     return Column(
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width: 50,
+          height: 50,
           decoration: BoxDecoration(
             color: color.withValues(alpha: .15),
             shape: BoxShape.circle,
@@ -796,7 +795,6 @@ class _SubjectPageState extends State<SubjectPage> {
                       ),
                       const Spacer(),
                       Container(
-                        key: TutorialService.keyFor(TutorialTargets.subjectAdd),
                         decoration: BoxDecoration(
                           color: isAbsolute
                               ? scheme.surfaceContainerHigh
@@ -954,11 +952,6 @@ class _SubjectPageState extends State<SubjectPage> {
                                     : 1.0,
                                 duration: const Duration(milliseconds: 200),
                                 child: Padding(
-                                  key: index == 0
-                                      ? TutorialService.keyFor(
-                                          TutorialTargets.subjectFirstCard,
-                                        )
-                                      : null,
                                   padding: const EdgeInsets.only(bottom: 14),
                                   child: Row(
                                     children: [

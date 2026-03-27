@@ -7,7 +7,6 @@ import '../providers/attendance_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/subject_provider.dart';
 import '../models/attendance.dart';
-import '../services/tutorial_service.dart';
 import '../widgets/day_timetable.dart';
 
 enum BulkAction { present, absent, cancelled, clear }
@@ -422,9 +421,6 @@ class HomePage extends StatelessWidget {
                       ),
                       const Spacer(),
                       Container(
-                        key: TutorialService.keyFor(
-                          TutorialTargets.homeQuickAdd,
-                        ),
                         decoration: BoxDecoration(
                           color: isAbsolute
                               ? scheme.surfaceContainerHigh
@@ -451,7 +447,6 @@ class HomePage extends StatelessWidget {
 
                 /// PANEL
                 Expanded(
-                  key: TutorialService.keyFor(TutorialTargets.homeOverview),
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
@@ -509,9 +504,6 @@ class HomePage extends StatelessWidget {
                             children: [
                               /// BULK ACTION BUTTONS
                               Align(
-                                key: TutorialService.keyFor(
-                                  TutorialTargets.homeBulkActions,
-                                ),
                                 alignment: Alignment.topRight,
                                 child: SizedBox(
                                   width:

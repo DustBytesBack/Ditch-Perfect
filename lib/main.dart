@@ -37,10 +37,7 @@ TextStyle _robotoFlexStyle({
       const FontVariation('wdth', 100), // Width: standard
       const FontVariation('XOPQ', 60), // Thick Stroke: slightly bolder
       const FontVariation('YOPQ', 70), // Thin Stroke: crisper thin strokes
-      const FontVariation(
-        'XTRA',
-        560,
-      ), // Counter Width: slightly wider openings
+      const FontVariation('XTRA', 560), // Counter Width: slightly wider openings
       const FontVariation('YTUC', 750), // Uppercase Height: taller caps
       const FontVariation('YTLC', 540), // Lowercase Height: taller x-height
       const FontVariation('YTAS', 760), // Ascender Height: taller ascenders

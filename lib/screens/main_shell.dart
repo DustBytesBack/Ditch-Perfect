@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
 import '../services/backup_service.dart';
-import '../services/tutorial_service.dart';
 import 'home_page.dart';
 import 'calendar_page.dart';
 import 'subject_page.dart';
@@ -18,7 +17,6 @@ import 'rank_page.dart';
 import '../services/database_service.dart';
 import '../services/update_service.dart';
 import '../utils/update_checker.dart';
-import '../widgets/tutorial_overlay.dart';
 import '../widgets/wavy_progress_indicator.dart';
 import '../utils/ranking_utils.dart';
 import '../providers/theme_provider.dart';
@@ -37,16 +35,13 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   static const int _primaryNavCount = 5;
   static const int _rankPageIndex = 6;
+  static const int _pageCount = 7;
 
   int currentIndex = 0;
   int previousIndex = 0;
   bool isNavExpanded = false;
   int? _swappedSecondaryIndex;
   bool isReordering = false;
-  bool _tutorialActive = false;
-  int _tutorialStepIndex = 0;
-  Rect? _currentTutorialRect;
-  Rect? _previousTutorialRect;
 
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
@@ -56,107 +51,7 @@ class _MainShellState extends State<MainShell> {
   Uri? _lastProcessedUri;
   DateTime? _lastRestoreTime;
 
-  List<_TutorialStep> get _tutorialSteps => const [
-    _TutorialStep(
-      title: 'Home Dashboard',
-      description:
-          'This home screen is your day-at-a-glance dashboard. It shows today\'s classes.',
-      targetIds: [TutorialTargets.homeOverview],
-      pageIndex: 0,
-    ),
-    _TutorialStep(
-      title: 'Quick Add',
-      description:
-          'Tap this add button to insert an extra subject into today\'s schedule. The sheet now has a Single tab for one subject and a From Day tab that copies an entire weekday timetable into today.',
-      targetIds: [TutorialTargets.homeQuickAdd],
-      pageIndex: 0,
-    ),
-    _TutorialStep(
-      title: 'Attendance Controls',
-      description:
-          'Tap these controls to update attendance in bulk. Subject rows also support tap actions for present, absent, cancelled, and clear.',
-      targetIds: [
-        TutorialTargets.homeFirstSubjectRow,
-        TutorialTargets.homeBulkActions,
-      ],
-      pageIndex: 0,
-    ),
-    _TutorialStep(
-      title: 'Subjects',
-      description:
-          'Manage your courses here. Tap add to create a subject, tap a card for details, and swipe subject cards left or right to rename or remove them.',
-      targetIds: [TutorialTargets.subjectFirstCard, TutorialTargets.subjectAdd],
-      pageIndex: 2,
-    ),
-    _TutorialStep(
-      title: 'Navigation Bar',
-      description:
-          'Tap these floating pills to switch sections. Tap the pill on top or swipe up to reveal extra shortcuts. Long-press the bar to enter reorder mode and rearrange all buttons.',
-      targetIds: [TutorialTargets.navBar],
-      pageIndex: 2,
-    ),
-    _TutorialStep(
-      title: 'Calculator Shortcut',
-      description:
-          'Expand the nav bar to find the Calc button. Open it to estimate how many future classes you can skip while staying at or above your attendance criteria.',
-      targetIds: [TutorialTargets.navCalculator],
-      pageIndex: 2,
-      expandNav: true,
-    ),
-    _TutorialStep(
-      title: 'Calculator Page',
-      description:
-          'Pick a subject, enter how many non-cancelled classes are still left, and the calculator shows how many you can skip, how many you must attend, and the projected final percentage.',
-      targetIds: [TutorialTargets.calculatorMain],
-      pageIndex: 5,
-    ),
-    _TutorialStep(
-      title: 'Rank Shortcut',
-      description:
-          'The Rank button sits beside the calculator in the expanded nav row. You can also long-press the bar and drag buttons around to customise which ones appear on the main row.',
-      targetIds: [TutorialTargets.navRank],
-      pageIndex: 2,
-      expandNav: true,
-    ),
-    _TutorialStep(
-      title: 'Calendar History',
-      description:
-          'Use the calendar to review attendance by date. Tap a day to open details, then use the bottom arrows or swipe on the day switcher to move across dates.',
-      targetIds: [TutorialTargets.calendarMain],
-      pageIndex: 1,
-    ),
-    _TutorialStep(
-      title: 'Calendar Multi-Select',
-      description:
-          'Tap this checklist button to switch the calendar into multi-select mode. Then tap several dates and use the floating pill above the nav bar to mark them present, absent, cancelled, or clear them in one go.',
-      targetIds: [TutorialTargets.calendarMultiSelect],
-      pageIndex: 1,
-    ),
-    _TutorialStep(
-      title: 'Monthly Stats',
-      description:
-          'This summary card shows your monthly picture: attended, missed, off, mixed, and not-marked days.',
-      targetIds: [TutorialTargets.calendarStats],
-      pageIndex: 1,
-    ),
-    _TutorialStep(
-      title: 'Settings And Replay',
-      description:
-          'Settings is where you tune preferences and manage app data. You can restart this tutorial anytime from this Replay Tutorial tile.',
-      targetIds: [TutorialTargets.settingsTutorialRestart],
-      pageIndex: 4,
-    ),
-  ];
 
-  final List<Widget> pages = const [
-    HomePage(),
-    CalendarPage(),
-    SubjectPage(),
-    TimetablePage(),
-    SettingsPage(),
-    AttendanceCalculatorPage(),
-    RankPage(),
-  ];
 
   List<NavigationDestination> _allDestinations = [
     const NavigationDestination(
@@ -204,7 +99,6 @@ class _MainShellState extends State<MainShell> {
     _loadNavOrder();
     _currentDisplayIndex = _getDisplayIndex();
 
-    TutorialService.restartListenable.addListener(_handleTutorialRestart);
     _initAppLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onLaunchChecks();
@@ -424,7 +318,6 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
-    TutorialService.restartListenable.removeListener(_handleTutorialRestart);
     _linkSubscription?.cancel();
     super.dispose();
   }
@@ -450,7 +343,7 @@ class _MainShellState extends State<MainShell> {
         displayIndex = 6;
       }
     }
-    if (displayIndex >= pages.length) displayIndex = 0;
+    if (displayIndex >= _pageCount) displayIndex = 0;
     return displayIndex;
   }
 
@@ -473,7 +366,6 @@ class _MainShellState extends State<MainShell> {
 
     if (mounted) {
       await RankingUtils.checkAndAutoUpload();
-      await _maybeStartTutorial();
     }
   }
 
@@ -507,14 +399,20 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final currentStep = _tutorialActive
-        ? _tutorialSteps[_tutorialStepIndex]
-        : null;
+    final pagesList = [
+      const HomePage(),
+      const CalendarPage(),
+      const SubjectPage(),
+      const TimetablePage(),
+      const SettingsPage(),
+      const AttendanceCalculatorPage(),
+      const RankPage(),
+    ];
 
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(index: _currentDisplayIndex, children: pages),
+          IndexedStack(index: _currentDisplayIndex, children: pagesList),
 
           PeekingPony(
             active: context.watch<ThemeProvider>().pookieMode,
@@ -563,7 +461,6 @@ class _MainShellState extends State<MainShell> {
                     clipBehavior: Clip.none,
                     children: [
                       AnimatedContainer(
-                        key: TutorialService.keyFor(TutorialTargets.navBar),
                         duration: const Duration(milliseconds: 280),
                         curve: Curves.easeOutCubic,
                         height: isReordering ? 200 : (isNavExpanded ? 164 : 90),
@@ -830,17 +727,12 @@ class _MainShellState extends State<MainShell> {
                                               secondaryNavItem(
                                                 _allDestinations[_primaryNavCount],
                                                 _primaryNavCount,
-                                                tutorialTargetId:
-                                                    TutorialTargets
-                                                        .navCalculator,
                                               ),
                                               const SizedBox(width: 14),
                                               secondaryNavItem(
                                                 _allDestinations[_primaryNavCount +
                                                     1],
                                                 _primaryNavCount + 1,
-                                                tutorialTargetId:
-                                                    TutorialTargets.navRank,
                                               ),
                                               const Spacer(),
                                             ],
@@ -900,25 +792,6 @@ class _MainShellState extends State<MainShell> {
               },
             ),
           ),
-          if (_tutorialActive &&
-              _currentTutorialRect != null &&
-              currentStep != null)
-            Positioned.fill(
-              child: TutorialOverlay(
-                targetRect: _currentTutorialRect!,
-                previousTargetRect:
-                    _previousTutorialRect ?? _currentTutorialRect!,
-                title: currentStep.title,
-                description: currentStep.description,
-                stepIndex: _tutorialStepIndex,
-                totalSteps: _tutorialSteps.length,
-                canGoBack: _tutorialStepIndex > 0,
-                allowTapOutside: true,
-                onNext: _goToNextTutorialStep,
-                onPrevious: _goToPreviousTutorialStep,
-                onSkip: _skipTutorial,
-              ),
-            ),
         ],
       ),
     );
@@ -1000,16 +873,12 @@ class _MainShellState extends State<MainShell> {
 
   Widget secondaryNavItem(
     NavigationDestination destination,
-    int index, {
-    String? tutorialTargetId,
-  }) {
+    int index,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     final selected = currentIndex == index;
 
     return Material(
-      key: tutorialTargetId == null
-          ? null
-          : TutorialService.keyFor(tutorialTargetId),
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(32),
@@ -1115,134 +984,6 @@ class _MainShellState extends State<MainShell> {
       isNavExpanded = false;
     });
   }
-
-  Future<void> _maybeStartTutorial() async {
-    if (TutorialService.isCompleted) return;
-    await _startTutorial();
-  }
-
-  Future<void> _startTutorial() async {
-    if (!mounted) return;
-
-    setState(() {
-      _tutorialActive = true;
-      TutorialService.isActive = true;
-      _tutorialStepIndex = 0;
-      _currentTutorialRect = null;
-      _previousTutorialRect = null;
-      currentIndex = 0;
-      previousIndex = 0;
-      isNavExpanded = false;
-
-      int nextDisplayIndex = _getDisplayIndex();
-      if (nextDisplayIndex != _currentDisplayIndex) {
-        _currentDisplayIndex = nextDisplayIndex;
-      }
-    });
-
-    await _showTutorialStep(0);
-  }
-
-  Future<void> _showTutorialStep(int index) async {
-    if (!mounted) return;
-
-    final step = _tutorialSteps[index];
-
-    setState(() {
-      _tutorialStepIndex = index;
-      currentIndex = step.pageIndex;
-      isNavExpanded = step.expandNav;
-      if (step.pageIndex != _rankPageIndex) {
-        previousIndex = step.pageIndex;
-      }
-
-      int nextDisplayIndex = _getDisplayIndex();
-      if (nextDisplayIndex != _currentDisplayIndex) {
-        _currentDisplayIndex = nextDisplayIndex;
-      }
-    });
-
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    await WidgetsBinding.instance.endOfFrame;
-
-    final rect = _resolveTutorialRect(step.targetIds);
-    if (rect == null) {
-      if (index >= _tutorialSteps.length - 1) {
-        await _completeTutorial();
-      } else {
-        await _showTutorialStep(index + 1);
-      }
-      return;
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      _previousTutorialRect = _currentTutorialRect ?? rect;
-      _currentTutorialRect = rect;
-      _tutorialActive = true;
-    });
-  }
-
-  Rect? _resolveTutorialRect(List<String> targetIds) {
-    for (final targetId in targetIds) {
-      final rect = TutorialService.rectFor(targetId);
-      if (rect != null) return rect;
-    }
-    return null;
-  }
-
-  Future<void> _goToNextTutorialStep() async {
-    if (_tutorialStepIndex >= _tutorialSteps.length - 1) {
-      await _completeTutorial();
-      return;
-    }
-
-    await _showTutorialStep(_tutorialStepIndex + 1);
-  }
-
-  Future<void> _goToPreviousTutorialStep() async {
-    if (_tutorialStepIndex == 0) return;
-    await _showTutorialStep(_tutorialStepIndex - 1);
-  }
-
-  Future<void> _skipTutorial() async {
-    await _completeTutorial();
-  }
-
-  Future<void> _completeTutorial() async {
-    await TutorialService.markCompleted();
-    if (!mounted) return;
-
-    setState(() {
-      _tutorialActive = false;
-      TutorialService.isActive = false;
-      _currentTutorialRect = null;
-      _previousTutorialRect = null;
-      isNavExpanded = false;
-    });
-  }
-
-  void _handleTutorialRestart() {
-    if (!mounted) return;
-    _startTutorial();
-  }
-}
-
-class _TutorialStep {
-  final String title;
-  final String description;
-  final List<String> targetIds;
-  final int pageIndex;
-  final bool expandNav;
-
-  const _TutorialStep({
-    required this.title,
-    required this.description,
-    required this.targetIds,
-    required this.pageIndex,
-    this.expandNav = false,
-  });
 }
 
 class PeekingPony extends StatefulWidget {

@@ -6,7 +6,6 @@ import '../providers/attendance_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/subject_provider.dart';
-import '../services/tutorial_service.dart';
 import '../utils/attendance_utils.dart';
 
 class AttendanceCalculatorPage extends StatefulWidget {
@@ -174,7 +173,6 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                 ),
                 Expanded(
                   child: Container(
-                    key: TutorialService.keyFor(TutorialTargets.calculatorMain),
                     margin: const EdgeInsets.symmetric(horizontal: 8),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(

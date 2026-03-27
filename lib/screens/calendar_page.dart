@@ -7,7 +7,6 @@ import '../models/attendance.dart';
 import '../utils/calendar_stats.dart';
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
-import '../services/tutorial_service.dart';
 import '../utils/holiday_utils.dart';
 import '../providers/theme_provider.dart';
 import 'day_details_page.dart';
@@ -222,9 +221,6 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                       const Spacer(),
                       Container(
-                        key: TutorialService.keyFor(
-                          TutorialTargets.calendarMultiSelect,
-                        ),
                         decoration: BoxDecoration(
                           color: headerColor,
                           borderRadius: BorderRadius.circular(18),
@@ -268,153 +264,148 @@ class _CalendarPageState extends State<CalendarPage> {
                       child: Column(
                         children: [
                           /// CALENDAR
-                          Container(
-                            key: TutorialService.keyFor(
-                              TutorialTargets.calendarMain,
+                          TableCalendar(
+                            firstDay: DateTime(2020),
+                            lastDay: DateTime(2100),
+                            focusedDay: focusedDay,
+                            headerStyle: const HeaderStyle(
+                              formatButtonVisible: false,
+                              titleCentered: true,
                             ),
-                            child: TableCalendar(
-                              firstDay: DateTime(2020),
-                              lastDay: DateTime(2100),
-                              focusedDay: focusedDay,
-                              headerStyle: const HeaderStyle(
-                                formatButtonVisible: false,
-                                titleCentered: true,
-                              ),
-                              selectedDayPredicate: (day) =>
-                                  !isMultiSelectMode &&
-                                  isSameDay(selectedDay, day),
-                              onDaySelected: (selected, focused) {
-                                if (isMultiSelectMode) {
-                                  _toggleDateSelection(selected);
-                                  setState(() {
-                                    focusedDay = focused;
-                                  });
-                                  return;
-                                }
-
+                            selectedDayPredicate: (day) =>
+                                !isMultiSelectMode &&
+                                isSameDay(selectedDay, day),
+                            onDaySelected: (selected, focused) {
+                              if (isMultiSelectMode) {
+                                _toggleDateSelection(selected);
                                 setState(() {
-                                  selectedDay = selected;
                                   focusedDay = focused;
                                 });
+                                return;
+                              }
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        DayDetailsPage(date: selected),
+                              setState(() {
+                                selectedDay = selected;
+                                focusedDay = focused;
+                              });
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      DayDetailsPage(date: selected),
+                                ),
+                              );
+                            },
+                            onPageChanged: (focused) {
+                              setState(() {
+                                focusedDay = focused;
+                              });
+                            },
+                            calendarBuilders: CalendarBuilders(
+                              defaultBuilder: (context, day, focusedDay) {
+                                final color = getDayColor(
+                                  day,
+                                  attendance,
+                                  timetable,
+                                );
+
+                                return Container(
+                                  margin: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: _isDateSelected(day)
+                                        ? Border.all(
+                                            color: scheme.primary,
+                                            width: 2.5,
+                                          )
+                                        : null,
+                                    boxShadow: (isAbsolute && color != null)
+                                        ? [
+                                            BoxShadow(
+                                              color: color.withValues(
+                                                alpha: .25,
+                                              ),
+                                              blurRadius: 8,
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "${day.day}",
+                                    style: TextStyle(
+                                      color: color == null
+                                          ? scheme.onSurface
+                                          : Colors.white,
+                                    ),
                                   ),
                                 );
                               },
-                              onPageChanged: (focused) {
-                                setState(() {
-                                  focusedDay = focused;
-                                });
+                              todayBuilder: (context, day, focusedDay) {
+                                final color = getDayColor(
+                                  day,
+                                  attendance,
+                                  timetable,
+                                );
+
+                                return Container(
+                                  margin: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _isDateSelected(day)
+                                          ? scheme.tertiary
+                                          : scheme.primary,
+                                      width: 2.5,
+                                    ),
+                                    boxShadow: isAbsolute
+                                        ? [
+                                            BoxShadow(
+                                              color: scheme.primary
+                                                  .withValues(alpha: .5),
+                                              blurRadius: 10,
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "${day.day}",
+                                    style: TextStyle(
+                                      color: color == null
+                                          ? scheme.onSurface
+                                          : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
                               },
-                              calendarBuilders: CalendarBuilders(
-                                defaultBuilder: (context, day, focusedDay) {
-                                  final color = getDayColor(
-                                    day,
-                                    attendance,
-                                    timetable,
-                                  );
+                              selectedBuilder: (context, day, focusedDay) {
+                                final color = getDayColor(
+                                  day,
+                                  attendance,
+                                  timetable,
+                                );
 
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: color,
-                                      shape: BoxShape.circle,
-                                      border: _isDateSelected(day)
-                                          ? Border.all(
-                                              color: scheme.primary,
-                                              width: 2.5,
-                                            )
-                                          : null,
-                                      boxShadow: (isAbsolute && color != null)
-                                          ? [
-                                              BoxShadow(
-                                                color: color.withValues(
-                                                  alpha: .25,
-                                                ),
-                                                blurRadius: 8,
-                                              ),
-                                            ]
-                                          : null,
+                                return Container(
+                                  margin: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: color ?? scheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "${day.day}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "${day.day}",
-                                      style: TextStyle(
-                                        color: color == null
-                                            ? scheme.onSurface
-                                            : Colors.white,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                todayBuilder: (context, day, focusedDay) {
-                                  final color = getDayColor(
-                                    day,
-                                    attendance,
-                                    timetable,
-                                  );
-
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: color,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: _isDateSelected(day)
-                                            ? scheme.tertiary
-                                            : scheme.primary,
-                                        width: 2.5,
-                                      ),
-                                      boxShadow: isAbsolute
-                                          ? [
-                                              BoxShadow(
-                                                color: scheme.primary
-                                                    .withValues(alpha: .5),
-                                                blurRadius: 10,
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "${day.day}",
-                                      style: TextStyle(
-                                        color: color == null
-                                            ? scheme.onSurface
-                                            : Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                selectedBuilder: (context, day, focusedDay) {
-                                  final color = getDayColor(
-                                    day,
-                                    attendance,
-                                    timetable,
-                                  );
-
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: color ?? scheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "${day.day}",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
 
@@ -422,9 +413,6 @@ class _CalendarPageState extends State<CalendarPage> {
 
                           /// STATS DASHBOARD CARD
                           Container(
-                            key: TutorialService.keyFor(
-                              TutorialTargets.calendarStats,
-                            ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
                               color: isAbsolute
@@ -615,9 +603,9 @@ class _CalendarPageState extends State<CalendarPage> {
                         ),
                       ),
                     ],
+                    ),
                   ),
                 ),
-              ),
             ),
         ],
       ),
