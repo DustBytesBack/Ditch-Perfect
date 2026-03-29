@@ -71,7 +71,7 @@ The app calculates:
 
 ## Installation
 
-Download the latest APK from the **Releases** section and install it on your Android device.
+Download the latest APK from the [**Releases**](https://github.com/DustBytesBack/Ditch-Perfect/releases) section and install it on your Android device.
 
 ---
 
