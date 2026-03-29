@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -407,6 +408,61 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                   ),
                 ),
 
+                /// STICKY STATS CARD
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: isAbsolute
+                          ? scheme.surfaceContainerHigh
+                          : scheme.surface,
+                      borderRadius: BorderRadius.circular(28),
+                      border: isAbsolute
+                          ? Border.all(color: scheme.outlineVariant)
+                          : null,
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _statItem(
+                              context,
+                              "Attended",
+                              stats.attended,
+                              Colors.green,
+                            ),
+                            _statItem(
+                              context,
+                              "Missed",
+                              stats.total - stats.attended,
+                              Colors.red,
+                            ),
+                            _statItem(
+                              context,
+                              "Percent",
+                              "${(stats.total == 0 ? 100 : (stats.attended / stats.total) * 100).toStringAsFixed(1)}%",
+                              scheme.primary,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        ExpressiveProgressBar(
+                          value: stats.total == 0
+                              ? 1
+                              : (stats.attended / stats.total),
+                          color: (stats.total == 0 ||
+                                  (stats.attended / stats.total) >= 0.75)
+                              ? Colors.green
+                              : scheme.error,
+                          backgroundColor: scheme.surfaceContainerHighest,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 /// MAIN PANEL
                 Expanded(
                   child: Container(
@@ -420,74 +476,11 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                     ),
                     child: Column(
                       children: [
-                        /// STICKY STATS CARD
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                          child: Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: isAbsolute
-                                  ? scheme.surfaceContainerHigh
-                                  : scheme.surfaceContainerHighest.withValues(
-                                      alpha: .4,
-                                    ),
-                              borderRadius: BorderRadius.circular(28),
-                              border: isAbsolute
-                                  ? Border.all(color: scheme.outlineVariant)
-                                  : null,
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    _statItem(
-                                      context,
-                                      "Attended",
-                                      stats.attended,
-                                      Colors.green,
-                                    ),
-                                    _statItem(
-                                      context,
-                                      "Missed",
-                                      stats.total - stats.attended,
-                                      Colors.red,
-                                    ),
-                                    _statItem(
-                                      context,
-                                      "Percent",
-                                      "${(stats.total == 0 ? 100 : (stats.attended / stats.total) * 100).toStringAsFixed(1)}%",
-                                      scheme.primary,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: LinearProgressIndicator(
-                                    value: stats.total == 0
-                                        ? 1
-                                        : (stats.attended / stats.total),
-                                    minHeight: 10,
-                                    backgroundColor:
-                                        scheme.surfaceContainerHighest,
-                                    color:
-                                        (stats.total == 0 ||
-                                            (stats.attended / stats.total) >=
-                                                0.75)
-                                        ? Colors.green
-                                        : scheme.error,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        const SizedBox(height: 8),
 
                         /// SORT & FILTER BUTTON GROUP
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                           child: Row(
                             children: [
                               Expanded(
@@ -739,7 +732,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     switch (record.status) {
       case AttendanceStatus.present:
         statusColor = Colors.green;
-        statusIcon = Icons.check;
+        statusIcon = Icons.done_rounded;
         statusName = "PRESENT";
         break;
       case AttendanceStatus.absent:
@@ -754,7 +747,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
         break;
       default:
         statusColor = Colors.grey;
-        statusIcon = Icons.help_outline;
+        statusIcon = Icons.help_outline_rounded;
         statusName = "UNKNOWN";
     }
 
@@ -775,53 +768,135 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
       borderRadius = BorderRadius.circular(10);
     }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: isLast ? 16 : 2),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: isAbsolute
-            ? scheme.surfaceContainerHigh
-            : scheme.tertiaryContainer.withValues(alpha: .3),
-        borderRadius: borderRadius,
-        border: isAbsolute
-            ? Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5))
-            : null,
-      ),
+    final iconBorderRadius = borderRadius.copyWith(
+      topRight: Radius.circular(10),
+      bottomRight: Radius.circular(10),
+    );
+    final dateBorderRadius = borderRadius.copyWith(
+      topLeft: Radius.circular(10),
+      bottomLeft: Radius.circular(10),
+    );
+
+    // Summary Pill
+    return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Icon Container
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: .15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(statusIcon, color: statusColor, size: 22),
-          ),
-          const SizedBox(width: 16),
-          // Date Text
+          // Icon Pill (First Quarter)
           Expanded(
-            child: Text(
-              dateStr,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.onSurface,
+            flex: 1,
+            child: Container(
+              margin: EdgeInsets.only(bottom: isLast ? 16 : 8),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: .2),
+                borderRadius: iconBorderRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: statusColor.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+                border: isAbsolute
+                    ? Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.5),
+                      )
+                    : null,
+              ),
+              child: Center(
+                child: Icon(
+                  statusIcon,
+                  color: statusColor,
+                  size: 32,
+                  shadows: [
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(1.0, 0),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(-1.0, 0),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(0, 1.0),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(0, -1.0),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(0.7, 0.7),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(-0.7, -0.7),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(0.7, -0.7),
+                    ),
+                    Shadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      offset: const Offset(-0.7, 0.7),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          // Status Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: .1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              statusName,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: statusColor,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
+          const SizedBox(width: 8),
+          // Date & Status Pill (Three Quarters)
+          Expanded(
+            flex: 3,
+            child: Container(
+              margin: EdgeInsets.only(bottom: isLast ? 16 : 8),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+              decoration: BoxDecoration(
+                color: isAbsolute
+                    ? scheme.surfaceContainerHigh
+                    : scheme.tertiaryContainer.withValues(alpha: .3),
+                borderRadius: dateBorderRadius,
+                border: isAbsolute
+                    ? Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.5),
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  // Date Text
+                  Expanded(
+                    child: Text(
+                      dateStr,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: scheme.onSurface,
+                          ),
+                    ),
+                  ),
+                  // Status Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      statusName,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -829,4 +904,139 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
       ),
     );
   }
+}
+
+class ExpressiveProgressBar extends StatefulWidget {
+  final double value;
+  final Color color;
+  final Color backgroundColor;
+
+  const ExpressiveProgressBar({
+    super.key,
+    required this.value,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  State<ExpressiveProgressBar> createState() => _ExpressiveProgressBarState();
+}
+
+class _ExpressiveProgressBarState extends State<ExpressiveProgressBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          size: const Size(double.infinity, 24),
+          painter: _WavyPainter(
+            progress: widget.value,
+            color: widget.color,
+            backgroundColor: widget.backgroundColor,
+            phase: _controller.value,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WavyPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color backgroundColor;
+  final double phase;
+
+  _WavyPainter({
+    required this.progress,
+    required this.color,
+    required this.backgroundColor,
+    required this.phase,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final backgroundPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final progressPaint = Paint()
+      ..color = color
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final double centerY = size.height / 2;
+
+    // 1. Draw background line (only the non-filled portion, after a gap)
+    const double gap = 16.0;
+    final double progressWidth = size.width * progress;
+    final double startX = progressWidth + gap;
+
+    if (startX < size.width) {
+      canvas.drawLine(
+        Offset(startX, centerY),
+        Offset(size.width, centerY),
+        backgroundPaint,
+      );
+    }
+
+    // 2. Draw progress portion (wavy)
+    if (progress > 0) {
+      final path = Path();
+      final double width = size.width * progress;
+
+      const double wavelength = 50.0;
+      const double amplitude = 5.0;
+
+      for (double x = 0; x <= width; x += 1.0) {
+        // Only taper at the heavy start (first 12px) and very sharp end (last 4px)
+        double modulation = 1.0;
+        if (x < 12) {
+          modulation = x / 12.0;
+        } else if (width - x < 4) {
+          modulation = (width - x) / 4.0;
+        }
+
+        final double y = centerY +
+            amplitude *
+                modulation *
+                math.sin(
+                  ((x / wavelength) * 2 * math.pi) - (phase * 2 * math.pi),
+                );
+
+        if (x == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+
+      canvas.drawPath(path, progressPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WavyPainter oldDelegate) => true;
 }
