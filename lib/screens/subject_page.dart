@@ -47,6 +47,10 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void showAddDialog(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
+    final isDynamic = themeProvider.isDynamicMode;
+    final isAbsolute = themeProvider.absoluteMode;
+    
     final nameController = TextEditingController();
     final shortController = TextEditingController();
 
@@ -71,11 +75,15 @@ class _SubjectPageState extends State<SubjectPage> {
                   ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
+                    borderSide: (isDynamic || isAbsolute) 
+                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        : BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
+                    borderSide: (isDynamic || isAbsolute) 
+                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        : BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
@@ -101,11 +109,15 @@ class _SubjectPageState extends State<SubjectPage> {
                   ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
+                    borderSide: (isDynamic || isAbsolute) 
+                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        : BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
+                    borderSide: (isDynamic || isAbsolute) 
+                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        : BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
@@ -291,6 +303,10 @@ class _SubjectPageState extends State<SubjectPage> {
     Subject subject,
     AttendanceStats stats,
   ) {
+    final themeProvider = context.read<ThemeProvider>();
+    final isDynamic = themeProvider.isDynamicMode;
+    final isAbsolute = themeProvider.absoluteMode;
+    
     final percentController = TextEditingController(
       text: stats.total == 0 ? '' : stats.percentage.toStringAsFixed(2),
     );
@@ -333,11 +349,15 @@ class _SubjectPageState extends State<SubjectPage> {
                           .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
+                        borderSide: (isDynamic || isAbsolute) 
+                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                            : BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
+                        borderSide: (isDynamic || isAbsolute) 
+                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                            : BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
@@ -375,11 +395,15 @@ class _SubjectPageState extends State<SubjectPage> {
                           .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
+                        borderSide: (isDynamic || isAbsolute) 
+                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                            : BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
+                        borderSide: (isDynamic || isAbsolute) 
+                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                            : BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
@@ -441,11 +465,15 @@ class _SubjectPageState extends State<SubjectPage> {
                           .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
+                        borderSide: (isDynamic || isAbsolute) 
+                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                            : BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide.none,
+                        borderSide: (isDynamic || isAbsolute) 
+                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                            : BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),

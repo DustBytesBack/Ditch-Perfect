@@ -456,7 +456,9 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                                   (stats.attended / stats.total) >= 0.75)
                               ? Colors.green
                               : scheme.error,
-                          backgroundColor: scheme.surfaceContainerHighest,
+                          backgroundColor: themeProvider.isDynamicMode
+                              ? scheme.outlineVariant.withValues(alpha: 0.5)
+                              : scheme.surfaceContainerHighest,
                         ),
                       ],
                     ),

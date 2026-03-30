@@ -124,7 +124,7 @@ class TimetablePage extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Feature on the way"),
-        content: const Text("This feature is currently under development."),
+        content: const Text("Lazy Developer Problems ¯\\_(ツ)_/¯."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

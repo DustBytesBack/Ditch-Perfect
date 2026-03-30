@@ -79,6 +79,7 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isAbsolute = themeProvider.absoluteMode;
+    final isDynamic = themeProvider.isDynamicMode;
     final scheme = Theme.of(context).colorScheme;
     final subjects = context.watch<SubjectProvider>().subjects;
     final attendance = context.watch<AttendanceProvider>();
@@ -201,7 +202,7 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                       ? scheme.surfaceContainerHigh
                                       : scheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(24),
-                                  border: isAbsolute
+                                  border: (isAbsolute || isDynamic)
                                       ? Border.all(color: scheme.outlineVariant)
                                       : null,
                                 ),
@@ -244,7 +245,9 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                                 border: OutlineInputBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(18),
-                                                  borderSide: BorderSide.none,
+                                                  borderSide: (isDynamic || isAbsolute) 
+                                                      ? BorderSide(color: scheme.outlineVariant) 
+                                                      : BorderSide.none,
                                                 ),
                                                 enabledBorder:
                                                     OutlineInputBorder(
@@ -252,8 +255,9 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                                           BorderRadius.circular(
                                                             18,
                                                           ),
-                                                      borderSide:
-                                                          BorderSide.none,
+                                                      borderSide: (isDynamic || isAbsolute) 
+                                                          ? BorderSide(color: scheme.outlineVariant) 
+                                                          : BorderSide.none,
                                                     ),
                                                 focusedBorder:
                                                     OutlineInputBorder(
@@ -373,7 +377,9 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                               border: OutlineInputBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(16),
-                                                borderSide: BorderSide.none,
+                                                borderSide: (isDynamic || isAbsolute) 
+                                                    ? BorderSide(color: scheme.outlineVariant) 
+                                                    : BorderSide.none,
                                               ),
                                               contentPadding:
                                                   const EdgeInsets.symmetric(
@@ -605,7 +611,7 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
       children: [
         Text(
           value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: color,
           ),

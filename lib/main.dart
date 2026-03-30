@@ -32,10 +32,9 @@ TextStyle _googleSansFlexStyle({
     letterSpacing: letterSpacing,
     fontVariations: <FontVariation>[
       FontVariation('wght', weight),
-      const FontVariation('GRAD', 100), // Grade: increased optical weight boost
-      const FontVariation('wdth', 100), // Width
+      const FontVariation('GRAD', 50), // Grade: increased optical weight boost
+      const FontVariation('wdth', 105), // Width
       const FontVariation('slnt', 0), // Slant
-      // You can add optical size (opsz) or rounded terminals (ROND) if desired:
       // const FontVariation('opsz', 14),
       const FontVariation('ROND', 100),
     ],
