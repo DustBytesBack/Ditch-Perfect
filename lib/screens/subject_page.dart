@@ -629,7 +629,10 @@ class _SubjectPageState extends State<SubjectPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(subject.name, style: Theme.of(context).textTheme.titleLarge),
+              Text(subject.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
               const SizedBox(height: 24),
 

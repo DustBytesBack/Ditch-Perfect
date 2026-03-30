@@ -157,6 +157,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final attendance = context.watch<AttendanceProvider>();
 
     final stats = calculateMonthStats(focusedDay, attendance, timetable);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     // Use simple conditional logic for colors while keeping a single structural layout
     final bgColor = isAbsolute ? scheme.surface : scheme.primaryContainer;
@@ -268,9 +269,93 @@ class _CalendarPageState extends State<CalendarPage> {
                             firstDay: DateTime(2020),
                             lastDay: DateTime(2100),
                             focusedDay: focusedDay,
-                            headerStyle: const HeaderStyle(
+                            headerStyle: HeaderStyle(
                               formatButtonVisible: false,
                               titleCentered: true,
+                              titleTextStyle: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge!
+                                  .copyWith(fontWeight: FontWeight.w700),
+                              leftChevronPadding: const EdgeInsets.all(8),
+                              rightChevronPadding: const EdgeInsets.all(8),
+                              leftChevronIcon: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: scheme.onSecondaryContainer.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: scheme.secondaryContainer,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      if (isDarkMode)
+                                        BoxShadow(
+                                          color: scheme.primary.withValues(alpha: 0.3),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        )
+                                      else ...[
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                        BoxShadow(
+                                          color: scheme.onSecondaryContainer.withValues(alpha: 0.15),
+                                          blurRadius: 1,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_left,
+                                    color: scheme.onSecondaryContainer,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              rightChevronIcon: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: scheme.onSecondaryContainer.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: scheme.secondaryContainer,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      if (isDarkMode)
+                                        BoxShadow(
+                                          color: scheme.primary.withValues(alpha: 0.3),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        )
+                                      else ...[
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                        BoxShadow(
+                                          color: scheme.onSecondaryContainer.withValues(alpha: 0.15),
+                                          blurRadius: 1,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_right,
+                                    color: scheme.onSecondaryContainer,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
                             ),
                             selectedDayPredicate: (day) =>
                                 !isMultiSelectMode &&
