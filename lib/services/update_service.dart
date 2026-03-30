@@ -100,4 +100,26 @@ class UpdateService {
 
   /// Compares two version strings. Returns true if [a] is newer than [b].
   static bool isVersionNewer(String a, String b) => _isNewer(a, b);
+
+  /// Fetches all releases from GitHub.
+  static Future<List<Map<String, dynamic>>> fetchAllReleases() async {
+    final url = Uri.parse(
+      "https://api.github.com/repos/$repoOwner/$repoName/releases",
+    );
+
+    final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception("GitHub API returned ${response.statusCode}");
+    }
+
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((release) {
+      return {
+        "version": release["tag_name"] as String,
+        "name": release["name"] as String?,
+        "body": release["body"] as String?,
+        "date": release["published_at"] as String?,
+      };
+    }).toList();
+  }
 }

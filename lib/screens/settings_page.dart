@@ -9,12 +9,9 @@ import '../providers/subject_provider.dart';
 import '../providers/timetable_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/update_checker.dart';
-import '../services/update_service.dart';
 import '../services/backup_service.dart';
 import '../widgets/wavy_progress_indicator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'edit_username_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -335,7 +332,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: scheme.onSecondaryContainer,
-                    fontSize: 13,
+                    fontSize: 15,
                   ),
                 ),
               ],
@@ -733,6 +730,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     child: Text(
                                       "Minimum Attendance %",
                                       style: TextStyle(
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -928,6 +926,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     child: Text(
                                       "Notification Time",
                                       style: TextStyle(
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -981,171 +980,253 @@ class _SettingsPageState extends State<SettingsPage> {
                               },
                             ),
 
-                            if (!themeProvider.isDynamicMode) ...[
-                              const SizedBox(height: 12),
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                              alignment: Alignment.topCenter,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 250),
+                                opacity: themeProvider.isDynamicMode ? 0.0 : 1.0,
+                                child: !themeProvider.isDynamicMode
+                                    ? Column(
+                                        children: [
+                                          const SizedBox(height: 12),
 
-                              /// POOKIE MODE
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 14,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isAbsolute
-                                      ? scheme.surfaceContainerHigh
-                                      : scheme.secondaryContainer,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isAbsolute
-                                        ? scheme.primary.withValues(alpha: 0.2)
-                                        : scheme.primary.withValues(alpha: 0.1),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: isAbsolute
-                                      ? null
-                                      : [
-                                          BoxShadow(
-                                            color: scheme.primary.withValues(
-                                              alpha: 0.05,
+                                          /// POOKIE MODE
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 14,
                                             ),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
+                                            decoration: BoxDecoration(
+                                              color: isAbsolute
+                                                  ? scheme.surfaceContainerHigh
+                                                  : scheme.secondaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: isAbsolute
+                                                    ? scheme.primary.withValues(
+                                                        alpha: 0.2,
+                                                      )
+                                                    : scheme.primary.withValues(
+                                                        alpha: 0.1,
+                                                      ),
+                                                width: 1.5,
+                                              ),
+                                              boxShadow: isAbsolute
+                                                  ? null
+                                                  : [
+                                                      BoxShadow(
+                                                        color: scheme.primary
+                                                            .withValues(
+                                                              alpha: 0.05,
+                                                            ),
+                                                        blurRadius: 10,
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
+                                                        ),
+                                                      ),
+                                                    ],
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  themeProvider.pookieMode &&
+                                                          themeProvider
+                                                                  .themeMode ==
+                                                              ThemeMode.dark
+                                                      ? "🖤"
+                                                      : "🎀",
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 18),
+                                                Expanded(
+                                                  child: Text(
+                                                    themeProvider.pookieMode &&
+                                                            themeProvider
+                                                                    .themeMode ==
+                                                                ThemeMode.dark
+                                                        ? "Emo Pookie Mode 🕸️"
+                                                        : "Pookie Mode",
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Switch.adaptive(
+                                                  value:
+                                                      themeProvider.pookieMode,
+                                                  onChanged: (value) {
+                                                    HapticFeedback
+                                                        .lightImpact();
+                                                    context
+                                                        .read<ThemeProvider>()
+                                                        .togglePookie(value);
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 12),
+
+                                          /// COLOR SCHEME
+                                          IgnorePointer(
+                                            ignoring: themeProvider.pookieMode,
+                                            child: AnimatedOpacity(
+                                              duration: const Duration(
+                                                milliseconds: 200,
+                                              ),
+                                              opacity: themeProvider.pookieMode
+                                                  ? 0.4
+                                                  : 1.0,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 18,
+                                                      vertical: 18,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: isAbsolute
+                                                      ? scheme
+                                                              .surfaceContainerHigh
+                                                      : scheme
+                                                              .secondaryContainer,
+                                                  borderRadius:
+                                                      const BorderRadius.only(
+                                                        topLeft:
+                                                            Radius.circular(10),
+                                                        topRight:
+                                                            Radius.circular(10),
+                                                        bottomLeft:
+                                                            Radius.circular(30),
+                                                        bottomRight:
+                                                            Radius.circular(30),
+                                                      ),
+                                                  border: Border.all(
+                                                    color: isAbsolute
+                                                        ? scheme.primary
+                                                                .withValues(
+                                                                  alpha: 0.2,
+                                                                )
+                                                        : scheme.primary
+                                                                .withValues(
+                                                                  alpha: 0.1,
+                                                                ),
+                                                    width: 1.5,
+                                                  ),
+                                                  boxShadow: isAbsolute
+                                                      ? null
+                                                      : [
+                                                          BoxShadow(
+                                                            color: scheme
+                                                                    .primary
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.05,
+                                                                    ),
+                                                            blurRadius: 10,
+                                                            offset: const Offset(
+                                                              0,
+                                                              4,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.palette,
+                                                          color: scheme
+                                                                  .onSecondaryContainer,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 18,
+                                                        ),
+                                                        const Text(
+                                                          "Color Scheme",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    Wrap(
+                                                      alignment:
+                                                          WrapAlignment.center,
+                                                      spacing: 16,
+                                                      runSpacing: 16,
+                                                      children: [
+                                                        colorOption(
+                                                          context,
+                                                          Colors.indigo,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.blue,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.cyan,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.teal,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.green,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.lime,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.amber,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.orange,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.deepOrange,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.red,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.pink,
+                                                        ),
+                                                        colorOption(
+                                                          context,
+                                                          Colors.deepPurple,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      themeProvider.pookieMode &&
-                                              themeProvider.themeMode ==
-                                                  ThemeMode.dark
-                                          ? "🖤"
-                                          : "🎀",
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                    const SizedBox(width: 18),
-                                    Expanded(
-                                      child: Text(
-                                        themeProvider.pookieMode &&
-                                                themeProvider.themeMode ==
-                                                    ThemeMode.dark
-                                            ? "Emo Pookie Mode 🕸️"
-                                            : "Pookie Mode",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Switch.adaptive(
-                                      value: themeProvider.pookieMode,
-                                      onChanged: (value) {
-                                        HapticFeedback.lightImpact();
-                                        context
-                                            .read<ThemeProvider>()
-                                            .togglePookie(value);
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                      )
+                                    : const SizedBox(width: double.infinity),
                               ),
-
-                              const SizedBox(height: 12),
-
-                              /// COLOR SCHEME
-                              IgnorePointer(
-                                ignoring: themeProvider.pookieMode,
-                                child: AnimatedOpacity(
-                                  duration: const Duration(milliseconds: 200),
-                                  opacity: themeProvider.pookieMode ? 0.4 : 1.0,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 18,
-                                      vertical: 18,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isAbsolute
-                                          ? scheme.surfaceContainerHigh
-                                          : scheme.secondaryContainer,
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(10),
-                                        topRight: Radius.circular(10),
-                                        bottomLeft: Radius.circular(30),
-                                        bottomRight: Radius.circular(30),
-                                      ),
-                                      border: Border.all(
-                                        color: isAbsolute
-                                            ? scheme.primary.withValues(
-                                                alpha: 0.2,
-                                              )
-                                            : scheme.primary.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                        width: 1.5,
-                                      ),
-                                      boxShadow: isAbsolute
-                                          ? null
-                                          : [
-                                              BoxShadow(
-                                                color: scheme.primary
-                                                    .withValues(alpha: 0.05),
-                                                blurRadius: 10,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ],
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.palette,
-                                              color: scheme
-                                                  .onSecondaryContainer,
-                                            ),
-                                            const SizedBox(width: 18),
-                                            const Text(
-                                              "Color Scheme",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Wrap(
-                                          alignment: WrapAlignment.center,
-                                          spacing: 16,
-                                          runSpacing: 16,
-                                          children: [
-                                            colorOption(
-                                              context,
-                                              Colors.indigo,
-                                            ),
-                                            colorOption(context, Colors.blue),
-                                            colorOption(context, Colors.cyan),
-                                            colorOption(context, Colors.teal),
-                                            colorOption(context, Colors.green),
-                                            colorOption(context, Colors.lime),
-                                            colorOption(context, Colors.amber),
-                                            colorOption(context, Colors.orange),
-                                            colorOption(
-                                              context,
-                                              Colors.deepOrange,
-                                            ),
-                                            colorOption(context, Colors.red),
-                                            colorOption(context, Colors.pink),
-                                            colorOption(
-                                              context,
-                                              Colors.deepPurple,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ],
                         ),
 
@@ -1232,54 +1313,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           child: ListTile(
                             leading: const Icon(Icons.article_outlined),
                             title: const Text("Release Notes"),
-                            onTap: () async {
+                            onTap: () {
                               HapticFeedback.lightImpact();
-                              final packageInfo =
-                                  await PackageInfo.fromPlatform();
-                              final version = packageInfo.version;
-                              if (!context.mounted) return;
-
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => AlertDialog(
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(height: 16),
-                                      const WavyCircularProgressIndicator(),
-                                      const SizedBox(height: 24),
-                                      Text(
-                                        "Fetching notes…",
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium,
-                                      ),
-                                      const SizedBox(height: 8),
-                                    ],
-                                  ),
-                                ),
-                              );
-
-                              String? notes;
-                              try {
-                                notes = await Future.wait([
-                                  UpdateService.fetchReleaseNotes(version),
-                                  Future.delayed(const Duration(seconds: 3)),
-                                ]).then((values) => values[0] as String?);
-                              } catch (_) {}
-
-                              if (!context.mounted) return;
-                              Navigator.pop(context); // dismiss loading
-
-                              showDialog(
-                                context: context,
-                                builder: (_) => _buildReleaseNotesDialog(
-                                  context,
-                                  version,
-                                  notes,
-                                ),
-                              );
+                              showReleaseNotesDialog(context);
                             },
                           ),
                         ),
@@ -1418,79 +1454,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildReleaseNotesDialog(
-    BuildContext context,
-    String version,
-    String? notes,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
 
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.article_outlined, color: scheme.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              "Release Notes — v$version",
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
-        child: notes != null
-            ? () {
-                final controller = ScrollController();
-                return Scrollbar(
-                  controller: controller,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: controller,
-                    child: MarkdownBody(
-                      data: notes,
-                      selectable: true,
-                      onTapLink: (text, href, title) {
-                        if (href != null) {
-                          launchUrl(
-                            Uri.parse(href),
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
-                      styleSheet:
-                          MarkdownStyleSheet.fromTheme(
-                            Theme.of(context),
-                          ).copyWith(
-                            p: Theme.of(context).textTheme.bodyMedium,
-                            h1: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                            h2: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                            h3: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                            listBullet: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                    ),
-                  ),
-                );
-              }()
-            : Text(
-                "No release notes available for version $version.",
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-      ),
-      actions: [
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Got it"),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSelectionTile(
     BuildContext context, {
@@ -1537,7 +1501,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 Text(
                   subtitle,

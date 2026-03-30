@@ -90,6 +90,21 @@ void checkForUpdateManual(BuildContext context) {
   );
 }
 
+/// Shows the release notes dialog manually.
+void showReleaseNotesDialog(BuildContext context) async {
+  final packageInfo = await PackageInfo.fromPlatform();
+  if (!context.mounted) return;
+  showDialog(
+    context: context,
+    builder: (_) => _ReleaseNotesDialog(
+      version: packageInfo.version,
+      notes: null, // It will load from history automatically
+    ),
+  );
+}
+
+
+
 // ── Manual check dialog (loading → result → error) ──────────────
 
 class _ManualUpdateCheckDialog extends StatefulWidget {
@@ -314,51 +329,275 @@ class _ReleaseNotesDialog extends StatelessWidget {
           ),
         ],
       ),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
-        child: notes != null
-            ? Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  child: MarkdownBody(
-                    data: notes!,
-                    selectable: true,
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrl(
-                          Uri.parse(href),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                        .copyWith(
-                          p: Theme.of(context).textTheme.bodyMedium,
-                          h1: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          h2: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          h3: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          listBullet: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                  ),
-                ),
-              )
-            : Text(
-                "You've successfully updated to version $version!",
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+      content: _SequentialReleaseNotesView(
+        initialVersion: version,
+        initialNotes: notes,
+        maxHeight: 400,
       ),
+      actionsAlignment: MainAxisAlignment.center,
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("Got it"),
+          child: const Text("Close"),
         ),
       ],
+    );
+  }
+}
+
+class _SequentialReleaseNotesView extends StatefulWidget {
+  final String initialVersion;
+  final String? initialNotes;
+  final double maxHeight;
+
+  const _SequentialReleaseNotesView({
+    required this.initialVersion,
+    this.initialNotes,
+    this.maxHeight = 250,
+  });
+
+  @override
+  State<_SequentialReleaseNotesView> createState() =>
+      _SequentialReleaseNotesViewState();
+}
+
+class _SequentialReleaseNotesViewState
+    extends State<_SequentialReleaseNotesView> {
+  List<Map<String, dynamic>> _releases = [];
+  int _currentIndex = -1;
+  bool _loading = false;
+  String? _installedVersion;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReleases();
+  }
+
+  Future<void> _loadReleases() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final results = await Future.wait([
+        UpdateService.fetchAllReleases(),
+        PackageInfo.fromPlatform(),
+      ]);
+
+      final releases = results[0] as List<Map<String, dynamic>>;
+      final packageInfo = results[1] as PackageInfo;
+
+      if (!mounted) return;
+
+      int initialIndex = releases.indexWhere(
+        (r) => (r["version"] as String).contains(widget.initialVersion),
+      );
+
+      setState(() {
+        _releases = releases;
+        _installedVersion = packageInfo.version;
+        _currentIndex = initialIndex != -1 ? initialIndex : 0;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        // Fallback to initial notes if error occurs
+      });
+    }
+  }
+
+  void _next() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+    }
+  }
+
+  void _previous() {
+    if (_currentIndex < _releases.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    if (_loading && _releases.isEmpty) {
+      return SizedBox(
+        height: widget.maxHeight,
+        child: const Center(child: WavyCircularProgressIndicator()),
+      );
+    }
+
+    final String currentDisplayVersion;
+    final String currentNotes;
+
+    if (_currentIndex != -1 && _releases.isNotEmpty) {
+      currentDisplayVersion = _releases[_currentIndex]["version"] as String;
+      currentNotes = _releases[_currentIndex]["body"] as String? ?? "";
+    } else {
+      currentDisplayVersion = widget.initialVersion;
+      currentNotes = widget.initialNotes ?? "";
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text(
+              "Version $currentDisplayVersion",
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // BADGES
+            if (_installedVersion != null &&
+                currentDisplayVersion.contains(_installedVersion!))
+              _buildBadge("CURRENT", scheme.secondaryContainer,
+                  scheme.onSecondaryContainer),
+
+            if (_releases.isNotEmpty &&
+                currentDisplayVersion == _releases.first["version"]) ...[
+              const SizedBox(width: 4),
+              _buildBadge(
+                  "LATEST", scheme.primaryContainer, scheme.onPrimaryContainer),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: widget.maxHeight,
+            maxWidth: 400,
+          ),
+          child: currentNotes.trim().isNotEmpty
+              ? Scrollbar(
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    key: ValueKey(currentDisplayVersion),
+                    child: MarkdownBody(
+                      data: currentNotes,
+                      selectable: true,
+                      onTapLink: (text, href, title) {
+                        if (href != null) {
+                          launchUrl(
+                            Uri.parse(href),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                          .copyWith(
+                            p: Theme.of(context).textTheme.bodyMedium,
+                            h1: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            h2: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            h3: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            listBullet: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                    ),
+                  ),
+                )
+              : Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Text(
+                      "No release notes provided for this version.",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+        ),
+        if (_releases.length > 1) ...[
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed:
+                    _currentIndex < _releases.length - 1 ? _previous : null,
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                label: const Text("Older"),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  minimumSize: const Size(0, 40),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "${_currentIndex + 1} / ${_releases.length}",
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 3,
+                    width: 20,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
+              ),
+              FilledButton.tonalIcon(
+                onPressed: _currentIndex > 0 ? _next : null,
+                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                label: const Text("Newer"),
+                iconAlignment: IconAlignment.end,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  minimumSize: const Size(0, 40),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBadge(String label, Color color, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 }

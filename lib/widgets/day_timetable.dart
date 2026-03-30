@@ -56,6 +56,15 @@ class DayTimetable extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? color : color.withValues(alpha: .25),
           borderRadius: BorderRadius.circular(selected ? 24 : 12),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : null,
         ),
         child: Icon(icon, color: selected ? Colors.white : color, size: 20),
       ),

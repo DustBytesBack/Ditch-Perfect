@@ -424,34 +424,6 @@ class HomePage extends StatelessWidget {
                       ),
                       const Spacer(),
 
-                      // UPDATE NOTIFICATION ICON
-                      Consumer<SettingsProvider>(
-                        builder: (context, settings, child) {
-                          final update = settings.updateInfo;
-                          if (update == null) return const SizedBox.shrink();
-
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.transparent,
-                              ),
-                              child: IconButton(
-                                iconSize: 26,
-                                padding: const EdgeInsets.all(12),
-                                icon: AnimatedUpdateIcon(
-                                  color: scheme.tertiary,
-                                  size: 26,
-                                ),
-                                onPressed: () {
-                                  showUpdateDialog(context, update);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
                       Container(
                         decoration: BoxDecoration(
                           color: isAbsolute
@@ -535,11 +507,37 @@ class HomePage extends StatelessWidget {
                         : Column(
                             children: [
                               /// BULK ACTION BUTTONS
-                              Align(
-                                alignment: Alignment.topRight,
-                                child: SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.4,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // UPDATE NOTIFICATION ICON
+                                  Consumer<SettingsProvider>(
+                                    builder: (context, settings, child) {
+                                      final update = settings.updateInfo;
+                                      if (update == null) return const SizedBox.shrink();
+
+                                      return Container(
+                                        margin: const EdgeInsets.only(left: 12),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.transparent,
+                                        ),
+                                        child: IconButton(
+                                          iconSize: 26,
+                                          padding: const EdgeInsets.all(12),
+                                          icon: AnimatedUpdateIcon(
+                                            color: scheme.tertiary,
+                                            size: 26,
+                                          ),
+                                          onPressed: () {
+                                            showUpdateDialog(context, update);
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  ),
+
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.4,
 
                                   child: SegmentedButton<BulkAction>(
                                     style: SegmentedButton.styleFrom(
@@ -630,7 +628,8 @@ class HomePage extends StatelessWidget {
                                         },
                                   ),
                                 ),
-                              ),
+                              ],
+                            ),
 
                               const SizedBox(height: 14),
 
