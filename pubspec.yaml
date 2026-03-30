@@ -51,9 +51,9 @@ flutter:
     - assets/icon/
     - LICENSE
   fonts:
-    - family: RobotoFlex
+    - family: GoogleSansFlex
       fonts:
-        - asset: assets/fonts/RobotoFlex.ttf
+        - asset: assets/fonts/GoogleSansFlex.ttf
 
 flutter_launcher_icons:
   android: true

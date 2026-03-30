@@ -18,93 +18,88 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/main_shell.dart';
 
-/// Builds a single Roboto Flex TextStyle with tuned variable-font axes.
-TextStyle _robotoFlexStyle({
+/// Builds a single Google Sans Flex TextStyle with tuned variable-font axes.
+TextStyle _googleSansFlexStyle({
   required double weight,
   double? fontSize,
   double? height,
   double? letterSpacing,
 }) {
   return TextStyle(
-    fontFamily: 'RobotoFlex',
+    fontFamily: 'GoogleSansFlex',
     fontSize: fontSize,
     height: height,
     letterSpacing: letterSpacing,
     fontVariations: <FontVariation>[
       FontVariation('wght', weight),
-      const FontVariation('GRAD', 150), // Grade: increased optical weight boost
-      const FontVariation('slnt', 0), // Slant: upright
-      const FontVariation('wdth', 100), // Width: standard
-      const FontVariation('XOPQ', 60), // Thick Stroke: slightly bolder
-      const FontVariation('YOPQ', 70), // Thin Stroke: crisper thin strokes
-      const FontVariation('XTRA', 560), // Counter Width: slightly wider openings
-      const FontVariation('YTUC', 750), // Uppercase Height: taller caps
-      const FontVariation('YTLC', 540), // Lowercase Height: taller x-height
-      const FontVariation('YTAS', 760), // Ascender Height: taller ascenders
-      const FontVariation('YTDE', -210), // Descender Depth: deeper descenders
-      const FontVariation('YTFI', 745), // Figure Height: taller numerals
+      const FontVariation('GRAD', 100), // Grade: increased optical weight boost
+      const FontVariation('wdth', 100), // Width
+      const FontVariation('slnt', 0), // Slant
+      // You can add optical size (opsz) or rounded terminals (ROND) if desired:
+      // const FontVariation('opsz', 14),
+      const FontVariation('ROND', 100),
     ],
   );
 }
 
-/// Material 3 TextTheme using Roboto Flex with expressive-pixel tuning.
+/// Material 3 TextTheme using Google Sans Flex with expressive-pixel tuning.
 /// Cached as a top-level final to avoid rebuilding 15 TextStyles on every frame.
-final TextTheme _robotoFlexTextTheme = TextTheme(
-  displayLarge: _robotoFlexStyle(
+final TextTheme _googleSansFlexTextTheme = TextTheme(
+  displayLarge: _googleSansFlexStyle(
     weight: 400,
     fontSize: 57,
     height: 1.12,
     letterSpacing: -0.25,
   ),
-  displayMedium: _robotoFlexStyle(weight: 400, fontSize: 45, height: 1.16),
-  displaySmall: _robotoFlexStyle(weight: 400, fontSize: 36, height: 1.22),
-  headlineLarge: _robotoFlexStyle(weight: 500, fontSize: 32, height: 1.25),
-  headlineMedium: _robotoFlexStyle(weight: 500, fontSize: 28, height: 1.29),
-  headlineSmall: _robotoFlexStyle(weight: 500, fontSize: 24, height: 1.33),
-  titleLarge: _robotoFlexStyle(weight: 600, fontSize: 22, height: 1.27),
-  titleMedium: _robotoFlexStyle(
+  displayMedium: _googleSansFlexStyle(weight: 400, fontSize: 45, height: 1.16),
+  displaySmall: _googleSansFlexStyle(weight: 400, fontSize: 36, height: 1.22),
+  headlineLarge: _googleSansFlexStyle(weight: 500, fontSize: 32, height: 1.25),
+  headlineMedium: _googleSansFlexStyle(weight: 500, fontSize: 28, height: 1.29),
+  headlineSmall: _googleSansFlexStyle(weight: 500, fontSize: 24, height: 1.33),
+  titleLarge: _googleSansFlexStyle(weight: 600, fontSize: 22, height: 1.27),
+  titleMedium: _googleSansFlexStyle(
     weight: 600,
     fontSize: 18,
     height: 1.50,
     letterSpacing: 0.15,
   ),
-  titleSmall: _robotoFlexStyle(
+  titleSmall: _googleSansFlexStyle(
     weight: 600,
     fontSize: 14,
     height: 1.43,
     letterSpacing: 0.10,
   ),
-  bodyLarge: _robotoFlexStyle(
+  bodyLarge: _googleSansFlexStyle(
     weight: 400,
     fontSize: 16,
     height: 1.50,
     letterSpacing: 0.15,
   ),
-  bodyMedium: _robotoFlexStyle(
+  bodyMedium: _googleSansFlexStyle(
     weight: 400,
     fontSize: 14,
     height: 1.43,
     letterSpacing: 0.25,
   ),
-  bodySmall: _robotoFlexStyle(
+  bodySmall: _googleSansFlexStyle(
     weight: 400,
     fontSize: 12,
     height: 1.33,
     letterSpacing: 0.40,
   ),
-  labelLarge: _robotoFlexStyle(
+  labelLarge: _googleSansFlexStyle(
     weight: 600,
     fontSize: 14,
     height: 1.43,
     letterSpacing: 0.10,
   ),
-  labelMedium: _robotoFlexStyle(
+  labelMedium: _googleSansFlexStyle(
     weight: 600,
     fontSize: 12,
     height: 1.33,
     letterSpacing: 0.50,
   ),
-  labelSmall: _robotoFlexStyle(
+  labelSmall: _googleSansFlexStyle(
     weight: 600,
     fontSize: 11,
     height: 1.45,
@@ -200,7 +195,7 @@ class _OutStandingState extends State<OutStanding> {
               useMaterial3: true,
               brightness: Brightness.dark,
               colorSchemeSeed: Colors.blue,
-              textTheme: _robotoFlexTextTheme,
+              textTheme: _googleSansFlexTextTheme,
             ),
             home: const Scaffold(
               body: Center(child: CircularProgressIndicator.adaptive()),
@@ -229,13 +224,13 @@ class _OutStandingState extends State<OutStanding> {
                           : ColorScheme.fromSeed(
                               seedColor: themeProvider.seedColor,
                             ),
-                      textTheme: _robotoFlexTextTheme,
+                      textTheme: _googleSansFlexTextTheme,
                     ),
 
                     darkTheme: ThemeData(
                       useMaterial3: true,
                       brightness: Brightness.dark,
-                      textTheme: _robotoFlexTextTheme,
+                      textTheme: _googleSansFlexTextTheme,
                       colorScheme: (() {
                         final baseScheme = (isDynamic && darkDynamic != null)
                             ? darkDynamic
