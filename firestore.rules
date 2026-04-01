@@ -6,7 +6,8 @@ service cloud.firestore {
     match /rankings/{document=**} {
       allow create: if true;
       allow get, list: if true;
-      allow update, delete: if false;
+      allow update: if true;
+      allow delete: if false;
     }
     
     // Allow users to read the leaderboard

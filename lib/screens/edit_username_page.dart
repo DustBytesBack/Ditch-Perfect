@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/wavy_progress_indicator.dart';
+import '../utils/ranking_utils.dart';
 
 class EditUsernamePage extends StatefulWidget {
   const EditUsernamePage({super.key});
@@ -21,16 +22,6 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
   @override
   void initState() {
     super.initState();
-    final isLocked =
-        DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false)
-            as bool;
-    if (isLocked) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pop(context);
-      });
-      return;
-    }
-
     final savedUsername =
         DatabaseService.settingsBox.get("username") as String?;
     if (savedUsername != null) {
@@ -62,18 +53,26 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
     });
 
     try {
-      // 1. Check if username is already in leaderboard (fastest check)
-      final leaderboardDoc = await FirebaseFirestore.instance
+      final currentUid = RankingUtils.getOrCreateUid();
+
+      // Check if username is already in leaderboard (by another user)
+      final leaderboardQuery = await FirebaseFirestore.instance
           .collection("leaderboard")
-          .doc(username)
+          .where("username", isEqualTo: username)
+          .limit(1)
           .get();
 
-      if (leaderboardDoc.exists) {
-        setState(() => _error = "Username is already taken");
-        return;
+      if (leaderboardQuery.docs.isNotEmpty) {
+        // Allow if the existing entry belongs to the current user
+        final existingDoc = leaderboardQuery.docs.first;
+        final existingUid = existingDoc.data()['uid'] as String?;
+        if (existingUid != currentUid) {
+          setState(() => _error = "Username is already taken");
+          return;
+        }
       }
 
-      // 2. Check if username is in rankings (pending calculation)
+      // Check if username is in rankings (by another user)
       final rankingsQuery = await FirebaseFirestore.instance
           .collection("rankings")
           .where("username", isEqualTo: username)
@@ -81,67 +80,21 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
           .get();
 
       if (rankingsQuery.docs.isNotEmpty) {
-        setState(() => _error = "Username is already taken");
-        return;
+        final existingDoc = rankingsQuery.docs.first;
+        final existingUid = existingDoc.data()['uid'] as String?;
+        if (existingUid != currentUid) {
+          setState(() => _error = "Username is already taken");
+          return;
+        }
       }
 
-      // 3. First Confirmation
-      if (mounted) {
-        final confirm1 = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Set Username?"),
-            content: const Text(
-              "Are you sure? You will have to pay if you want to change it later.",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text("Continue"),
-              ),
-            ],
-          ),
-        );
-        if (confirm1 != true) return;
-      }
-
-      // 4. Second Confirmation
-      if (mounted) {
-        final confirm2 = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Final Check!"),
-            content: const Text(
-              "Just Kidding !. Your username is permanent, just like your name irl. Confirm to save?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Go Back"),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text("Confirm & Save"),
-              ),
-            ],
-          ),
-        );
-        if (confirm2 != true) return;
-      }
-
-      // If it doesn't exist in either and user confirmed twice, it's unique and final
+      // Save locally
       await DatabaseService.settingsBox.put("username", username);
       await DatabaseService.settingsBox.put("isUsernameSet", true);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Username locked and saved successfully"),
-          ),
+          const SnackBar(content: Text("Username saved successfully")),
         );
         Navigator.pop(context);
       }
@@ -249,3 +202,4 @@ class _EditUsernamePageState extends State<EditUsernamePage> {
     );
   }
 }
+

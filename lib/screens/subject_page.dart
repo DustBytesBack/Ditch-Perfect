@@ -62,74 +62,77 @@ class _SubjectPageState extends State<SubjectPage> {
           title: const Text("Add Subject"),
           contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
           actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: "Subject Name",
-                  prefixIcon: const Icon(Icons.subject),
-                  filled: true,
-                  fillColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: (isDynamic || isAbsolute) 
-                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
-                        : BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: (isDynamic || isAbsolute) 
-                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
-                        : BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: "Subject Name",
+                    prefixIcon: const Icon(Icons.subject),
+                    filled: true,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              TextField(
-                controller: shortController,
-                maxLength: 8,
-                decoration: InputDecoration(
-                  labelText: "Short Name (max 8 letters)",
-                  prefixIcon: const Icon(Icons.short_text),
-                  filled: true,
-                  fillColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: (isDynamic || isAbsolute) 
-                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
-                        : BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: (isDynamic || isAbsolute) 
-                        ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
-                        : BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
+                TextField(
+                  controller: shortController,
+                  maxLength: 8,
+                  decoration: InputDecoration(
+                    labelText: "Short Name (max 8 letters)",
+                    prefixIcon: const Icon(Icons.short_text),
+                    filled: true,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -185,6 +188,8 @@ class _SubjectPageState extends State<SubjectPage> {
       builder: (_) {
         return AlertDialog(
           title: const Text("Delete Subject"),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
           content: const Text(
             "Do you want to remove this subject from past entries or only future timetable entries?",
           ),
@@ -224,6 +229,10 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void showRenameDialog(BuildContext context, Subject subject) {
+    final themeProvider = context.read<ThemeProvider>();
+    final isDynamic = themeProvider.isDynamicMode;
+    final isAbsolute = themeProvider.absoluteMode;
+
     final nameController = TextEditingController(text: subject.name);
     final shortController = TextEditingController(text: subject.shortName);
 
@@ -232,22 +241,81 @@ class _SubjectPageState extends State<SubjectPage> {
       builder: (_) {
         return AlertDialog(
           title: const Text("Rename Subject"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Subject Name"),
-              ),
-
-              TextField(
-                controller: shortController,
-                maxLength: 8,
-                decoration: const InputDecoration(
-                  labelText: "Short Name (max 8 letters)",
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: "Subject Name",
+                    prefixIcon: const Icon(Icons.subject),
+                    filled: true,
+                    fillColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: .5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: shortController,
+                  maxLength: 8,
+                  decoration: InputDecoration(
+                    labelText: "Short Name (max 8 letters)",
+                    prefixIcon: const Icon(Icons.short_text),
+                    filled: true,
+                    fillColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: .5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: (isDynamic || isAbsolute) 
+                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                          : BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

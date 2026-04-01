@@ -165,39 +165,38 @@ class _RankPageState extends State<RankPage> {
                         ),
                       ),
                       const Spacer(),
-                      if (!_isUsernameSet) ...[
-                        Container(
-                          decoration: BoxDecoration(
-                            color: isAbsolute
-                                ? scheme.surfaceContainerHigh
-                                : scheme.surface,
-                            borderRadius: BorderRadius.circular(18),
-                            border: isAbsolute
-                                ? Border.all(
-                                    color: scheme.primary.withValues(
-                                      alpha: 0.10,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          child: IconButton(
-                            iconSize: 28,
-                            padding: const EdgeInsets.all(14),
-                            icon: Icon(Icons.edit, color: scheme.onSurface),
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const EditUsernamePage(),
-                                ),
-                              );
-                              _loadUsername();
-                            },
-                            tooltip: "Set Username",
-                          ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isAbsolute
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                          border: isAbsolute
+                              ? Border.all(
+                                  color: scheme.primary.withValues(
+                                    alpha: 0.10,
+                                  ),
+                                )
+                              : null,
                         ),
-                      ],
+                        child: IconButton(
+                          iconSize: 28,
+                          padding: const EdgeInsets.all(14),
+                          icon: Icon(Icons.edit, color: scheme.onSurface),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const EditUsernamePage(),
+                              ),
+                            );
+                            _loadUsername();
+                          },
+                          tooltip: "Edit Username",
+                        ),
+                      ),
+
                     ],
                   ),
                 ),
