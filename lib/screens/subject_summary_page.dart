@@ -439,11 +439,26 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                               stats.total - stats.attended,
                               Colors.red,
                             ),
-                            _statItem(
-                              context,
-                              "Percent",
-                              "${(stats.total == 0 ? 100 : (stats.attended / stats.total) * 100).toStringAsFixed(1)}%",
-                              scheme.primary,
+                            TweenAnimationBuilder<double>(
+                              duration: const Duration(milliseconds: 2500),
+                              curve: Curves.easeOutExpo,
+                              tween: Tween<double>(
+                                begin: 0,
+                                end: stats.total == 0
+                                    ? 100
+                                    : (stats.attended / stats.total) * 100,
+                              ),
+                              builder: (context, value, child) {
+                                final color = value >= 75
+                                    ? Colors.green
+                                    : scheme.error;
+                                return _statItem(
+                                  context,
+                                  "Percent",
+                                  "${value.toStringAsFixed(1)}%",
+                                  color,
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -925,36 +940,65 @@ class ExpressiveProgressBar extends StatefulWidget {
 }
 
 class _ExpressiveProgressBarState extends State<ExpressiveProgressBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with TickerProviderStateMixin {
+  late AnimationController _phaseController;
+  late AnimationController _revealController;
+  late Animation<double> _revealAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _phaseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
+
+    _revealController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    _revealAnimation = CurvedAnimation(
+      parent: _revealController,
+      curve: Curves.easeOutExpo,
+    );
+
+    _revealController.forward();
+  }
+
+  @override
+  void didUpdateWidget(ExpressiveProgressBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _revealController.forward(from: 0);
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _phaseController.dispose();
+    _revealController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AnimatedBuilder(
-      animation: _controller,
+      animation: Listenable.merge([_phaseController, _revealAnimation]),
       builder: (context, child) {
+        final currentProgress = widget.value * _revealAnimation.value;
+        // If current progress is < 75%, show as error color (red)
+        // Once it passes 75% AND the final target is also >= 75%, it will show as the final target color (green)
+        final displayColor = (currentProgress >= 0.75) ? widget.color : scheme.error;
+
         return CustomPaint(
           size: const Size(double.infinity, 24),
           painter: _WavyPainter(
-            progress: widget.value,
-            color: widget.color,
+            progress: currentProgress,
+            color: displayColor,
             backgroundColor: widget.backgroundColor,
-            phase: _controller.value,
+            phase: _phaseController.value,
           ),
         );
       },
