@@ -10,6 +10,7 @@ import '../providers/attendance_provider.dart';
 import '../utils/attendance_utils.dart';
 import '../models/subject.dart';
 import '../models/attendance.dart';
+import '../widgets/slidable_tile.dart';
 
 class SubjectPage extends StatefulWidget {
   const SubjectPage({super.key});
@@ -895,58 +896,40 @@ class _SubjectPageState extends State<SubjectPage> {
                         final isSelected = _selectedSubjectId == subject.id;
                         final isAnySelected = _selectedSubjectId != null;
 
-                        return Dismissible(
+                        return SlidableTile(
                           key: ValueKey(subject.id),
-                          direction: isAnySelected
-                              ? DismissDirection.none
-                              : DismissDirection.horizontal,
-
-                          confirmDismiss: (direction) async {
-                            if (direction == DismissDirection.startToEnd) {
-                              HapticFeedback.mediumImpact();
-                              showDeleteDialog(context, subject);
-                            } else {
-                              HapticFeedback.lightImpact();
-                              showRenameDialog(context, subject);
-                            }
-                            return false;
+                          enabled: !isAnySelected,
+                          onLeftAction: () {
+                            showDeleteDialog(context, subject);
                           },
-
-                          background: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 38,
-                              ),
-                              decoration: BoxDecoration(
-                                color: scheme.errorContainer,
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              child: Icon(
-                                Icons.delete,
-                                color: scheme.onErrorContainer,
-                              ),
+                          onRightAction: () {
+                            showRenameDialog(context, subject);
+                          },
+                          actionWidth: 100,
+                          leftAction: Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            decoration: BoxDecoration(
+                              color: scheme.errorContainer,
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.delete,
+                              color: scheme.onErrorContainer,
+                              size: 32,
                             ),
                           ),
-
-                          secondaryBackground: Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 38,
-                              ),
-                              decoration: BoxDecoration(
-                                color: scheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              child: Icon(
-                                Icons.edit,
-                                color: scheme.onPrimaryContainer,
-                              ),
+                          rightAction: Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            decoration: BoxDecoration(
+                              color: scheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.edit,
+                              color: scheme.onPrimaryContainer,
+                              size: 32,
                             ),
                           ),
 

@@ -836,7 +836,10 @@ class _MainShellState extends State<MainShell> {
             color: selected
                 ? scheme.onPrimaryContainer
                 : scheme.onSurfaceVariant,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            fontWeight: selected ? FontWeight.w900 : FontWeight.w500,
+            fontVariations: <FontVariation>[
+              const FontVariation('wdth', 80),
+            ]
           ),
           child: Text(destination.label),
         ),
