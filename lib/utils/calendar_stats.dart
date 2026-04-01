@@ -28,6 +28,7 @@ CalendarStats calculateMonthStats(
     if (day.isAfter(DateTime.now())) continue;
 
     final slots = timetable.getSlotsForDate(day);
+    final slotIds = timetable.getSlotIdsForDate(day);
 
     // Days with no subjects — treat as holiday/off day
     if (slots.isEmpty) {
@@ -41,7 +42,7 @@ CalendarStats calculateMonthStats(
     int none = 0;
 
     for (int i = 0; i < slots.length; i++) {
-      final status = attendance.getStatus(day, i);
+      final status = attendance.getStatus(day, slotIds[i], legacySlotIndex: i);
 
       if (status == AttendanceStatus.present) {
         present++;

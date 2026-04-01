@@ -98,6 +98,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
     for (final date in dates) {
       final slots = timetable.getSlotsForDate(date);
+      final slotIds = timetable.getSlotIdsForDate(date);
 
       if (slots.isEmpty) {
         emptyCount++;
@@ -106,10 +107,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
       if (status == null) {
         for (int i = 0; i < slots.length; i++) {
-          attendance.clearAttendance(date, i);
+          attendance.clearAttendance(date, slotIds[i], legacySlotIndex: i);
         }
       } else {
-        attendance.markAll(date, slots, status);
+        attendance.markAll(date, slots, status, slotIds: slotIds);
       }
 
       markedCount++;
@@ -281,7 +282,9 @@ class _CalendarPageState extends State<CalendarPage> {
                               leftChevronIcon: Container(
                                 padding: const EdgeInsets.all(2),
                                 decoration: BoxDecoration(
-                                  color: scheme.onSecondaryContainer.withValues(alpha: 0.1),
+                                  color: scheme.onSecondaryContainer.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Container(
@@ -292,18 +295,23 @@ class _CalendarPageState extends State<CalendarPage> {
                                     boxShadow: [
                                       if (isDarkMode)
                                         BoxShadow(
-                                          color: scheme.primary.withValues(alpha: 0.3),
+                                          color: scheme.primary.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           blurRadius: 10,
                                           spreadRadius: 2,
                                         )
                                       else ...[
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.2),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.2,
+                                          ),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
                                         BoxShadow(
-                                          color: scheme.onSecondaryContainer.withValues(alpha: 0.15),
+                                          color: scheme.onSecondaryContainer
+                                              .withValues(alpha: 0.15),
                                           blurRadius: 1,
                                           offset: const Offset(0, 1),
                                         ),
@@ -320,7 +328,9 @@ class _CalendarPageState extends State<CalendarPage> {
                               rightChevronIcon: Container(
                                 padding: const EdgeInsets.all(2),
                                 decoration: BoxDecoration(
-                                  color: scheme.onSecondaryContainer.withValues(alpha: 0.1),
+                                  color: scheme.onSecondaryContainer.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Container(
@@ -331,18 +341,23 @@ class _CalendarPageState extends State<CalendarPage> {
                                     boxShadow: [
                                       if (isDarkMode)
                                         BoxShadow(
-                                          color: scheme.primary.withValues(alpha: 0.3),
+                                          color: scheme.primary.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           blurRadius: 10,
                                           spreadRadius: 2,
                                         )
                                       else ...[
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.2),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.2,
+                                          ),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
                                         BoxShadow(
-                                          color: scheme.onSecondaryContainer.withValues(alpha: 0.15),
+                                          color: scheme.onSecondaryContainer
+                                              .withValues(alpha: 0.15),
                                           blurRadius: 1,
                                           offset: const Offset(0, 1),
                                         ),
@@ -449,8 +464,9 @@ class _CalendarPageState extends State<CalendarPage> {
                                     boxShadow: isAbsolute
                                         ? [
                                             BoxShadow(
-                                              color: scheme.primary
-                                                  .withValues(alpha: .5),
+                                              color: scheme.primary.withValues(
+                                                alpha: .5,
+                                              ),
                                               blurRadius: 10,
                                             ),
                                           ]
@@ -688,9 +704,9 @@ class _CalendarPageState extends State<CalendarPage> {
                         ),
                       ),
                     ],
-                    ),
                   ),
                 ),
+              ),
             ),
         ],
       ),

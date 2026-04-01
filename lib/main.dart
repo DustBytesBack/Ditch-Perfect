@@ -138,17 +138,18 @@ Future<List<SingleChildWidget>> _initializeApp() async {
   // Start Firebase initialization in the background — don't block the UI.
   Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final attendanceProvider = AttendanceProvider()..loadAllAttendance();
-  final timetableProvider = TimetableProvider()..loadTimetable();
-  final subjectProvider = SubjectProvider()..loadSubjects();
-  final settingsProvider = SettingsProvider()..loadSettings();
-  final themeProvider = ThemeProvider()..loadTheme();
+  final attendanceProvider = AttendanceProvider();
+  attendanceProvider.loadAllAttendance();
 
-  subjectProvider.setProviders(
+  final timetableProvider = TimetableProvider(
+    attendanceProvider: attendanceProvider,
+  )..loadTimetable();
+  final subjectProvider = SubjectProvider(
     attendanceProvider: attendanceProvider,
     timetableProvider: timetableProvider,
-  );
-  timetableProvider.setAttendanceProvider(attendanceProvider);
+  )..loadSubjects();
+  final settingsProvider = SettingsProvider()..loadSettings();
+  final themeProvider = ThemeProvider()..loadTheme();
 
   // Fire-and-forget notification scheduling — don't block.
   NotificationService.init().then((_) {

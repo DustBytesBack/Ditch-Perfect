@@ -1,132 +1,176 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../models/attendance.dart';
 import '../services/database_service.dart';
 import 'attendance_provider.dart';
 
 class TimetableProvider extends ChangeNotifier {
-  /// The CURRENT weekly timetable. Physically modified on all removals.
+  final AttendanceProvider _attendanceProvider;
+
+  TimetableProvider({required AttendanceProvider attendanceProvider})
+    : _attendanceProvider = attendanceProvider;
+
   final Map<String, List<String>> _week = {};
+  final Map<String, List<String>> _weekSlotIds = {};
 
-  /// Extra date-specific slots added by the user (e.g. "add subject to today").
   final Map<String, List<String>> _extraSlots = {};
+  final Map<String, List<String>> _extraSlotIds = {};
 
-  /// Per-date base timetable overrides. When a "Future Only" removal happens,
-  /// past dates that had the old timetable get a snapshot saved here so
-  /// [getSlotsForDate] can reconstruct what the timetable looked like on
-  /// that date. Key = ISO date string, value = base slot list for that date.
   final Map<String, List<String>> _dateBaseOverrides = {};
+  final Map<String, List<String>> _dateBaseSlotIdOverrides = {};
 
-  /// Caches the base slots returned by the most recent [getSlotsForDate] call.
-  /// This allows [getDaySlots] to return date-aware results when called
-  /// immediately after [getSlotsForDate] for the same weekday (as happens
-  /// inside [DayTimetable.build]).
-  String? _lastBaseWeekday;
-  List<String> _lastBaseSlots = [];
+  static const String _overridePrefix = '_override_';
+
+  final List<String> days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
   Map<String, List<String>> get week => _week;
 
   Map<String, List<String>> get extraSlots => _extraSlots;
-
-  /// Optional reference to AttendanceProvider for in-memory cache updates.
-  AttendanceProvider? _attendanceProvider;
-
-  /// Inject reference to AttendanceProvider.
-  void setAttendanceProvider(AttendanceProvider provider) {
-    _attendanceProvider = provider;
-  }
-
-  final List<String> days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
   String buildDateKey(DateTime date) {
     final d = DateTime(date.year, date.month, date.day);
     return d.toIso8601String();
   }
 
-  void loadTimetable() {
-    final box = DatabaseService.timetableBox;
+  String _overrideKey(String dateKey) => '$_overridePrefix$dateKey';
 
-    _week.clear();
-    _extraSlots.clear();
-    _dateBaseOverrides.clear();
+  List<String> _cleanStringList(dynamic raw) {
+    if (raw == null) return [];
+    return List.from(
+      raw,
+    ).where((e) => e != null).map((e) => e.toString()).toList();
+  }
 
-    for (var day in days) {
-      final stored = box.get(day);
+  List<String> _alignedSlotIds({
+    required String key,
+    required int length,
+    required bool isOverride,
+  }) {
+    final boxKey = isOverride ? _overrideKey(key) : key;
+    final existing = _cleanStringList(
+      DatabaseService.timetableSlotIdsBox.get(boxKey),
+    );
 
-      if (stored != null) {
-        final rawList = List.from(stored);
-
-        final cleanList = rawList
-            .where((e) => e != null)
-            .map((e) => e.toString())
-            .toList();
-
-        _week[day] = cleanList;
-
-        box.put(day, cleanList);
-      } else {
-        _week[day] = [];
-        box.put(day, []);
-      }
+    if (existing.length == length) {
+      return existing;
     }
 
-    // Load extra date-specific slots from Hive.
-    for (var key in box.keys) {
-      final keyStr = key.toString();
+    final uuids = const Uuid();
+    final generated = List<String>.generate(length, (_) => uuids.v4());
+    DatabaseService.timetableSlotIdsBox.put(boxKey, generated);
+    return generated;
+  }
 
+  void _persistWeek(String day) {
+    DatabaseService.timetableBox.put(day, _week[day] ?? []);
+    DatabaseService.timetableSlotIdsBox.put(day, _weekSlotIds[day] ?? []);
+  }
+
+  void _persistExtra(String dateKey) {
+    final slots = _extraSlots[dateKey] ?? [];
+    final slotIds = _extraSlotIds[dateKey] ?? [];
+
+    if (slots.isEmpty) {
+      DatabaseService.timetableBox.delete(dateKey);
+      DatabaseService.timetableSlotIdsBox.delete(dateKey);
+      _extraSlots.remove(dateKey);
+      _extraSlotIds.remove(dateKey);
+      return;
+    }
+
+    DatabaseService.timetableBox.put(dateKey, slots);
+    DatabaseService.timetableSlotIdsBox.put(dateKey, slotIds);
+  }
+
+  void _persistDateOverride(String dateKey) {
+    final slots = _dateBaseOverrides[dateKey] ?? [];
+    final slotIds = _dateBaseSlotIdOverrides[dateKey] ?? [];
+
+    if (slots.isEmpty) {
+      _dateBaseOverrides.remove(dateKey);
+      _dateBaseSlotIdOverrides.remove(dateKey);
+      DatabaseService.timetableRemovalsBox.delete(dateKey);
+      DatabaseService.timetableSlotIdsBox.delete(_overrideKey(dateKey));
+      return;
+    }
+
+    DatabaseService.timetableRemovalsBox.put(dateKey, slots);
+    DatabaseService.timetableSlotIdsBox.put(_overrideKey(dateKey), slotIds);
+  }
+
+  void loadTimetable() {
+    _week.clear();
+    _weekSlotIds.clear();
+    _extraSlots.clear();
+    _extraSlotIds.clear();
+    _dateBaseOverrides.clear();
+    _dateBaseSlotIdOverrides.clear();
+
+    final timetableBox = DatabaseService.timetableBox;
+
+    for (final day in days) {
+      final cleanList = _cleanStringList(timetableBox.get(day));
+      _week[day] = cleanList;
+      _weekSlotIds[day] = _alignedSlotIds(
+        key: day,
+        length: cleanList.length,
+        isOverride: false,
+      );
+
+      timetableBox.put(day, cleanList);
+      DatabaseService.timetableSlotIdsBox.put(day, _weekSlotIds[day]!);
+    }
+
+    for (final key in timetableBox.keys) {
+      final keyStr = key.toString();
       if (days.contains(keyStr)) continue;
 
-      final stored = box.get(key);
+      final cleanList = _cleanStringList(timetableBox.get(key));
+      if (cleanList.isEmpty) continue;
 
-      if (stored != null) {
-        final rawList = List.from(stored);
-
-        final cleanList = rawList
-            .where((e) => e != null)
-            .map((e) => e.toString())
-            .toList();
-
-        if (cleanList.isNotEmpty) {
-          _extraSlots[keyStr] = cleanList;
-        }
-      }
+      _extraSlots[keyStr] = cleanList;
+      _extraSlotIds[keyStr] = _alignedSlotIds(
+        key: keyStr,
+        length: cleanList.length,
+        isOverride: false,
+      );
     }
 
-    // Load date base overrides from Hive.
     final overridesBox = DatabaseService.timetableRemovalsBox;
-    for (var key in overridesBox.keys) {
-      final stored = overridesBox.get(key);
-      if (stored != null) {
-        final rawList = List.from(stored as List);
-        final cleanList = rawList
-            .where((e) => e != null)
-            .map((e) => e.toString())
-            .toList();
-        _dateBaseOverrides[key.toString()] = cleanList;
-      }
+    for (final key in overridesBox.keys) {
+      final dateKey = key.toString();
+      final cleanList = _cleanStringList(overridesBox.get(key));
+      if (cleanList.isEmpty) continue;
+
+      _dateBaseOverrides[dateKey] = cleanList;
+      _dateBaseSlotIdOverrides[dateKey] = _alignedSlotIds(
+        key: dateKey,
+        length: cleanList.length,
+        isOverride: true,
+      );
     }
 
     notifyListeners();
   }
 
-  // ── Slot accessors ──────────────────────────────────────────────
-
-  /// Returns the base slots for a weekday.
-  ///
-  /// If [getSlotsForDate] was called just before for a date that falls on
-  /// the same weekday, this returns the date-aware base (which may be a
-  /// [_dateBaseOverrides] snapshot). Otherwise it returns the current
-  /// weekly timetable [_week] entry.
-  ///
-  /// The cache is consumed (cleared) on each call so it doesn't leak into
-  /// unrelated callers (e.g. timetable editor, timetable page).
   List<String> getDaySlots(String day) {
-    if (_lastBaseWeekday == day) {
-      final cached = _lastBaseSlots;
-      _lastBaseWeekday = null;
-      _lastBaseSlots = [];
-      return cached;
-    }
     return _week[day] ?? [];
+  }
+
+  List<String> getDaySlotIds(String day) {
+    return _weekSlotIds[day] ?? [];
+  }
+
+  List<String> getBaseSlotsForDate(DateTime date) {
+    final dayKey = days[date.weekday - 1];
+    final dateKey = buildDateKey(date);
+    return _dateBaseOverrides[dateKey] ?? (_week[dayKey] ?? []);
+  }
+
+  List<String> getBaseSlotIdsForDate(DateTime date) {
+    final dayKey = days[date.weekday - 1];
+    final dateKey = buildDateKey(date);
+    return _dateBaseSlotIdOverrides[dateKey] ?? (_weekSlotIds[dayKey] ?? []);
   }
 
   List<String> getTodaySlots() {
@@ -134,281 +178,169 @@ class TimetableProvider extends ChangeNotifier {
     return getDaySlots(days[weekday - 1]);
   }
 
-  /// Returns the slots that should appear for a specific date.
-  /// If a date-base override exists (from a "Future Only" removal), it is
-  /// used as the base instead of the current weekly timetable.
-  ///
-  /// Also caches the base so that a subsequent [getDaySlots] call for the
-  /// same weekday returns the date-aware base instead of the current week.
   List<String> getSlotsForDate(DateTime date) {
-    final dayKey = days[date.weekday - 1];
     final dateKey = buildDateKey(date);
-
-    // Use the override if one exists for this date, otherwise use current week.
-    final base = _dateBaseOverrides[dateKey] ?? (_week[dayKey] ?? []);
-
-    // Cache the base for getDaySlots to pick up.
-    _lastBaseWeekday = dayKey;
-    _lastBaseSlots = base;
-
+    final base = getBaseSlotsForDate(date);
     final extra = _extraSlots[dateKey] ?? [];
-
     return [...base, ...extra];
   }
 
-  // ── Slot mutations ──────────────────────────────────────────────
+  List<String> getSlotIdsForDate(DateTime date) {
+    final dateKey = buildDateKey(date);
+    final base = getBaseSlotIdsForDate(date);
+    final extra = _extraSlotIds[dateKey] ?? [];
+    return [...base, ...extra];
+  }
 
   void addSubject(String day, String subjectId) {
-    final box = DatabaseService.timetableBox;
-
     final slots = _week[day] ?? [];
+    final slotIds = _weekSlotIds[day] ?? [];
 
     slots.add(subjectId);
+    slotIds.add(const Uuid().v4());
 
     _week[day] = slots;
-
-    box.put(day, slots);
+    _weekSlotIds[day] = slotIds;
+    _persistWeek(day);
 
     notifyListeners();
   }
 
-  /// "Future Only" — remove the slot from the timetable going forward.
-  /// Past dates still show the slot (and its attendance data) because we
-  /// snapshot the current base timetable into [_dateBaseOverrides] for
-  /// every past date on this weekday that has attendance records.
-  ///
-  /// Today and future dates are affected by the removal: the slot disappears
-  /// and any attendance records at that slot index are deleted + re-indexed.
-  ///
-  /// [index] is relative to the CURRENT [getDaySlots] list.
-  void removeSubjectAt(String day, int index) {
-    final slots = _week[day];
-    if (slots == null || index < 0 || index >= slots.length) return;
-
-    // Snapshot the CURRENT base timetable for all past dates on this weekday
-    // that have attendance records (and don't already have an override).
-    final weekdayNumber = days.indexOf(day) + 1;
-    _snapshotPastDates(day, weekdayNumber, List<String>.from(slots));
-
-    // Delete and re-index attendance records on today (and any future dates)
-    // for this weekday, since those dates will use the updated _week.
-    _deleteAndReindexSlotFromTodayOnward(weekdayNumber, index);
-
-    // Physically remove the slot from the current timetable.
-    slots.removeAt(index);
-    DatabaseService.timetableBox.put(day, slots);
-
-    _attendanceProvider?.notifyIfChanged();
-    notifyListeners();
-  }
-
-  /// Snapshot the current base timetable [baseSlots] into _dateBaseOverrides
-  /// for every past date on weekday [weekdayNumber] that has attendance
-  /// records and doesn't already have a snapshot.
   void _snapshotPastDates(
-    String day,
     int weekdayNumber,
     List<String> baseSlots,
+    List<String> baseSlotIds,
   ) {
-    final attendanceBox = DatabaseService.attendanceBox;
-    final overridesBox = DatabaseService.timetableRemovalsBox;
-
-    // Collect all unique dates from attendance records that fall on this weekday.
-    final pastDates = <String>{};
-
-    for (var k in attendanceBox.keys) {
-      final kStr = k.toString();
-      // Key format: "ISO8601Date_slotIndex"
-      final lastUnderscore = kStr.lastIndexOf('_');
-      if (lastUnderscore < 0) continue;
-
-      final datePart = kStr.substring(0, lastUnderscore);
-      final parsed = DateTime.tryParse(datePart);
-      if (parsed == null) continue;
-      if (parsed.weekday != weekdayNumber) continue;
-
-      // Only snapshot past dates (before today).
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      if (!parsed.isBefore(today)) continue;
-
-      pastDates.add(datePart);
-    }
-
-    // Save a snapshot for each past date that doesn't already have one.
-    for (var dateKey in pastDates) {
-      if (!_dateBaseOverrides.containsKey(dateKey)) {
-        _dateBaseOverrides[dateKey] = List<String>.from(baseSlots);
-        overridesBox.put(dateKey, List<String>.from(baseSlots));
-      }
-    }
-  }
-
-  /// Delete the attendance record at [slotIndex] and re-index higher slots
-  /// for all dates on [weekdayNumber] that are today or in the future.
-  /// This ensures that when a slot is removed "Future Only", today's (and
-  /// any future) attendance data stays consistent with the updated _week.
-  void _deleteAndReindexSlotFromTodayOnward(int weekdayNumber, int slotIndex) {
     final attendanceBox = DatabaseService.attendanceBox;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // Collect keys grouped by date for today-or-later on this weekday.
-    final allKeys = attendanceBox.keys.toList();
-
-    for (var k in allKeys) {
-      final kStr = k.toString();
-      final record = attendanceBox.get(k);
-      if (record == null || record is! Attendance) continue;
-      if (record.date.weekday != weekdayNumber) continue;
+    final pastDates = <String>{};
+    for (final value in attendanceBox.values) {
+      if (value is! Attendance) continue;
+      if (value.date.weekday != weekdayNumber) continue;
 
       final recordDate = DateTime(
-        record.date.year,
-        record.date.month,
-        record.date.day,
+        value.date.year,
+        value.date.month,
+        value.date.day,
       );
-      if (recordDate.isBefore(today)) {
-        continue; // skip past dates (they have snapshots)
-      }
+      if (!recordDate.isBefore(today)) continue;
 
-      if (record.slotIndex == slotIndex) {
-        // This is the removed slot — delete it.
-        attendanceBox.delete(k);
-        _attendanceProvider?.records.remove(kStr);
-      } else if (record.slotIndex > slotIndex) {
-        // Higher slot index — shift down by 1.
-        attendanceBox.delete(k);
-        _attendanceProvider?.records.remove(kStr);
-
-        record.slotIndex = record.slotIndex - 1;
-
-        final dateIso = recordDate.toIso8601String();
-        final newKey = "${dateIso}_${record.slotIndex}";
-        attendanceBox.put(newKey, record);
-        _attendanceProvider?.records[newKey] = record;
-      }
+      pastDates.add(recordDate.toIso8601String());
     }
+
+    for (final dateKey in pastDates) {
+      if (_dateBaseOverrides.containsKey(dateKey)) continue;
+
+      _dateBaseOverrides[dateKey] = List<String>.from(baseSlots);
+      _dateBaseSlotIdOverrides[dateKey] = List<String>.from(baseSlotIds);
+      _persistDateOverride(dateKey);
+    }
+  }
+
+  void removeSubjectAt(String day, int index) {
+    final slots = _week[day];
+    final slotIds = _weekSlotIds[day];
+    if (slots == null || slotIds == null) return;
+    if (index < 0 || index >= slots.length || index >= slotIds.length) return;
+
+    final weekdayNumber = days.indexOf(day) + 1;
+    _snapshotPastDates(
+      weekdayNumber,
+      List<String>.from(slots),
+      List<String>.from(slotIds),
+    );
+
+    final removedSlotId = slotIds[index];
+    _attendanceProvider.deleteAttendanceForSlotFromDateOnward(
+      weekdayNumber,
+      removedSlotId,
+    );
+
+    slots.removeAt(index);
+    slotIds.removeAt(index);
+    _persistWeek(day);
+
+    _attendanceProvider.notifyIfChanged();
+    notifyListeners();
   }
 
   void reorderSubject(String day, int oldIndex, int newIndex) {
     if (oldIndex == newIndex) return;
 
     final slots = _week[day];
-    if (slots == null ||
-        oldIndex < 0 ||
+    final slotIds = _weekSlotIds[day];
+    if (slots == null || slotIds == null) return;
+    if (oldIndex < 0 ||
         oldIndex >= slots.length ||
         newIndex < 0 ||
         newIndex >= slots.length) {
       return;
     }
 
-    // 1. Snapshot past dates with the CURRENT base slots so history is preserved
     final weekdayNumber = days.indexOf(day) + 1;
-    _snapshotPastDates(day, weekdayNumber, List<String>.from(slots));
-
-    // 2. Perform the reorder on attendance records for today and future
-    // We need to swap/shift slotIndex in the attendanceBox.
-    _reindexAttendanceOnReorderFromTodayOnward(
+    _snapshotPastDates(
       weekdayNumber,
-      oldIndex,
-      newIndex,
+      List<String>.from(slots),
+      List<String>.from(slotIds),
     );
 
-    // 3. Physically reorder the slot in the current timetable.
-    final item = slots.removeAt(oldIndex);
-    slots.insert(newIndex, item);
-    DatabaseService.timetableBox.put(day, slots);
+    final subject = slots.removeAt(oldIndex);
+    final slotId = slotIds.removeAt(oldIndex);
+    slots.insert(newIndex, subject);
+    slotIds.insert(newIndex, slotId);
 
-    _attendanceProvider?.notifyIfChanged();
+    _persistWeek(day);
     notifyListeners();
-  }
-
-  void _reindexAttendanceOnReorderFromTodayOnward(
-    int weekdayNumber,
-    int oldIndex,
-    int newIndex,
-  ) {
-    final attendanceBox = DatabaseService.attendanceBox;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    final allKeys = attendanceBox.keys.toList();
-
-    final recordsToUpdate = <Attendance>[];
-    final keysToDelete = <String>[];
-
-    for (var k in allKeys) {
-      final kStr = k.toString();
-      final record = attendanceBox.get(k);
-      if (record == null || record is! Attendance) continue;
-      if (record.date.weekday != weekdayNumber) continue;
-
-      final recordDate = DateTime(
-        record.date.year,
-        record.date.month,
-        record.date.day,
-      );
-      if (recordDate.isBefore(today)) continue;
-
-      int currentSlot = record.slotIndex;
-      int? updatedSlot;
-
-      if (currentSlot == oldIndex) {
-        updatedSlot = newIndex;
-      } else if (oldIndex < newIndex &&
-          currentSlot > oldIndex &&
-          currentSlot <= newIndex) {
-        updatedSlot = currentSlot - 1;
-      } else if (oldIndex > newIndex &&
-          currentSlot >= newIndex &&
-          currentSlot < oldIndex) {
-        updatedSlot = currentSlot + 1;
-      }
-
-      if (updatedSlot != null) {
-        keysToDelete.add(kStr);
-        record.slotIndex = updatedSlot;
-        recordsToUpdate.add(record);
-      }
-    }
-
-    // Delete old keys first to avoid overwriting shifted records prematurely
-    for (var k in keysToDelete) {
-      attendanceBox.delete(k);
-      _attendanceProvider?.records.remove(k);
-    }
-
-    // Insert records with new indices
-    for (var record in recordsToUpdate) {
-      final dateIso = record.date.toIso8601String();
-      final newKey = "${dateIso}_${record.slotIndex}";
-      attendanceBox.put(newKey, record);
-      _attendanceProvider?.records[newKey] = record;
-    }
   }
 
   void updateDaySlots(String day, List<String> newSlots) {
-    final box = DatabaseService.timetableBox;
+    final oldSlots = _week[day] ?? [];
+    final oldSlotIds = _weekSlotIds[day] ?? [];
 
-    _week[day] = newSlots;
+    final newSlotIds = <String>[];
+    final usedOldIndices = <int>{};
 
-    box.put(day, newSlots);
+    for (final subjectId in newSlots) {
+      int matchIndex = -1;
+      for (int i = 0; i < oldSlots.length; i++) {
+        if (usedOldIndices.contains(i)) continue;
+        if (oldSlots[i] == subjectId) {
+          matchIndex = i;
+          break;
+        }
+      }
+
+      if (matchIndex >= 0) {
+        usedOldIndices.add(matchIndex);
+        newSlotIds.add(oldSlotIds[matchIndex]);
+      } else {
+        newSlotIds.add(const Uuid().v4());
+      }
+    }
+
+    _week[day] = List<String>.from(newSlots);
+    _weekSlotIds[day] = newSlotIds;
+    _persistWeek(day);
 
     notifyListeners();
   }
 
-  /// Compatibility methods (old code support)
-
   void assignSubject(String day, int index, String subjectId) {
     final slots = _week[day] ?? [];
+    final slotIds = _weekSlotIds[day] ?? [];
 
     if (index < slots.length) {
       slots[index] = subjectId;
     } else {
       slots.add(subjectId);
+      slotIds.add(const Uuid().v4());
     }
 
-    DatabaseService.timetableBox.put(day, slots);
+    _week[day] = slots;
+    _weekSlotIds[day] = slotIds;
+    _persistWeek(day);
 
     notifyListeners();
   }
@@ -417,154 +349,136 @@ class TimetableProvider extends ChangeNotifier {
     removeSubjectAt(day, index);
   }
 
-  /// Remove ONE slot at (day, index) from the weekly timetable AND delete
-  /// all past attendance records for that slot on every occurrence of this
-  /// weekday. Called from timetable editor "Delete All Entries".
-  ///
-  /// Unlike [removeSubjectAt] ("Future Only"), this also purges history.
   void removeSlotEverywhere(String day, int index) {
     final slots = _week[day];
-    if (slots == null || index < 0 || index >= slots.length) return;
+    final slotIds = _weekSlotIds[day];
+    if (slots == null || slotIds == null) return;
+    if (index < 0 || index >= slots.length || index >= slotIds.length) return;
 
     final subjectId = slots[index];
-
-    // Find the weekday number (1=mon..7=sun).
+    final removedSlotId = slotIds[index];
     final weekdayNumber = days.indexOf(day) + 1;
 
-    // Delete all attendance records for this subject on this weekday AND shift indices
-    // down for everything that comes after it, both in history and future.
-    _removeAllEntriesAndReindex(subjectId, weekdayNumber, index);
+    final overrideKeys = _dateBaseOverrides.keys.toList();
+    for (final dateKey in overrideKeys) {
+      final parsed = DateTime.tryParse(dateKey);
+      if (parsed == null || parsed.weekday != weekdayNumber) continue;
 
-    // Physically remove the slot from the current timetable.
+      final overrideSlots = _dateBaseOverrides[dateKey] ?? [];
+      final overrideSlotIds = _dateBaseSlotIdOverrides[dateKey] ?? [];
+
+      final removedIndices = <int>[];
+      for (int i = 0; i < overrideSlots.length; i++) {
+        final sameSlotId =
+            i < overrideSlotIds.length && overrideSlotIds[i] == removedSlotId;
+        final sameSubject = overrideSlots[i] == subjectId;
+        if (sameSlotId || sameSubject) {
+          removedIndices.add(i);
+        }
+      }
+
+      for (int i = removedIndices.length - 1; i >= 0; i--) {
+        final removeAt = removedIndices[i];
+        if (removeAt < overrideSlots.length) {
+          overrideSlots.removeAt(removeAt);
+        }
+        if (removeAt < overrideSlotIds.length) {
+          overrideSlotIds.removeAt(removeAt);
+        }
+      }
+
+      _dateBaseOverrides[dateKey] = overrideSlots;
+      _dateBaseSlotIdOverrides[dateKey] = overrideSlotIds;
+      _persistDateOverride(dateKey);
+    }
+
+    _attendanceProvider.deleteAttendanceForSlot(removedSlotId);
+
     slots.removeAt(index);
-    DatabaseService.timetableBox.put(day, slots);
+    slotIds.removeAt(index);
+    _persistWeek(day);
 
-    _attendanceProvider?.notifyIfChanged();
+    _attendanceProvider.notifyIfChanged();
     notifyListeners();
   }
 
-  void _removeAllEntriesAndReindex(
-    String subjectId,
-    int weekdayNumber,
-    int currentIndexToRemove,
-  ) {
-    final attendanceBox = DatabaseService.attendanceBox;
-    final overridesBox = DatabaseService.timetableRemovalsBox;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+  void removeRemovalsForSubject(String subjectId) {
+    final keys = _dateBaseOverrides.keys.toList();
 
-    final allKeys = attendanceBox.keys.toList();
-    final recordsToUpdate = <Attendance>[];
-    final keysToDelete = <String>[];
+    for (final key in keys) {
+      final slots = _dateBaseOverrides[key] ?? [];
+      final slotIds = _dateBaseSlotIdOverrides[key] ?? [];
 
-    final dateToRemoveIndexMap = <String, int>{};
-
-    final overrideKeysToUpdate = <String>[];
-    for (var entry in _dateBaseOverrides.entries) {
-      final parsed = DateTime.tryParse(entry.key);
-      if (parsed == null || parsed.weekday != weekdayNumber) continue;
-
-      final idx = entry.value.indexOf(subjectId);
-      if (idx >= 0) {
-        entry.value.removeAt(idx);
-        overrideKeysToUpdate.add(entry.key);
-        dateToRemoveIndexMap[entry.key] = idx;
-      }
-    }
-
-    for (var key in overrideKeysToUpdate) {
-      final slots = _dateBaseOverrides[key]!;
-      if (slots.isEmpty) {
-        _dateBaseOverrides.remove(key);
-        overridesBox.delete(key);
-      } else {
-        overridesBox.put(key, slots);
-      }
-    }
-
-    // Step 2: Iterate attendance records. Find the index that was removed for this record's date.
-    for (var k in allKeys) {
-      final kStr = k.toString();
-      final record = attendanceBox.get(k);
-      if (record == null || record is! Attendance) continue;
-      if (record.date.weekday != weekdayNumber) continue;
-
-      final recordDate = DateTime(
-        record.date.year,
-        record.date.month,
-        record.date.day,
-      );
-      final dateIso = recordDate.toIso8601String();
-
-      // Determine what index was removed for this specific date
-      int removedIdx = currentIndexToRemove;
-
-      if (recordDate.isBefore(today)) {
-        if (dateToRemoveIndexMap.containsKey(dateIso)) {
-          removedIdx = dateToRemoveIndexMap[dateIso]!;
-        } else if (_dateBaseOverrides.containsKey(dateIso)) {
-          continue;
-        }
+      final removedIndices = <int>[];
+      for (int i = 0; i < slots.length; i++) {
+        if (slots[i] == subjectId) removedIndices.add(i);
       }
 
-      int currentSlot = record.slotIndex;
-
-      if (currentSlot == removedIdx) {
-        // This is the record for the deleted slot itself. Only delete if it matches subjectId.
-        if (record.subjectId == subjectId) {
-          keysToDelete.add(kStr);
-        }
-      } else if (currentSlot > removedIdx) {
-        // Shift down
-        keysToDelete.add(kStr);
-        record.slotIndex = currentSlot - 1;
-        recordsToUpdate.add(record);
+      for (int i = removedIndices.length - 1; i >= 0; i--) {
+        final removeAt = removedIndices[i];
+        if (removeAt < slots.length) slots.removeAt(removeAt);
+        if (removeAt < slotIds.length) slotIds.removeAt(removeAt);
       }
-    }
 
-    // Apply the deletions and updates
-    for (var k in keysToDelete) {
-      attendanceBox.delete(k);
-      _attendanceProvider?.records.remove(k);
-    }
-
-    for (var record in recordsToUpdate) {
-      final dateIso = record.date.toIso8601String();
-      final newKey = "${dateIso}_${record.slotIndex}";
-      attendanceBox.put(newKey, record);
-      _attendanceProvider?.records[newKey] = record;
+      _dateBaseOverrides[key] = slots;
+      _dateBaseSlotIdOverrides[key] = slotIds;
+      _persistDateOverride(key);
     }
   }
 
-  /// Remove all overrides and attendance for a subject (used when subject
-  /// is deleted completely).
-  void removeRemovalsForSubject(String subjectId) {
-    final overridesBox = DatabaseService.timetableRemovalsBox;
+  void removeSubjectEverywhereById(String subjectId) {
+    for (final day in days) {
+      final slots = _week[day] ?? [];
+      final slotIds = _weekSlotIds[day] ?? [];
 
-    final keysToUpdate = <String>[];
-
-    for (var entry in _dateBaseOverrides.entries) {
-      if (entry.value.contains(subjectId)) {
-        entry.value.removeWhere((s) => s == subjectId);
-        keysToUpdate.add(entry.key);
+      for (int i = slots.length - 1; i >= 0; i--) {
+        if (slots[i] != subjectId) continue;
+        final slotId = slotIds[i];
+        _attendanceProvider.deleteAttendanceForSlot(slotId);
+        slots.removeAt(i);
+        slotIds.removeAt(i);
       }
+
+      _week[day] = slots;
+      _weekSlotIds[day] = slotIds;
+      _persistWeek(day);
     }
 
-    for (var key in keysToUpdate) {
-      final slots = _dateBaseOverrides[key]!;
-      if (slots.isEmpty) {
-        _dateBaseOverrides.remove(key);
-        overridesBox.delete(key);
-      } else {
-        overridesBox.put(key, slots);
+    final extraKeys = _extraSlots.keys.toList();
+    for (final dateKey in extraKeys) {
+      final slots = _extraSlots[dateKey] ?? [];
+      final slotIds = _extraSlotIds[dateKey] ?? [];
+      final date = DateTime.tryParse(dateKey);
+
+      for (int i = slots.length - 1; i >= 0; i--) {
+        if (slots[i] != subjectId) continue;
+        final slotId = slotIds[i];
+        if (date != null) {
+          _attendanceProvider.deleteAttendanceForDateSlot(date, slotId);
+        } else {
+          _attendanceProvider.deleteAttendanceForSlot(slotId);
+        }
+        slots.removeAt(i);
+        slotIds.removeAt(i);
       }
+
+      _extraSlots[dateKey] = slots;
+      _extraSlotIds[dateKey] = slotIds;
+      _persistExtra(dateKey);
     }
+
+    removeRemovalsForSubject(subjectId);
+    _attendanceProvider.notifyIfChanged();
+    notifyListeners();
   }
 
   void reload() {
     _week.clear();
+    _weekSlotIds.clear();
     _extraSlots.clear();
+    _extraSlotIds.clear();
     _dateBaseOverrides.clear();
+    _dateBaseSlotIdOverrides.clear();
 
     try {
       DatabaseService.timetableBox.clear();
@@ -574,93 +488,47 @@ class TimetableProvider extends ChangeNotifier {
       DatabaseService.timetableRemovalsBox.clear();
     } catch (_) {}
 
-    for (var day in days) {
+    try {
+      DatabaseService.timetableSlotIdsBox.clear();
+    } catch (_) {}
+
+    for (final day in days) {
       _week[day] = [];
+      _weekSlotIds[day] = [];
     }
 
     notifyListeners();
   }
 
   void addSubjectToDate(DateTime date, String subjectId) {
-    final box = DatabaseService.timetableBox;
-
     final key = buildDateKey(date);
-
     final slots = _extraSlots[key] ?? [];
+    final slotIds = _extraSlotIds[key] ?? [];
 
     slots.add(subjectId);
+    slotIds.add(const Uuid().v4());
 
     _extraSlots[key] = slots;
-
-    box.put(key, slots);
+    _extraSlotIds[key] = slotIds;
+    _persistExtra(key);
 
     notifyListeners();
   }
 
   void removeExtraSubject(DateTime date, int index) {
     final key = buildDateKey(date);
-
     final slots = _extraSlots[key];
+    final slotIds = _extraSlotIds[key];
+    if (slots == null || slotIds == null) return;
+    if (index < 0 || index >= slots.length || index >= slotIds.length) return;
 
-    if (slots == null) return;
-
-    if (index < 0 || index >= slots.length) return;
-
+    final removedSlotId = slotIds[index];
     slots.removeAt(index);
+    slotIds.removeAt(index);
+    _persistExtra(key);
 
-    final box = DatabaseService.timetableBox;
-
-    if (slots.isEmpty) {
-      _extraSlots.remove(key);
-      box.delete(key);
-    } else {
-      _extraSlots[key] = slots;
-      box.put(key, slots);
-    }
-
-    // Fix attendance records: remove the deleted slot's record,
-    // and re-index any records with higher slot indices.
-    final attendanceBox = DatabaseService.attendanceBox;
-
-    final dayKey = days[date.weekday - 1];
-    final d = DateTime(date.year, date.month, date.day);
-    final dateKeyStr = buildDateKey(date);
-
-    // Base count for this date: use override if present, else current week.
-    final baseSlots = _dateBaseOverrides[dateKeyStr] ?? (_week[dayKey] ?? []);
-    final baseCount = baseSlots.length;
-
-    final removedSlotIndex = baseCount + index;
-
-    final datePrefix = "${d.toIso8601String()}_";
-
-    final keys = attendanceBox.keys.toList();
-
-    for (var k in keys) {
-      final kStr = k.toString();
-
-      if (!kStr.startsWith(datePrefix)) continue;
-
-      final record = attendanceBox.get(k);
-
-      if (record == null || record is! Attendance) continue;
-
-      if (record.slotIndex == removedSlotIndex) {
-        attendanceBox.delete(k);
-        _attendanceProvider?.records.remove(kStr);
-      } else if (record.slotIndex > removedSlotIndex) {
-        attendanceBox.delete(k);
-        _attendanceProvider?.records.remove(kStr);
-
-        record.slotIndex = record.slotIndex - 1;
-
-        final newKey = "${d.toIso8601String()}_${record.slotIndex}";
-        attendanceBox.put(newKey, record);
-        _attendanceProvider?.records[newKey] = record;
-      }
-    }
-
-    _attendanceProvider?.notifyIfChanged();
+    _attendanceProvider.deleteAttendanceForDateSlot(date, removedSlotId);
+    _attendanceProvider.notifyIfChanged();
 
     notifyListeners();
   }

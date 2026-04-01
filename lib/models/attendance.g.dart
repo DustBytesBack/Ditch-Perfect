@@ -70,13 +70,14 @@ class AttendanceAdapter extends TypeAdapter<Attendance> {
       subjectId: fields[1] as String,
       slotIndex: fields[2] as int,
       status: fields[3] as AttendanceStatus,
+      slotId: fields[4] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Attendance obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -84,7 +85,9 @@ class AttendanceAdapter extends TypeAdapter<Attendance> {
       ..writeByte(2)
       ..write(obj.slotIndex)
       ..writeByte(3)
-      ..write(obj.status);
+      ..write(obj.status)
+      ..writeByte(4)
+      ..write(obj.slotId);
   }
 
   @override

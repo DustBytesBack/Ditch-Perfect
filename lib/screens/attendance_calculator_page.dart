@@ -92,7 +92,7 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
 
     final stats = selectedSubject == null
         ? const AttendanceStats(attended: 0, total: 0)
-        : calculateStats(selectedSubject.id, attendance.records.values);
+        : attendance.getStatsForSubject(selectedSubject.id);
 
     final currentPercent = stats.total == 0
         ? 100.0
@@ -245,20 +245,25 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                                 border: OutlineInputBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(18),
-                                                  borderSide: (isDynamic || isAbsolute) 
-                                                      ? BorderSide(color: scheme.outlineVariant) 
+                                                  borderSide:
+                                                      (isDynamic || isAbsolute)
+                                                      ? BorderSide(
+                                                          color: scheme
+                                                              .outlineVariant,
+                                                        )
                                                       : BorderSide.none,
                                                 ),
-                                                enabledBorder:
-                                                    OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            18,
-                                                          ),
-                                                      borderSide: (isDynamic || isAbsolute) 
-                                                          ? BorderSide(color: scheme.outlineVariant) 
-                                                          : BorderSide.none,
-                                                    ),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(18),
+                                                  borderSide:
+                                                      (isDynamic || isAbsolute)
+                                                      ? BorderSide(
+                                                          color: scheme
+                                                              .outlineVariant,
+                                                        )
+                                                      : BorderSide.none,
+                                                ),
                                                 focusedBorder:
                                                     OutlineInputBorder(
                                                       borderRadius:
@@ -377,8 +382,12 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                               border: OutlineInputBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(16),
-                                                borderSide: (isDynamic || isAbsolute) 
-                                                    ? BorderSide(color: scheme.outlineVariant) 
+                                                borderSide:
+                                                    (isDynamic || isAbsolute)
+                                                    ? BorderSide(
+                                                        color: scheme
+                                                            .outlineVariant,
+                                                      )
                                                     : BorderSide.none,
                                               ),
                                               contentPadding:
@@ -426,8 +435,9 @@ class _AttendanceCalculatorPageState extends State<AttendanceCalculatorPage> {
                                       onChanged: (value) {
                                         HapticFeedback.selectionClick();
                                         setState(() {
-                                          _futureClassesController.text =
-                                              value.toInt().toString();
+                                          _futureClassesController.text = value
+                                              .toInt()
+                                              .toString();
                                         });
                                       },
                                     ),

@@ -36,11 +36,15 @@ class Attendance {
   @HiveField(3)
   AttendanceStatus status;
 
+  @HiveField(4)
+  String? slotId;
+
   Attendance({
     required this.date,
     required this.subjectId,
     required this.slotIndex,
     this.status = AttendanceStatus.none,
+    this.slotId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -48,6 +52,7 @@ class Attendance {
     'subjectId': subjectId,
     'slotIndex': slotIndex,
     'status': status.toJson(),
+    'slotId': slotId,
   };
 
   factory Attendance.fromJson(Map<String, dynamic> json) => Attendance(
@@ -55,5 +60,6 @@ class Attendance {
     subjectId: json['subjectId'],
     slotIndex: json['slotIndex'],
     status: AttendanceStatus.fromJson(json['status']),
+    slotId: json['slotId'] as String?,
   );
 }

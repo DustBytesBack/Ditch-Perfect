@@ -9,8 +9,6 @@ import '../providers/attendance_provider.dart';
 import '../providers/settings_provider.dart';
 import '../models/attendance.dart';
 import '../models/subject.dart';
-import '../utils/attendance_utils.dart';
-import '../utils/holiday_utils.dart';
 
 class DayTimetable extends StatelessWidget {
   final DateTime date;
@@ -83,8 +81,9 @@ class DayTimetable extends StatelessWidget {
     final minAttendance = context.watch<SettingsProvider>().minAttendance;
 
     final slots = timetable.getSlotsForDate(date);
+    final slotIds = timetable.getSlotIdsForDate(date);
 
-    final baseSlots = timetable.getDaySlots(weekdayKey(date));
+    final baseSlots = timetable.getBaseSlotsForDate(date);
     final baseCount = baseSlots.length;
 
     return ListView.builder(
@@ -98,9 +97,14 @@ class DayTimetable extends StatelessWidget {
           orElse: () => Subject(id: "", name: "", shortName: ""),
         );
 
-        final status = attendance.getStatus(date, index);
+        final slotId = slotIds[index];
+        final status = attendance.getStatus(
+          date,
+          slotId,
+          legacySlotIndex: index,
+        );
 
-        final stats = calculateStats(subject.id, attendance.records.values);
+        final stats = attendance.getStatsForSubject(subject.id);
 
         int attended = stats.attended;
         int total = stats.total;
@@ -253,7 +257,11 @@ class DayTimetable extends StatelessWidget {
                     Icons.clear_all_outlined,
                     Colors.grey,
                     () {
-                      attendance.clearAttendance(date, index);
+                      attendance.clearAttendance(
+                        date,
+                        slotId,
+                        legacySlotIndex: index,
+                      );
                     },
                   ),
 
@@ -270,8 +278,9 @@ class DayTimetable extends StatelessWidget {
                       attendance.markAttendance(
                         date,
                         subject.id,
-                        index,
+                        slotId,
                         AttendanceStatus.cancelled,
+                        slotIndex: index,
                       );
                     },
                   ),
@@ -289,8 +298,9 @@ class DayTimetable extends StatelessWidget {
                       attendance.markAttendance(
                         date,
                         subject.id,
-                        index,
+                        slotId,
                         AttendanceStatus.absent,
+                        slotIndex: index,
                       );
                     },
                   ),
@@ -308,8 +318,9 @@ class DayTimetable extends StatelessWidget {
                       attendance.markAttendance(
                         date,
                         subject.id,
-                        index,
+                        slotId,
                         AttendanceStatus.present,
+                        slotIndex: index,
                       );
                     },
                   ),

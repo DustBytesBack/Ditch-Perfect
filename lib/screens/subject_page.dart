@@ -9,7 +9,6 @@ import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/attendance_utils.dart';
 import '../models/subject.dart';
-import '../models/attendance.dart';
 import '../widgets/slidable_tile.dart';
 
 class SubjectPage extends StatefulWidget {
@@ -51,7 +50,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final themeProvider = context.read<ThemeProvider>();
     final isDynamic = themeProvider.isDynamicMode;
     final isAbsolute = themeProvider.absoluteMode;
-    
+
     final nameController = TextEditingController();
     final shortController = TextEditingController();
 
@@ -78,14 +77,22 @@ class _SubjectPageState extends State<SubjectPage> {
                     ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -112,14 +119,22 @@ class _SubjectPageState extends State<SubjectPage> {
                     ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -254,20 +269,27 @@ class _SubjectPageState extends State<SubjectPage> {
                     labelText: "Subject Name",
                     prefixIcon: const Icon(Icons.subject),
                     filled: true,
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: .5),
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -289,20 +311,27 @@ class _SubjectPageState extends State<SubjectPage> {
                     labelText: "Short Name (max 8 letters)",
                     prefixIcon: const Icon(Icons.short_text),
                     filled: true,
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: .5),
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withValues(alpha: .5),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(28),
-                      borderSide: (isDynamic || isAbsolute) 
-                          ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                      borderSide: (isDynamic || isAbsolute)
+                          ? BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            )
                           : BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -375,7 +404,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final themeProvider = context.read<ThemeProvider>();
     final isDynamic = themeProvider.isDynamicMode;
     final isAbsolute = themeProvider.absoluteMode;
-    
+
     final percentController = TextEditingController(
       text: stats.total == 0 ? '' : stats.percentage.toStringAsFixed(2),
     );
@@ -418,14 +447,22 @@ class _SubjectPageState extends State<SubjectPage> {
                           .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: (isDynamic || isAbsolute) 
-                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        borderSide: (isDynamic || isAbsolute)
+                            ? BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              )
                             : BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: (isDynamic || isAbsolute) 
-                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        borderSide: (isDynamic || isAbsolute)
+                            ? BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              )
                             : BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -464,14 +501,22 @@ class _SubjectPageState extends State<SubjectPage> {
                           .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: (isDynamic || isAbsolute) 
-                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        borderSide: (isDynamic || isAbsolute)
+                            ? BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              )
                             : BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: (isDynamic || isAbsolute) 
-                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        borderSide: (isDynamic || isAbsolute)
+                            ? BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              )
                             : BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -534,14 +579,22 @@ class _SubjectPageState extends State<SubjectPage> {
                           .withValues(alpha: .5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: (isDynamic || isAbsolute) 
-                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        borderSide: (isDynamic || isAbsolute)
+                            ? BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              )
                             : BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: (isDynamic || isAbsolute) 
-                            ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant) 
+                        borderSide: (isDynamic || isAbsolute)
+                            ? BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              )
                             : BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -561,7 +614,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   child: const Text('Cancel'),
                 ),
                 FilledButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final percent = double.tryParse(
                       percentController.text.trim(),
                     );
@@ -592,9 +645,18 @@ class _SubjectPageState extends State<SubjectPage> {
 
                     if (inputMode == 'total') {
                       total = knownValue;
-                      attended = ((percent / 100) * total).round();
+
+                      if (total == 0) {
+                        attended = 0;
+                      } else {
+                        attended = ((percent / 100) * total)
+                            .round()
+                            .clamp(0, total)
+                            .toInt();
+                      }
                     } else {
                       attended = knownValue;
+
                       if (percent == 0) {
                         if (attended > 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -606,9 +668,16 @@ class _SubjectPageState extends State<SubjectPage> {
                           );
                           return;
                         }
+
                         total = 0;
+                      } else if (percent == 100) {
+                        total = attended;
                       } else {
-                        total = (attended / (percent / 100)).round();
+                        final estimatedTotal = (attended * 100 / percent)
+                            .round();
+                        total = estimatedTotal < attended
+                            ? attended
+                            : estimatedTotal;
                       }
                     }
 
@@ -627,16 +696,44 @@ class _SubjectPageState extends State<SubjectPage> {
                         ? 0.0
                         : (attended / total) * 100;
 
-                    if ((computedPercent - percent).abs() > 0.6) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Those values do not produce a close enough attendance percentage',
+                    final exactMatch =
+                        ((total == 0 && percent == 0) ||
+                        (computedPercent - percent).abs() < 0.0001);
+
+                    final shouldReplace = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        final scheme = Theme.of(context).colorScheme;
+                        return AlertDialog(
+                          title: const Text('Replace Attendance Records?'),
+                          content: const Text(
+                            'This will replace all past attendance records for this subject. This action cannot be undone.',
                           ),
-                        ),
-                      );
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(
+                                'Replace',
+                                style: TextStyle(
+                                  color: scheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (shouldReplace != true) {
                       return;
                     }
+
+                    if (!context.mounted) return;
 
                     context
                         .read<AttendanceProvider>()
@@ -645,6 +742,16 @@ class _SubjectPageState extends State<SubjectPage> {
                           attended: attended,
                           total: total,
                         );
+
+                    if (!exactMatch && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Exact match not possible. Saved nearest: $attended/$total (${computedPercent.toStringAsFixed(2)}%)',
+                          ),
+                        ),
+                      );
+                    }
 
                     Navigator.pop(context);
                   },
@@ -665,25 +772,10 @@ class _SubjectPageState extends State<SubjectPage> {
   ) {
     final scheme = Theme.of(context).colorScheme;
 
-    final attendanceProvider = context.read<AttendanceProvider>();
-
-    final records = attendanceProvider.records.values;
-
-    int attended = 0;
-    int missed = 0;
-    int cancelled = 0;
-
-    for (final r in records) {
-      if (r.subjectId != subject.id) continue;
-
-      if (r.status == AttendanceStatus.present) attended++;
-
-      if (r.status == AttendanceStatus.absent) missed++;
-
-      if (r.status == AttendanceStatus.cancelled) cancelled++;
-    }
-
-    final total = attended + missed;
+    final attended = stats.attended;
+    final missed = stats.missed;
+    final cancelled = stats.cancelled;
+    final total = stats.total;
 
     showModalBottomSheet(
       context: context,
@@ -698,10 +790,12 @@ class _SubjectPageState extends State<SubjectPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(subject.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              Text(
+                subject.name,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
               const SizedBox(height: 24),
 
@@ -939,9 +1033,8 @@ class _SubjectPageState extends State<SubjectPage> {
 
                         final subject = subjects[index];
 
-                        final stats = calculateStats(
+                        final stats = attendanceProvider.getStatsForSubject(
                           subject.id,
-                          attendanceProvider.records.values,
                         );
 
                         double percent = stats.total == 0
@@ -1276,7 +1369,10 @@ class _SubjectPageState extends State<SubjectPage> {
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCubic,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(32),
@@ -1289,60 +1385,59 @@ class _SubjectPageState extends State<SubjectPage> {
                   ],
                 ),
                 child: Row(
-                children: [
-                  Expanded(
-                    child: _selectionActionButton(
-                      context: context,
-                      icon: Icons.edit,
-                      color: scheme.primary,
-                      label: 'Rename',
-                      onTap: () {
-                        final subject = subjects.firstWhere(
-                          (s) => s.id == _selectedSubjectId,
-                        );
-                        setState(() => _selectedSubjectId = null);
-                        showRenameDialog(context, subject);
-                      },
+                  children: [
+                    Expanded(
+                      child: _selectionActionButton(
+                        context: context,
+                        icon: Icons.edit,
+                        color: scheme.primary,
+                        label: 'Rename',
+                        onTap: () {
+                          final subject = subjects.firstWhere(
+                            (s) => s.id == _selectedSubjectId,
+                          );
+                          setState(() => _selectedSubjectId = null);
+                          showRenameDialog(context, subject);
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: _selectionActionButton(
-                      context: context,
-                      icon: Icons.fact_check_outlined,
-                      color: scheme.primary,
-                      label: 'Attendance',
-                      onTap: () {
-                        final subject = subjects.firstWhere(
-                          (s) => s.id == _selectedSubjectId,
-                        );
-                        final stats = calculateStats(
-                          subject.id,
-                          attendanceProvider.records.values,
-                        );
-                        setState(() => _selectedSubjectId = null);
-                        showAttendanceEditDialog(context, subject, stats);
-                      },
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _selectionActionButton(
+                        context: context,
+                        icon: Icons.fact_check_outlined,
+                        color: scheme.primary,
+                        label: 'Attendance',
+                        onTap: () {
+                          final subject = subjects.firstWhere(
+                            (s) => s.id == _selectedSubjectId,
+                          );
+                          final stats = attendanceProvider.getStatsForSubject(
+                            subject.id,
+                          );
+                          setState(() => _selectedSubjectId = null);
+                          showAttendanceEditDialog(context, subject, stats);
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: _selectionActionButton(
-                      context: context,
-                      icon: Icons.delete,
-                      color: scheme.error,
-                      label: 'Delete',
-                      onTap: () {
-                        final subject = subjects.firstWhere(
-                          (s) => s.id == _selectedSubjectId,
-                        );
-                        setState(() => _selectedSubjectId = null);
-                        showDeleteDialog(context, subject);
-                      },
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _selectionActionButton(
+                        context: context,
+                        icon: Icons.delete,
+                        color: scheme.error,
+                        label: 'Delete',
+                        onTap: () {
+                          final subject = subjects.firstWhere(
+                            (s) => s.id == _selectedSubjectId,
+                          );
+                          setState(() => _selectedSubjectId = null);
+                          showDeleteDialog(context, subject);
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               ),
             ),
           ),

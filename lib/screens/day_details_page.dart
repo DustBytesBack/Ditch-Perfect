@@ -386,6 +386,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
     final date = _currentDate;
 
     final slots = timetable.getSlotsForDate(date);
+    final slotIds = timetable.getSlotIdsForDate(date);
 
     final isHolidayDay = isHoliday(date, timetable);
     final isNoTimetableDay = isNoTimetable(date, timetable);
@@ -599,6 +600,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                                               date,
                                               slots,
                                               AttendanceStatus.present,
+                                              slotIds: slotIds,
                                             );
                                           }
 
@@ -607,6 +609,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                                               date,
                                               slots,
                                               AttendanceStatus.absent,
+                                              slotIds: slotIds,
                                             );
                                           }
 
@@ -615,6 +618,7 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                                               date,
                                               slots,
                                               AttendanceStatus.cancelled,
+                                              slotIds: slotIds,
                                             );
                                           }
 
@@ -626,7 +630,8 @@ class _DayDetailsPageState extends State<DayDetailsPage> {
                                             ) {
                                               attendance.clearAttendance(
                                                 date,
-                                                i,
+                                                slotIds[i],
+                                                legacySlotIndex: i,
                                               );
                                             }
                                           }

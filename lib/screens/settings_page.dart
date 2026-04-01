@@ -150,17 +150,16 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool?> _showImportPreviewDialog(Map<String, dynamic> metadata) {
-    final String date =
-        metadata['exportedAt'] != null
-            ? DateTime.parse(metadata['exportedAt'])
-                .toLocal()
-                .toString()
-                .split('.')[0]
-            : 'Unknown';
+    final String date = metadata['exportedAt'] != null
+        ? DateTime.parse(
+            metadata['exportedAt'],
+          ).toLocal().toString().split('.')[0]
+        : 'Unknown';
     final int version = metadata['version'];
     final int subjectsCount = metadata['subjectsCount'];
-    final List<Map<String, dynamic>> subjects =
-        List<Map<String, dynamic>>.from(metadata['subjects']);
+    final List<Map<String, dynamic>> subjects = List<Map<String, dynamic>>.from(
+      metadata['subjects'],
+    );
     final String app = metadata['app'] ?? 'Unknown';
 
     return showDialog<bool>(
@@ -201,9 +200,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(
                   "Detailed Subject Preview:",
                   style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ConstrainedBox(
@@ -220,10 +219,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: subjects.length,
-                        separatorBuilder: (context, index) => Divider(
-                          height: 1,
-                          color: scheme.outlineVariant,
-                        ),
+                        separatorBuilder: (context, index) =>
+                            Divider(height: 1, color: scheme.outlineVariant),
                         itemBuilder: (context, index) {
                           final s = subjects[index];
                           final double perc = s['percentage'];
@@ -234,7 +231,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             visualDensity: VisualDensity.compact,
                             title: Text(
                               s['name'],
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             subtitle: Text(
                               "Present: ${s['present']} | Absent: ${s['absent']}",
@@ -248,7 +247,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   "${perc.toStringAsFixed(1)}%",
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: isLow ? scheme.error : scheme.primary,
+                                    color: isLow
+                                        ? scheme.error
+                                        : scheme.primary,
                                   ),
                                 ),
                                 Text(
@@ -528,6 +529,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 await DatabaseService.attendanceBox.clear();
                 await DatabaseService.timetableBox.clear();
                 await DatabaseService.timetableRemovalsBox.clear();
+                await DatabaseService.timetableSlotIdsBox.clear();
+                await DatabaseService.attendanceBaselinesBox.clear();
 
                 // Specifically reset the username lock
                 await DatabaseService.settingsBox.put("isUsernameSet", false);
@@ -762,10 +765,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
                                 onChangeEnd: (value) {
                                   HapticFeedback.lightImpact();
-                                  DatabaseService.settingsBox.put(
-                                    "minAttendance",
-                                    value.toInt(),
-                                  );
+                                  context
+                                      .read<SettingsProvider>()
+                                      .updateMinAttendance(
+                                        value.toInt().toDouble(),
+                                      );
                                 },
                               ),
                             ],
@@ -826,7 +830,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             },
                           ),
                         ),
-
 
                         const SizedBox(height: 16),
 
@@ -980,7 +983,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               alignment: Alignment.topCenter,
                               child: AnimatedOpacity(
                                 duration: const Duration(milliseconds: 250),
-                                opacity: themeProvider.isDynamicMode ? 0.0 : 1.0,
+                                opacity: themeProvider.isDynamicMode
+                                    ? 0.0
+                                    : 1.0,
                                 child: !themeProvider.isDynamicMode
                                     ? Column(
                                         children: [
@@ -1057,8 +1062,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                                   value:
                                                       themeProvider.pookieMode,
                                                   onChanged: (value) {
-                                                    HapticFeedback
-                                                        .lightImpact();
+                                                    HapticFeedback.lightImpact();
                                                     context
                                                         .read<ThemeProvider>()
                                                         .togglePookie(value);
@@ -1089,9 +1093,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                 decoration: BoxDecoration(
                                                   color: isAbsolute
                                                       ? scheme
-                                                              .surfaceContainerHigh
+                                                            .surfaceContainerHigh
                                                       : scheme
-                                                              .secondaryContainer,
+                                                            .secondaryContainer,
                                                   borderRadius:
                                                       const BorderRadius.only(
                                                         topLeft:
@@ -1106,13 +1110,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                                   border: Border.all(
                                                     color: isAbsolute
                                                         ? scheme.primary
-                                                                .withValues(
-                                                                  alpha: 0.2,
-                                                                )
+                                                              .withValues(
+                                                                alpha: 0.2,
+                                                              )
                                                         : scheme.primary
-                                                                .withValues(
-                                                                  alpha: 0.1,
-                                                                ),
+                                                              .withValues(
+                                                                alpha: 0.1,
+                                                              ),
                                                     width: 1.5,
                                                   ),
                                                   boxShadow: isAbsolute
@@ -1120,16 +1124,16 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       : [
                                                           BoxShadow(
                                                             color: scheme
-                                                                    .primary
-                                                                    .withValues(
-                                                                      alpha:
-                                                                          0.05,
-                                                                    ),
+                                                                .primary
+                                                                .withValues(
+                                                                  alpha: 0.05,
+                                                                ),
                                                             blurRadius: 10,
-                                                            offset: const Offset(
-                                                              0,
-                                                              4,
-                                                            ),
+                                                            offset:
+                                                                const Offset(
+                                                                  0,
+                                                                  4,
+                                                                ),
                                                           ),
                                                         ],
                                                 ),
@@ -1140,7 +1144,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                                         Icon(
                                                           Icons.palette,
                                                           color: scheme
-                                                                  .onSecondaryContainer,
+                                                              .onSecondaryContainer,
                                                         ),
                                                         const SizedBox(
                                                           width: 18,
@@ -1448,8 +1452,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-
-
   Widget _buildSelectionTile(
     BuildContext context, {
     required String title,
@@ -1495,7 +1497,10 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   subtitle,

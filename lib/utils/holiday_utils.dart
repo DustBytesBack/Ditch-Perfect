@@ -42,6 +42,7 @@ Color? getDayColor(
   TimetableProvider timetable,
 ) {
   final slots = timetable.getSlotsForDate(day);
+  final slotIds = timetable.getSlotIdsForDate(day);
 
   // Days with no subjects assigned
   if (slots.isEmpty) {
@@ -59,7 +60,7 @@ Color? getDayColor(
   int none = 0;
 
   for (int i = 0; i < slots.length; i++) {
-    final status = attendance.getStatus(day, i);
+    final status = attendance.getStatus(day, slotIds[i], legacySlotIndex: i);
 
     if (status == AttendanceStatus.present) {
       present++;

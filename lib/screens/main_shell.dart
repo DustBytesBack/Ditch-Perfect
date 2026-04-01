@@ -37,6 +37,14 @@ class _MainShellState extends State<MainShell> {
   static const int _rankPageIndex = 6;
   static const int _pageCount = 7;
 
+  static const String _homeId = 'home';
+  static const String _calendarId = 'calendar';
+  static const String _subjectsId = 'subjects';
+  static const String _timetableId = 'timetable';
+  static const String _settingsId = 'settings';
+  static const String _calculatorId = 'calculator';
+  static const String _rankId = 'rank';
+
   int currentIndex = 0;
   int previousIndex = 0;
   bool isNavExpanded = false;
@@ -50,8 +58,6 @@ class _MainShellState extends State<MainShell> {
   bool _isProcessingRestore = false;
   Uri? _lastProcessedUri;
   DateTime? _lastRestoreTime;
-
-
 
   List<NavigationDestination> _allDestinations = [
     const NavigationDestination(
@@ -130,7 +136,7 @@ class _MainShellState extends State<MainShell> {
 
   void _handleBackupLink(Uri uri) {
     if (kDebugMode) print("Received backup link: $uri");
-    
+
     // Debounce identical URIs arriving in short succession (common on Android)
     final now = DateTime.now();
     if (_lastProcessedUri == uri &&
@@ -190,10 +196,9 @@ class _MainShellState extends State<MainShell> {
       if (!mounted) return;
 
       final String date = metadata['exportedAt'] != null
-          ? DateTime.parse(metadata['exportedAt'])
-              .toLocal()
-              .toString()
-              .split('.')[0]
+          ? DateTime.parse(
+              metadata['exportedAt'],
+            ).toLocal().toString().split('.')[0]
           : 'Unknown';
       final int version = metadata['version'];
       final int subjects = metadata['subjectsCount'];
@@ -277,8 +282,16 @@ class _MainShellState extends State<MainShell> {
           context.read<SubjectProvider>().loadSubjects();
           context.read<AttendanceProvider>().loadAllAttendance();
           context.read<TimetableProvider>().loadTimetable();
-          context.read<SettingsProvider>().loadSettings();
+          final settingsProvider = context.read<SettingsProvider>();
+          settingsProvider.loadSettings();
           context.read<ThemeProvider>().loadTheme();
+
+          // Re-apply notification schedule from restored settings.
+          try {
+            await settingsProvider.rescheduleNotificationIfEnabled();
+          } catch (_) {
+            // Non-blocking: restore succeeded even if notification scheduling fails.
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -297,14 +310,23 @@ class _MainShellState extends State<MainShell> {
   void _loadNavOrder() {
     final savedOrder = DatabaseService.settingsBox.get("navOrder") as List?;
     if (savedOrder != null && savedOrder.length == _allDestinations.length) {
+      final remaining = List<NavigationDestination>.from(_allDestinations);
       final newDestinations = <NavigationDestination>[];
-      for (final label in savedOrder) {
-        final dest = _allDestinations.firstWhere(
-          (d) => d.label == label,
-          orElse: () => _allDestinations[0],
+
+      for (final raw in savedOrder) {
+        final key = raw.toString();
+        final idx = remaining.indexWhere(
+          (d) => _destinationId(d) == key || d.label == key,
         );
-        newDestinations.add(dest);
+        if (idx >= 0) {
+          newDestinations.add(remaining.removeAt(idx));
+        }
       }
+
+      if (newDestinations.length != _allDestinations.length) {
+        return;
+      }
+
       setState(() {
         _allDestinations = newDestinations;
       });
@@ -312,7 +334,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _saveNavOrder() {
-    final order = _allDestinations.map((d) => d.label).toList();
+    final order = _allDestinations.map(_destinationId).toList();
     DatabaseService.settingsBox.put("navOrder", order);
   }
 
@@ -325,26 +347,42 @@ class _MainShellState extends State<MainShell> {
   int _getDisplayIndex([int? specificCurrentIndex]) {
     int index = specificCurrentIndex ?? currentIndex;
     int displayIndex = index;
+
     if (index < _allDestinations.length) {
-      final label = _allDestinations[index].label;
-      if (label == "Home") {
+      final id = _destinationId(_allDestinations[index]);
+      if (id == _homeId) {
         displayIndex = 0;
-      } else if (label == "Calendar") {
+      } else if (id == _calendarId) {
         displayIndex = 1;
-      } else if (label == "Subjects") {
+      } else if (id == _subjectsId) {
         displayIndex = 2;
-      } else if (label == "Timetable") {
+      } else if (id == _timetableId) {
         displayIndex = 3;
-      } else if (label == "Settings") {
+      } else if (id == _settingsId) {
         displayIndex = 4;
-      } else if (label == "Calc") {
+      } else if (id == _calculatorId) {
         displayIndex = 5;
-      } else if (label == "Rank") {
+      } else if (id == _rankId) {
         displayIndex = 6;
       }
     }
+
     if (displayIndex >= _pageCount) displayIndex = 0;
     return displayIndex;
+  }
+
+  String _destinationId(NavigationDestination destination) {
+    final iconData = (destination.selectedIcon as Icon).icon;
+
+    if (iconData == Icons.home) return _homeId;
+    if (iconData == Icons.calendar_month) return _calendarId;
+    if (iconData == Icons.menu_book) return _subjectsId;
+    if (iconData == Icons.schedule) return _timetableId;
+    if (iconData == Icons.settings) return _settingsId;
+    if (iconData == Icons.calculate) return _calculatorId;
+    if (iconData == Icons.leaderboard) return _rankId;
+
+    return destination.label.toLowerCase();
   }
 
   Future<void> _onLaunchChecks() async {
@@ -537,132 +575,135 @@ class _MainShellState extends State<MainShell> {
                                     alignment: WrapAlignment.center,
                                     spacing: 0,
                                     runSpacing: 0,
-                                    children: List.generate(
-                                      _allDestinations.length,
-                                      (index) {
-                                        final dest = _allDestinations[index];
-                                        return LongPressDraggable<int>(
-                                          data: index,
-                                          feedback: Material(
-                                            color: Colors.transparent,
-                                            child: Opacity(
-                                              opacity: 0.8,
-                                              child: SizedBox(
-                                                width: itemWidth,
-                                                height: 65,
-                                                child: Center(
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                        (dest.icon as Icon)
-                                                            .icon,
-                                                        size: 24,
+                                    children: List.generate(_allDestinations.length, (
+                                      index,
+                                    ) {
+                                      final dest = _allDestinations[index];
+                                      return LongPressDraggable<int>(
+                                        data: index,
+                                        feedback: Material(
+                                          color: Colors.transparent,
+                                          child: Opacity(
+                                            opacity: 0.8,
+                                            child: SizedBox(
+                                              width: itemWidth,
+                                              height: 65,
+                                              child: Center(
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      (dest.icon as Icon).icon,
+                                                      size: 24,
+                                                      color: scheme.primary,
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      dest.label,
+                                                      style: TextStyle(
+                                                        fontSize: 10,
                                                         color: scheme.primary,
+                                                        fontWeight:
+                                                            FontWeight.w600,
                                                       ),
-                                                      const SizedBox(height: 4),
-                                                      Text(
-                                                        dest.label,
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          color: scheme.primary,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ),
                                           ),
-                                          childWhenDragging: SizedBox(
-                                            width: itemWidth,
-                                            height: 65,
-                                            child: Center(
-                                              child: Icon(
-                                                (dest.icon as Icon).icon,
-                                                size: 20,
-                                                color: scheme.onSurfaceVariant
-                                                    .withValues(alpha: 0.3),
-                                              ),
+                                        ),
+                                        childWhenDragging: SizedBox(
+                                          width: itemWidth,
+                                          height: 65,
+                                          child: Center(
+                                            child: Icon(
+                                              (dest.icon as Icon).icon,
+                                              size: 20,
+                                              color: scheme.onSurfaceVariant
+                                                  .withValues(alpha: 0.3),
                                             ),
                                           ),
-                                          onDragStarted: () {
-                                            HapticFeedback.lightImpact();
-                                          },
-                                          child: DragTarget<int>(
-                                            onWillAcceptWithDetails: (_) =>
-                                                true,
-                                            onAcceptWithDetails: (details) {
-                                              final oldIndex = details.data;
-                                              final newIndex = index;
-                                              if (oldIndex == newIndex) return;
-                                              HapticFeedback.selectionClick();
-                                              setState(() {
-                                                final item = _allDestinations
-                                                    .removeAt(oldIndex);
-                                                _allDestinations.insert(
-                                                  newIndex,
-                                                  item,
-                                                );
+                                        ),
+                                        onDragStarted: () {
+                                          HapticFeedback.lightImpact();
+                                        },
+                                        child: DragTarget<int>(
+                                          onWillAcceptWithDetails: (_) => true,
+                                          onAcceptWithDetails: (details) {
+                                            final oldIndex = details.data;
+                                            final newIndex = index;
+                                            if (oldIndex == newIndex) return;
+                                            HapticFeedback.selectionClick();
+                                            setState(() {
+                                              final item = _allDestinations
+                                                  .removeAt(oldIndex);
+                                              _allDestinations.insert(
+                                                newIndex,
+                                                item,
+                                              );
 
-                                                if (currentIndex == oldIndex) {
-                                                  currentIndex = newIndex;
-                                                } else if (oldIndex <
-                                                        newIndex &&
-                                                    currentIndex > oldIndex &&
-                                                    currentIndex <= newIndex) {
-                                                  currentIndex--;
-                                                } else if (oldIndex >
-                                                        newIndex &&
-                                                    currentIndex < oldIndex &&
-                                                    currentIndex >= newIndex) {
-                                                  currentIndex++;
-                                                }
-                                              });
-                                              _saveNavOrder();
-                                            },
-                                            builder:
-                                                (
-                                                  context,
-                                                  candidateData,
-                                                  rejectedData,
-                                                ) {
-                                                  final isHovered =
-                                                      candidateData.isNotEmpty;
-                                                  return AnimatedContainer(
-                                                    duration: const Duration(
-                                                      milliseconds: 150,
-                                                    ),
-                                                    width: itemWidth,
-                                                    height: 65,
-                                                    decoration: BoxDecoration(
-                                                      color: isHovered
-                                                          ? scheme
-                                                                .primaryContainer
-                                                                .withValues(
-                                                                  alpha: 0.5,
-                                                                )
-                                                          : Colors.transparent,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            16,
-                                                          ),
-                                                    ),
-                                                    child: navItem(
-                                                      dest,
-                                                      index,
-                                                      isReordering: true,
-                                                    ),
+                                              if (currentIndex == oldIndex) {
+                                                currentIndex = newIndex;
+                                              } else if (oldIndex < newIndex &&
+                                                  currentIndex > oldIndex &&
+                                                  currentIndex <= newIndex) {
+                                                currentIndex--;
+                                              } else if (oldIndex > newIndex &&
+                                                  currentIndex < oldIndex &&
+                                                  currentIndex >= newIndex) {
+                                                currentIndex++;
+                                              }
+
+                                              // Reordering changes destination indices.
+                                              // Reset transient secondary swap state so
+                                              // future tab taps don't unswap the wrong item.
+                                              _swappedSecondaryIndex = null;
+                                              _currentDisplayIndex =
+                                                  _getDisplayIndex(
+                                                    currentIndex,
                                                   );
-                                                },
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                            });
+                                            _saveNavOrder();
+                                          },
+                                          builder:
+                                              (
+                                                context,
+                                                candidateData,
+                                                rejectedData,
+                                              ) {
+                                                final isHovered =
+                                                    candidateData.isNotEmpty;
+                                                return AnimatedContainer(
+                                                  duration: const Duration(
+                                                    milliseconds: 150,
+                                                  ),
+                                                  width: itemWidth,
+                                                  height: 65,
+                                                  decoration: BoxDecoration(
+                                                    color: isHovered
+                                                        ? scheme
+                                                              .primaryContainer
+                                                              .withValues(
+                                                                alpha: 0.5,
+                                                              )
+                                                        : Colors.transparent,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
+                                                  ),
+                                                  child: navItem(
+                                                    dest,
+                                                    index,
+                                                    isReordering: true,
+                                                  ),
+                                                );
+                                              },
+                                        ),
+                                      );
+                                    }),
                                   ),
                                 ),
                               )
@@ -837,9 +878,7 @@ class _MainShellState extends State<MainShell> {
                 ? scheme.onPrimaryContainer
                 : scheme.onSurfaceVariant,
             fontWeight: selected ? FontWeight.w900 : FontWeight.w500,
-            fontVariations: <FontVariation>[
-              const FontVariation('wdth', 80),
-            ]
+            fontVariations: <FontVariation>[const FontVariation('wdth', 80)],
           ),
           child: Text(destination.label),
         ),
@@ -874,10 +913,7 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget secondaryNavItem(
-    NavigationDestination destination,
-    int index,
-  ) {
+  Widget secondaryNavItem(NavigationDestination destination, int index) {
     final scheme = Theme.of(context).colorScheme;
     final selected = currentIndex == index;
 

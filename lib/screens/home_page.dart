@@ -354,6 +354,7 @@ class HomePage extends StatelessWidget {
     final today = DateTime.now();
 
     final slots = timetable.getSlotsForDate(today);
+    final slotIds = timetable.getSlotIdsForDate(today);
 
     final isWeekend =
         today.weekday == DateTime.saturday || today.weekday == DateTime.sunday;
@@ -508,13 +509,16 @@ class HomePage extends StatelessWidget {
                             children: [
                               /// BULK ACTION BUTTONS
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   // UPDATE NOTIFICATION ICON
                                   Consumer<SettingsProvider>(
                                     builder: (context, settings, child) {
                                       final update = settings.updateInfo;
-                                      if (update == null) return const SizedBox.shrink();
+                                      if (update == null) {
+                                        return const SizedBox.shrink();
+                                      }
 
                                       return Container(
                                         margin: const EdgeInsets.only(left: 12),
@@ -537,99 +541,106 @@ class HomePage extends StatelessWidget {
                                   ),
 
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width * 0.4,
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.4,
 
-                                  child: SegmentedButton<BulkAction>(
-                                    style: SegmentedButton.styleFrom(
-                                      selectedBackgroundColor:
-                                          scheme.tertiaryContainer,
-                                      selectedForegroundColor:
-                                          scheme.onTertiaryContainer,
-                                      backgroundColor: scheme.tertiaryContainer
-                                          .withValues(alpha: .5),
-                                      foregroundColor: scheme
-                                          .onTertiaryContainer
-                                          .withValues(alpha: .8),
-                                      side: BorderSide(
-                                        color: scheme.tertiary.withValues(
-                                          alpha: 0.8,
+                                    child: SegmentedButton<BulkAction>(
+                                      style: SegmentedButton.styleFrom(
+                                        selectedBackgroundColor:
+                                            scheme.tertiaryContainer,
+                                        selectedForegroundColor:
+                                            scheme.onTertiaryContainer,
+                                        backgroundColor: scheme
+                                            .tertiaryContainer
+                                            .withValues(alpha: .5),
+                                        foregroundColor: scheme
+                                            .onTertiaryContainer
+                                            .withValues(alpha: .8),
+                                        side: BorderSide(
+                                          color: scheme.tertiary.withValues(
+                                            alpha: 0.8,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    segments: const [
-                                      ButtonSegment(
-                                        value: BulkAction.clear,
-                                        icon: Icon(Icons.clear_all_outlined),
-                                      ),
+                                      segments: const [
+                                        ButtonSegment(
+                                          value: BulkAction.clear,
+                                          icon: Icon(Icons.clear_all_outlined),
+                                        ),
 
-                                      ButtonSegment(
-                                        value: BulkAction.cancelled,
-                                        icon: Icon(Icons.block),
-                                      ),
+                                        ButtonSegment(
+                                          value: BulkAction.cancelled,
+                                          icon: Icon(Icons.block),
+                                        ),
 
-                                      ButtonSegment(
-                                        value: BulkAction.absent,
-                                        icon: Icon(Icons.close_rounded),
-                                      ),
+                                        ButtonSegment(
+                                          value: BulkAction.absent,
+                                          icon: Icon(Icons.close_rounded),
+                                        ),
 
-                                      ButtonSegment(
-                                        value: BulkAction.present,
-                                        icon: Icon(Icons.check),
-                                      ),
-                                    ],
+                                        ButtonSegment(
+                                          value: BulkAction.present,
+                                          icon: Icon(Icons.check),
+                                        ),
+                                      ],
 
-                                    selected: const <BulkAction>{},
-                                    emptySelectionAllowed: true,
+                                      selected: const <BulkAction>{},
+                                      emptySelectionAllowed: true,
 
-                                    onSelectionChanged:
-                                        (Set<BulkAction> selection) {
-                                          if (selection.isEmpty) return;
+                                      onSelectionChanged:
+                                          (Set<BulkAction> selection) {
+                                            if (selection.isEmpty) return;
 
-                                          HapticFeedback.mediumImpact();
+                                            HapticFeedback.mediumImpact();
 
-                                          final action = selection.first;
+                                            final action = selection.first;
 
-                                          if (action == BulkAction.present) {
-                                            attendance.markAll(
-                                              today,
-                                              slots,
-                                              AttendanceStatus.present,
-                                            );
-                                          }
-
-                                          if (action == BulkAction.absent) {
-                                            attendance.markAll(
-                                              today,
-                                              slots,
-                                              AttendanceStatus.absent,
-                                            );
-                                          }
-
-                                          if (action == BulkAction.cancelled) {
-                                            attendance.markAll(
-                                              today,
-                                              slots,
-                                              AttendanceStatus.cancelled,
-                                            );
-                                          }
-
-                                          if (action == BulkAction.clear) {
-                                            for (
-                                              int i = 0;
-                                              i < slots.length;
-                                              i++
-                                            ) {
-                                              attendance.clearAttendance(
+                                            if (action == BulkAction.present) {
+                                              attendance.markAll(
                                                 today,
-                                                i,
+                                                slots,
+                                                AttendanceStatus.present,
+                                                slotIds: slotIds,
                                               );
                                             }
-                                          }
-                                        },
+
+                                            if (action == BulkAction.absent) {
+                                              attendance.markAll(
+                                                today,
+                                                slots,
+                                                AttendanceStatus.absent,
+                                                slotIds: slotIds,
+                                              );
+                                            }
+
+                                            if (action ==
+                                                BulkAction.cancelled) {
+                                              attendance.markAll(
+                                                today,
+                                                slots,
+                                                AttendanceStatus.cancelled,
+                                                slotIds: slotIds,
+                                              );
+                                            }
+
+                                            if (action == BulkAction.clear) {
+                                              for (
+                                                int i = 0;
+                                                i < slots.length;
+                                                i++
+                                              ) {
+                                                attendance.clearAttendance(
+                                                  today,
+                                                  slotIds[i],
+                                                  legacySlotIndex: i,
+                                                );
+                                              }
+                                            }
+                                          },
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
 
                               const SizedBox(height: 14),
 

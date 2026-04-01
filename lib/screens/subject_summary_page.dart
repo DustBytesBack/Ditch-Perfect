@@ -8,7 +8,6 @@ import '../models/subject.dart';
 import '../models/attendance.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/theme_provider.dart';
-import '../utils/attendance_utils.dart';
 
 enum SortOption { dateNewest, dateOldest, status }
 
@@ -111,9 +110,8 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                   children: [
                     Text(
                       "Filter Records",
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     _optionTile(
@@ -297,10 +295,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     final scheme = Theme.of(context).colorScheme;
     final attendanceProvider = context.watch<AttendanceProvider>();
 
-    final stats = calculateStats(
-      widget.subject.id,
-      attendanceProvider.records.values,
-    );
+    final stats = attendanceProvider.getStatsForSubject(widget.subject.id);
 
     List<Attendance> records = attendanceProvider.records.values
         .where((r) => r.subjectId == widget.subject.id)
@@ -467,7 +462,8 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                           value: stats.total == 0
                               ? 1
                               : (stats.attended / stats.total),
-                          color: (stats.total == 0 ||
+                          color:
+                              (stats.total == 0 ||
                                   (stats.attended / stats.total) >= 0.75)
                               ? Colors.green
                               : scheme.error,
@@ -889,9 +885,9 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                     child: Text(
                       dateStr,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: scheme.onSurface,
-                          ),
+                        fontWeight: FontWeight.w900,
+                        color: scheme.onSurface,
+                      ),
                     ),
                   ),
                   // Status Badge
@@ -907,10 +903,10 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                     child: Text(
                       statusName,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
+                        color: statusColor,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ],
@@ -990,7 +986,9 @@ class _ExpressiveProgressBarState extends State<ExpressiveProgressBar>
         final currentProgress = widget.value * _revealAnimation.value;
         // If current progress is < 75%, show as error color (red)
         // Once it passes 75% AND the final target is also >= 75%, it will show as the final target color (green)
-        final displayColor = (currentProgress >= 0.75) ? widget.color : scheme.error;
+        final displayColor = (currentProgress >= 0.75)
+            ? widget.color
+            : scheme.error;
 
         return CustomPaint(
           size: const Size(double.infinity, 24),
@@ -1065,7 +1063,8 @@ class _WavyPainter extends CustomPainter {
           modulation = (width - x) / 4.0;
         }
 
-        final double y = centerY +
+        final double y =
+            centerY +
             amplitude *
                 modulation *
                 math.sin(

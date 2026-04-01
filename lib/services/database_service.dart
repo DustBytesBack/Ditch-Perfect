@@ -8,6 +8,8 @@ class DatabaseService {
   static const String timetableBoxName = "timetable";
   static const String settingsBoxName = "settings";
   static const String timetableRemovalsBoxName = "timetable_removals";
+  static const String timetableSlotIdsBoxName = "timetable_slot_ids";
+  static const String attendanceBaselinesBoxName = "attendance_baselines";
 
   static bool _initialized = false;
 
@@ -40,6 +42,10 @@ class DatabaseService {
       if (!Hive.isBoxOpen(settingsBoxName)) Hive.openBox(settingsBoxName),
       if (!Hive.isBoxOpen(timetableRemovalsBoxName))
         Hive.openBox(timetableRemovalsBoxName),
+      if (!Hive.isBoxOpen(timetableSlotIdsBoxName))
+        Hive.openBox(timetableSlotIdsBoxName),
+      if (!Hive.isBoxOpen(attendanceBaselinesBoxName))
+        Hive.openBox(attendanceBaselinesBoxName),
     ]);
 
     final settings = Hive.box(settingsBoxName);
@@ -71,4 +77,8 @@ class DatabaseService {
   static Box get settingsBox => Hive.box(settingsBoxName);
 
   static Box get timetableRemovalsBox => Hive.box(timetableRemovalsBoxName);
+
+  static Box get timetableSlotIdsBox => Hive.box(timetableSlotIdsBoxName);
+
+  static Box get attendanceBaselinesBox => Hive.box(attendanceBaselinesBoxName);
 }
