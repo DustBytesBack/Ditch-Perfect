@@ -11,8 +11,8 @@ import '../providers/attendance_provider.dart';
 import '../utils/update_checker.dart';
 import '../services/backup_service.dart';
 import '../widgets/wavy_progress_indicator.dart';
+import '../widgets/edit_username_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'edit_username_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -821,13 +821,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             onTap: () async {
                               HapticFeedback.lightImpact();
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const EditUsernamePage(),
-                                ),
-                              );
+                              await EditUsernameDialog.show(context);
                               if (mounted) setState(() {});
                             },
                           ),

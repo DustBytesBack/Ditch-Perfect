@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -7,8 +8,7 @@ import '../utils/ranking_utils.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/wavy_progress_indicator.dart';
-
-import 'edit_username_page.dart';
+import '../widgets/edit_username_dialog.dart';
 
 class RankPage extends StatefulWidget {
   const RankPage({super.key});
@@ -19,7 +19,6 @@ class RankPage extends StatefulWidget {
 
 class _RankPageState extends State<RankPage> {
   String? _username;
-  bool _isUsernameSet = false;
   bool _isUploading = false;
   int _refreshCounter = 0;
 
@@ -35,9 +34,6 @@ class _RankPageState extends State<RankPage> {
     if (!mounted) return;
     setState(() {
       _username = DatabaseService.settingsBox.get("username") as String?;
-      _isUsernameSet =
-          DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false)
-              as bool;
     });
   }
 
@@ -179,22 +175,31 @@ class _RankPageState extends State<RankPage> {
                                 )
                               : null,
                         ),
-                        child: IconButton(
-                          iconSize: 28,
-                          padding: const EdgeInsets.all(14),
-                          icon: Icon(Icons.edit, color: scheme.onSurface),
-                          onPressed: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const EditUsernamePage(),
+                        child: _isUploading
+                            ? const Padding(
+                                padding: EdgeInsets.all(14),
+                                child: SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: WavyCircularProgressIndicator(
+                                    size: 28,
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                              )
+                            : IconButton(
+                                iconSize: 28,
+                                padding: const EdgeInsets.all(14),
+                                icon: Icon(
+                                  Icons.cloud_upload_outlined,
+                                  color: scheme.onSurface,
+                                ),
+                                onPressed: () async {
+                                  HapticFeedback.mediumImpact();
+                                  await _submitRankingData();
+                                },
+                                tooltip: "Sync Ranking Data",
                               ),
-                            );
-                            _loadUsername();
-                          },
-                          tooltip: "Edit Username",
-                        ),
                       ),
 
                     ],
@@ -303,12 +308,16 @@ class _RankPageState extends State<RankPage> {
                         ),
                       )
                     : IconButton(
-                        onPressed: () => _submitRankingData(),
+                        onPressed: () async {
+                          HapticFeedback.lightImpact();
+                          await EditUsernameDialog.show(context);
+                          _loadUsername();
+                        },
                         icon: Icon(
-                          Icons.cloud_upload_outlined,
-                          color: scheme.primary,
+                          Icons.edit_rounded,
+                          color: scheme.tertiary,
                         ),
-                        tooltip: "Sync Now",
+                        tooltip: "Edit Username",
                       ),
             ],
           ),
