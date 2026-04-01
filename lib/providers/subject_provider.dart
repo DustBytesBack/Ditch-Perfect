@@ -5,6 +5,7 @@ import '../services/database_service.dart';
 import 'package:uuid/uuid.dart';
 import 'attendance_provider.dart';
 import 'timetable_provider.dart';
+import '../utils/ranking_utils.dart';
 
 class SubjectProvider extends ChangeNotifier {
   final List<Subject> _subjects = [];
@@ -48,6 +49,7 @@ class SubjectProvider extends ChangeNotifier {
     _subjects.add(subject);
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   void renameSubject(String id, String newName, String newShortName) {
@@ -61,6 +63,7 @@ class SubjectProvider extends ChangeNotifier {
     DatabaseService.subjectsBox.put(id, subject);
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   /// DELETE SUBJECT FROM FUTURE TIMETABLE ONLY
@@ -133,6 +136,7 @@ class SubjectProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   void reload() {
@@ -145,6 +149,7 @@ class SubjectProvider extends ChangeNotifier {
     } catch (_) {}
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   void updateMinAttendance(String subjectId, double value) {
@@ -155,6 +160,7 @@ class SubjectProvider extends ChangeNotifier {
     DatabaseService.subjectsBox.put(subject.id, subject);
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   /// DELETE SUBJECT COMPLETELY (PAST + FUTURE)
@@ -243,6 +249,7 @@ class SubjectProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   Subject? getSubjectById(String id) {

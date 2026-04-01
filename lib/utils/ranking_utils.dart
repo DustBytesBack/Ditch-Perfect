@@ -20,13 +20,24 @@ class RankingUtils {
   }
 
   /// Checks for internet and automatically uploads ranking data if a username is set.
-  static Future<void> checkAndAutoUpload() async {
-    final username = DatabaseService.settingsBox.get("username") as String?;
+  /// Only syncs if [force] is true OR if the number of pending changes exceeds the threshold (5).
+  static Future<void> checkAndAutoUpload({bool force = false}) async {
+    final box = DatabaseService.settingsBox;
+    final username = box.get("username") as String?;
     final isUsernameSet =
-        DatabaseService.settingsBox.get("isUsernameSet", defaultValue: false)
-            as bool;
+        box.get("isUsernameSet", defaultValue: false) as bool;
 
     if (!isUsernameSet || username == null || username.isEmpty) return;
+
+    // Logic for change-based threshold
+    if (!force) {
+      int count = box.get("pendingSyncCount", defaultValue: 0) as int;
+      count++;
+      if (count < 5) {
+        await box.put("pendingSyncCount", count);
+        return;
+      }
+    }
 
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult.contains(ConnectivityResult.none)) return;
@@ -74,5 +85,8 @@ class RankingUtils {
         .collection("rankings")
         .doc(uid)
         .set(dataMap);
+
+    // Reset pending sync count after successful upload
+    await DatabaseService.settingsBox.put("pendingSyncCount", 0);
   }
 }

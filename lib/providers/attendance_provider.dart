@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/attendance.dart';
 import '../services/database_service.dart';
+import '../utils/ranking_utils.dart';
 
 class AttendanceProvider extends ChangeNotifier {
   /// All attendance records from the Hive box, keyed by "date_slotIndex".
@@ -66,6 +67,7 @@ class AttendanceProvider extends ChangeNotifier {
     _records[key] = record;
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload();
   }
 
   void clearAttendance(DateTime date, int slotIndex) {
@@ -78,6 +80,7 @@ class AttendanceProvider extends ChangeNotifier {
     _records.remove(key);
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload();
   }
 
   AttendanceStatus getStatus(DateTime date, int slotIndex) {
@@ -109,6 +112,7 @@ class AttendanceProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload();
   }
 
   /// Delete all attendance records for a specific subject.
@@ -129,6 +133,7 @@ class AttendanceProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   void replaceSubjectAttendanceBaseline(
@@ -153,6 +158,7 @@ class AttendanceProvider extends ChangeNotifier {
 
     if (total <= 0) {
       notifyListeners();
+      RankingUtils.checkAndAutoUpload(force: true);
       return;
     }
 
@@ -195,6 +201,7 @@ class AttendanceProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 
   /// Notify listeners externally (e.g. when TimetableProvider modifies
@@ -214,5 +221,6 @@ class AttendanceProvider extends ChangeNotifier {
     } catch (_) {}
 
     notifyListeners();
+    RankingUtils.checkAndAutoUpload(force: true);
   }
 }

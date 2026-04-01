@@ -365,7 +365,7 @@ class _MainShellState extends State<MainShell> {
     }
 
     if (mounted) {
-      await RankingUtils.checkAndAutoUpload();
+      await RankingUtils.checkAndAutoUpload(force: true);
     }
   }
 
