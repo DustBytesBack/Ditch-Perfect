@@ -168,7 +168,12 @@ class AttendanceProvider extends ChangeNotifier {
     AttendanceStatus status, {
     int slotIndex = -1,
   }) {
-    final key = _slotIdKey(date, slotId);
+    // Determine the best key for this record to avoid collisions
+    // If slotId is generic/missing but we have a slotIndex, use legacy keying
+    final key = (slotId == "" || slotId == "-1") && slotIndex != -1
+        ? _legacyIndexKey(date, slotIndex)
+        : _slotIdKey(date, slotId);
+
     final record = Attendance(
       date: DateTime(date.year, date.month, date.day),
       subjectId: subjectId,

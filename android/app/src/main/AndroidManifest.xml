@@ -30,40 +30,72 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!--
-                Intent filters for .dpbk custom backup files.
-                
-                IMPORTANT: Android's pathPattern does NOT work with content:// URIs
-                (the URI path contains a document ID, not the filename).
-                For content:// we must use */* and validate the file in app code.
-                The app will check the display name for .dpbk extension and validate
-                metadata before processing.
-            -->
-            <!-- 1. Handle file:// URIs using strict extension matching -->
+            <!-- .dpbk backup file handlers -->
             <intent-filter android:label="Ditch Perfect Backup">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" />
-                <data android:host="*" />
-                <data android:pathPattern=".*\\.dpbk" />
-                <data android:pathPattern=".*\\..*\\.dpbk" />
+                <category android:name="android.intent.category.OPENABLE" />
+
+                <data android:scheme="file" android:host="*" android:pathPattern=".*\\.dpbk" />
+                <data android:scheme="file" android:host="*" android:pathPattern=".*\\..*\\.dpbk" />
             </intent-filter>
 
-            <!-- 2. Handle content:// URIs using compatible MIME types (JSON/Text) -->
-            <!-- We don't use pathPattern here because content URIs often use IDs instead of names -->
             <intent-filter android:label="Ditch Perfect Backup">
                 <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
 
+                <data android:scheme="content" android:mimeType="application/x-dpbk" />
+            </intent-filter>
+
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
+
+                <data android:scheme="content" android:mimeType="application/octet-stream" />
+            </intent-filter>
+
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="content" />
+                <data android:scheme="content" android:mimeType="application/octet-stream" />
+            </intent-filter>
 
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.OPENABLE" />
+
+                <data android:scheme="content" android:mimeType="*/*" android:host="*" android:pathSuffix=".dpbk" />
+                <data android:scheme="content" android:mimeType="*/*" android:host="*" android:pathPattern=".*\\.dpbk" />
+                <data android:scheme="content" android:mimeType="*/*" android:host="*" android:pathPattern=".*\\..*\\.dpbk" />
+            </intent-filter>
+
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/x-dpbk" />
-                <data android:mimeType="application/json" />
-                <data android:mimeType="text/plain" />
-                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <intent-filter android:label="Ditch Perfect Backup">
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-dpbk" />
             </intent-filter>
         </activity>
         <!-- flutter_local_notifications scheduled notification receiver -->

@@ -782,12 +782,12 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     }
 
     final iconBorderRadius = borderRadius.copyWith(
-      topRight: Radius.circular(10),
-      bottomRight: Radius.circular(10),
+      topRight: const Radius.circular(10),
+      bottomRight: const Radius.circular(10),
     );
     final dateBorderRadius = borderRadius.copyWith(
-      topLeft: Radius.circular(10),
-      bottomLeft: Radius.circular(10),
+      topLeft: const Radius.circular(10),
+      bottomLeft: const Radius.circular(10),
     );
 
     // Summary Pill
@@ -795,69 +795,16 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Icon Pill (First Quarter)
+          // Icon Pill - Speed Dial Trigger
           Expanded(
             flex: 1,
-            child: Container(
-              margin: EdgeInsets.only(bottom: isLast ? 16 : 8),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: .2),
-                borderRadius: iconBorderRadius,
-                boxShadow: [
-                  BoxShadow(
-                    color: statusColor.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-                border: isAbsolute
-                    ? Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.5),
-                      )
-                    : null,
-              ),
-              child: Center(
-                child: Icon(
-                  statusIcon,
-                  color: statusColor,
-                  size: 32,
-                  shadows: [
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(1.0, 0),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(-1.0, 0),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(0, 1.0),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(0, -1.0),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(0.7, 0.7),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(-0.7, -0.7),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(0.7, -0.7),
-                    ),
-                    Shadow(
-                      color: statusColor.withValues(alpha: 0.5),
-                      offset: const Offset(-0.7, 0.7),
-                    ),
-                  ],
-                ),
-              ),
+            child: AttendanceSpeedDial(
+              record: record,
+              iconBorderRadius: iconBorderRadius,
+              statusColor: statusColor,
+              statusIcon: statusIcon,
+              isAbsolute: isAbsolute,
+              isLast: isLast,
             ),
           ),
           const SizedBox(width: 8),
@@ -914,6 +861,332 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AttendanceSpeedDial extends StatefulWidget {
+  final Attendance record;
+  final BorderRadius iconBorderRadius;
+  final Color statusColor;
+  final IconData statusIcon;
+  final bool isAbsolute;
+  final bool isLast;
+
+  const AttendanceSpeedDial({
+    super.key,
+    required this.record,
+    required this.iconBorderRadius,
+    required this.statusColor,
+    required this.statusIcon,
+    required this.isAbsolute,
+    required this.isLast,
+  });
+
+  @override
+  State<AttendanceSpeedDial> createState() => _AttendanceSpeedDialState();
+}
+
+class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
+    with SingleTickerProviderStateMixin {
+  final _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+  late AnimationController _controller;
+  bool _isOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    if (_isOpen) {
+      _controller.reverse().then((_) => _removeOverlay());
+    } else {
+      _showOverlay();
+      _controller.forward();
+    }
+    setState(() => _isOpen = !_isOpen);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _showOverlay() {
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    final attendanceProvider = context.read<AttendanceProvider>();
+
+    return OverlayEntry(
+      builder: (context) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _toggleMenu,
+        child: Stack(
+          children: [
+            FadeTransition(
+              opacity: _controller,
+              child: Container(color: Colors.black12),
+            ),
+            CompositedTransformFollower(
+              link: _layerLink,
+              showWhenUnlinked: false,
+              offset: const Offset(8, -12),
+              followerAnchor: Alignment.bottomLeft,
+              targetAnchor: Alignment.topLeft,
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildMenuItem(
+                      icon: Icons.delete_sweep_rounded,
+                      label: "Clear marking",
+                      color: Colors.grey,
+                      index: 3,
+                      onTap: () {
+                        attendanceProvider.clearAttendance(
+                          widget.record.date,
+                          widget.record.slotId ?? "-1",
+                          legacySlotIndex: widget.record.slotIndex,
+                        );
+                        _toggleMenu();
+                      },
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.block,
+                      label: "Cancelled",
+                      color: Colors.orange,
+                      index: 2,
+                      onTap: () {
+                        attendanceProvider.markAttendance(
+                          widget.record.date,
+                          widget.record.subjectId,
+                          widget.record.slotId ?? "-1",
+                          AttendanceStatus.cancelled,
+                          slotIndex: widget.record.slotIndex,
+                        );
+                        _toggleMenu();
+                      },
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.close_rounded,
+                      label: "Absent",
+                      color: Colors.red,
+                      index: 1,
+                      onTap: () {
+                        attendanceProvider.markAttendance(
+                          widget.record.date,
+                          widget.record.subjectId,
+                          widget.record.slotId ?? "-1",
+                          AttendanceStatus.absent,
+                          slotIndex: widget.record.slotIndex,
+                        );
+                        _toggleMenu();
+                      },
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.check_rounded,
+                      label: "Attended",
+                      color: Colors.green,
+                      index: 0,
+                      onTap: () {
+                        attendanceProvider.markAttendance(
+                          widget.record.date,
+                          widget.record.subjectId,
+                          widget.record.slotId ?? "-1",
+                          AttendanceStatus.present,
+                          slotIndex: widget.record.slotIndex,
+                        );
+                        _toggleMenu();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required int index,
+    required VoidCallback onTap,
+  }) {
+    final staggeredAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(
+        index * 0.1,
+        1.0,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Tonal container colors for M3 Expressive
+    Color bgColor;
+    Color textColor;
+    
+    if (color == Colors.green) {
+      bgColor = isDark ? Colors.green.shade900.withValues(alpha: 0.95) : Colors.green.shade100;
+      textColor = isDark ? Colors.green.shade100 : Colors.green.shade900;
+    } else if (color == Colors.red) {
+      bgColor = isDark ? Colors.red.shade900.withValues(alpha: 0.95) : Colors.red.shade100;
+      textColor = isDark ? Colors.red.shade100 : Colors.red.shade900;
+    } else if (color == Colors.orange) {
+      bgColor = isDark ? Colors.orange.shade900.withValues(alpha: 0.95) : Colors.orange.shade100;
+      textColor = isDark ? Colors.orange.shade100 : Colors.orange.shade900;
+    } else {
+      bgColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+      textColor = isDark ? Colors.grey.shade200 : Colors.grey.shade800;
+    }
+
+    return ScaleTransition(
+      scale: staggeredAnimation,
+      child: FadeTransition(
+        opacity: staggeredAnimation,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              onTap();
+            },
+            borderRadius: BorderRadius.circular(28),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, color: textColor, size: 28),
+                  const SizedBox(width: 16),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _toggleMenu();
+        },
+        borderRadius: widget.iconBorderRadius,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: EdgeInsets.only(bottom: widget.isLast ? 16 : 8),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: _isOpen
+                ? scheme.surfaceContainerHighest
+                : widget.statusColor.withValues(alpha: .2),
+            borderRadius: widget.iconBorderRadius,
+            boxShadow: _isOpen
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 15,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: widget.statusColor.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+            border: widget.isAbsolute
+                ? Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.5),
+                  )
+                : null,
+          ),
+          child: Center(
+            child: AnimatedRotation(
+              duration: const Duration(milliseconds: 300),
+              turns: _isOpen ? 0.375 : 0,
+              child: Icon(
+                _isOpen ? Icons.add : widget.statusIcon,
+                color: _isOpen ? scheme.primary : widget.statusColor,
+                size: 32,
+                shadows: _isOpen
+                    ? []
+                    : [
+                        Shadow(
+                          color: widget.statusColor.withValues(alpha: 0.5),
+                          offset: const Offset(1.0, 0),
+                        ),
+                        Shadow(
+                          color: widget.statusColor.withValues(alpha: 0.5),
+                          offset: const Offset(-1.0, 0),
+                        ),
+                        Shadow(
+                          color: widget.statusColor.withValues(alpha: 0.5),
+                          offset: const Offset(0, 1.0),
+                        ),
+                        Shadow(
+                          color: widget.statusColor.withValues(alpha: 0.5),
+                          offset: const Offset(0, -1.0),
+                        ),
+                      ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -50,6 +50,7 @@ class _MainShellState extends State<MainShell> {
   bool isNavExpanded = false;
   int? _swappedSecondaryIndex;
   bool isReordering = false;
+  bool _suppressNavBarAnimation = false;
 
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
@@ -98,6 +99,25 @@ class _MainShellState extends State<MainShell> {
   ];
 
   int _currentDisplayIndex = 0;
+
+  void _setReordering(bool value) {
+    if (isReordering == value) return;
+
+    setState(() {
+      _suppressNavBarAnimation = true;
+      isReordering = value;
+      if (value) {
+        isNavExpanded = false;
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _suppressNavBarAnimation = false;
+      });
+    });
+  }
 
   @override
   void initState() {
@@ -490,30 +510,34 @@ class _MainShellState extends State<MainShell> {
                       ? null
                       : () {
                           HapticFeedback.mediumImpact();
-                          setState(() {
-                            isReordering = true;
-                            isNavExpanded = true;
-                          });
+                          _setReordering(true);
                         },
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
                       AnimatedContainer(
-                        duration: const Duration(milliseconds: 280),
+                        duration: _suppressNavBarAnimation
+                            ? Duration.zero
+                            : const Duration(milliseconds: 280),
                         curve: Curves.easeOutCubic,
-                        height: isReordering ? 200 : (isNavExpanded ? 164 : 90),
+                        height: isReordering ? 250 : (isNavExpanded ? 164 : 90),
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
                           color: isReordering
-                              ? scheme.surfaceContainerHighest
+                              ? scheme.surfaceContainerLow
                               : scheme.surfaceContainerHigh,
                           border: isReordering
-                              ? Border.all(color: scheme.primary, width: 2)
+                              ? Border.all(
+                                  color: scheme.outlineVariant,
+                                  width: 1.5,
+                                )
                               : null,
                           borderRadius: BorderRadius.circular(40),
                           boxShadow: [
                             BoxShadow(
-                              color: scheme.shadow.withValues(alpha: .35),
+                              color: scheme.shadow.withValues(
+                                alpha: isReordering ? 0.1 : 0.35,
+                              ),
                               blurRadius: 14,
                               offset: const Offset(0, 6),
                             ),
@@ -526,184 +550,102 @@ class _MainShellState extends State<MainShell> {
                             if (isReordering)
                               Padding(
                                 padding: const EdgeInsets.only(
-                                  top: 8,
-                                  bottom: 4,
+                                  top: 14,
+                                  bottom: 10,
                                 ),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 16),
-                                      child: Text(
-                                        "Reorder Navbar",
-                                        style: TextStyle(
-                                          color: scheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
+                                    const SizedBox(width: 24),
+                                    Icon(
+                                      Icons.drag_indicator_rounded,
+                                      size: 18,
+                                      color: scheme.primary.withValues(
+                                        alpha: 0.7,
                                       ),
                                     ),
-                                    GestureDetector(
-                                      onTap: () {
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      "Edit Navigation",
+                                      style: TextStyle(
+                                        color: scheme.onSurface,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    FilledButton.tonal(
+                                      style: FilledButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () {
                                         HapticFeedback.lightImpact();
-                                        setState(() {
-                                          isReordering = false;
-                                        });
+                                        _setReordering(false);
                                       },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: scheme.primaryContainer,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.check,
-                                          size: 16,
-                                          color: scheme.onPrimaryContainer,
+                                      child: const Text(
+                                        "Done",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(width: 14),
                                   ],
                                 ),
                               ),
                             if (isReordering)
                               Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 4.0),
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: 0,
-                                    runSpacing: 0,
-                                    children: List.generate(_allDestinations.length, (
-                                      index,
-                                    ) {
-                                      final dest = _allDestinations[index];
-                                      return LongPressDraggable<int>(
-                                        data: index,
-                                        feedback: Material(
-                                          color: Colors.transparent,
-                                          child: Opacity(
-                                            opacity: 0.8,
-                                            child: SizedBox(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: List.generate(
+                                          _primaryNavCount,
+                                          (index) => Expanded(
+                                            child: _buildDraggableNavItem(
+                                              index,
+                                              itemWidth,
+                                              scheme,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: List.generate(
+                                          _allDestinations.length -
+                                              _primaryNavCount,
+                                          (i) {
+                                            final index = _primaryNavCount + i;
+                                            return SizedBox(
                                               width: itemWidth,
-                                              height: 65,
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Icon(
-                                                      (dest.icon as Icon).icon,
-                                                      size: 24,
-                                                      color: scheme.primary,
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      dest.label,
-                                                      style: TextStyle(
-                                                        fontSize: 10,
-                                                        color: scheme.primary,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
+                                              child: _buildDraggableNavItem(
+                                                index,
+                                                itemWidth,
+                                                scheme,
                                               ),
-                                            ),
-                                          ),
-                                        ),
-                                        childWhenDragging: SizedBox(
-                                          width: itemWidth,
-                                          height: 65,
-                                          child: Center(
-                                            child: Icon(
-                                              (dest.icon as Icon).icon,
-                                              size: 20,
-                                              color: scheme.onSurfaceVariant
-                                                  .withValues(alpha: 0.3),
-                                            ),
-                                          ),
-                                        ),
-                                        onDragStarted: () {
-                                          HapticFeedback.lightImpact();
-                                        },
-                                        child: DragTarget<int>(
-                                          onWillAcceptWithDetails: (_) => true,
-                                          onAcceptWithDetails: (details) {
-                                            final oldIndex = details.data;
-                                            final newIndex = index;
-                                            if (oldIndex == newIndex) return;
-                                            HapticFeedback.selectionClick();
-                                            setState(() {
-                                              final item = _allDestinations
-                                                  .removeAt(oldIndex);
-                                              _allDestinations.insert(
-                                                newIndex,
-                                                item,
-                                              );
-
-                                              if (currentIndex == oldIndex) {
-                                                currentIndex = newIndex;
-                                              } else if (oldIndex < newIndex &&
-                                                  currentIndex > oldIndex &&
-                                                  currentIndex <= newIndex) {
-                                                currentIndex--;
-                                              } else if (oldIndex > newIndex &&
-                                                  currentIndex < oldIndex &&
-                                                  currentIndex >= newIndex) {
-                                                currentIndex++;
-                                              }
-
-                                              // Reordering changes destination indices.
-                                              // Reset transient secondary swap state so
-                                              // future tab taps don't unswap the wrong item.
-                                              _swappedSecondaryIndex = null;
-                                              _currentDisplayIndex =
-                                                  _getDisplayIndex(
-                                                    currentIndex,
-                                                  );
-                                            });
-                                            _saveNavOrder();
+                                            );
                                           },
-                                          builder:
-                                              (
-                                                context,
-                                                candidateData,
-                                                rejectedData,
-                                              ) {
-                                                final isHovered =
-                                                    candidateData.isNotEmpty;
-                                                return AnimatedContainer(
-                                                  duration: const Duration(
-                                                    milliseconds: 150,
-                                                  ),
-                                                  width: itemWidth,
-                                                  height: 65,
-                                                  decoration: BoxDecoration(
-                                                    color: isHovered
-                                                        ? scheme
-                                                              .primaryContainer
-                                                              .withValues(
-                                                                alpha: 0.5,
-                                                              )
-                                                        : Colors.transparent,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          16,
-                                                        ),
-                                                  ),
-                                                  child: navItem(
-                                                    dest,
-                                                    index,
-                                                    isReordering: true,
-                                                  ),
-                                                );
-                                              },
                                         ),
-                                      );
-                                    }),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               )
@@ -754,34 +696,41 @@ class _MainShellState extends State<MainShell> {
                                   ],
                                 ),
                               ),
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 280),
-                                curve: Curves.easeOutCubic,
-                                child: isNavExpanded
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(top: 10),
-                                        child: SizedBox(
-                                          height: 49,
-                                          child: Row(
-                                            children: [
-                                              const Spacer(),
-                                              secondaryNavItem(
-                                                _allDestinations[_primaryNavCount],
-                                                _primaryNavCount,
-                                              ),
-                                              const SizedBox(width: 14),
-                                              secondaryNavItem(
-                                                _allDestinations[_primaryNavCount +
-                                                    1],
-                                                _primaryNavCount + 1,
-                                              ),
-                                              const Spacer(),
-                                            ],
+                              if (!isReordering)
+                                AnimatedSize(
+                                  duration: _suppressNavBarAnimation
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 280),
+                                  curve: Curves.easeOutCubic,
+                                  child: isNavExpanded
+                                      ? Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 10,
                                           ),
-                                        ),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
+                                          child: SizedBox(
+                                            height: 49,
+                                            child: Row(
+                                              children: [
+                                                const Spacer(),
+                                                secondaryNavItem(
+                                                  _allDestinations[_primaryNavCount],
+                                                  _primaryNavCount,
+                                                ),
+                                                const SizedBox(width: 14),
+                                                secondaryNavItem(
+                                                  _allDestinations[_primaryNavCount +
+                                                      1],
+                                                  _primaryNavCount + 1,
+                                                ),
+                                                const SizedBox(width: 14),
+                                                reorderToggleButton(),
+                                                const Spacer(),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
                             ],
                           ],
                         ),
@@ -878,7 +827,11 @@ class _MainShellState extends State<MainShell> {
                 ? scheme.onPrimaryContainer
                 : scheme.onSurfaceVariant,
             fontWeight: selected ? FontWeight.w900 : FontWeight.w500,
-            fontVariations: <FontVariation>[const FontVariation('wdth', 80)],
+            fontVariations: <FontVariation>[
+              const FontVariation('wdth', 85),
+              const FontVariation('ROND', 100),
+              const FontVariation('opsz', 300),
+            ],
           ),
           child: Text(destination.label),
         ),
@@ -1022,6 +975,170 @@ class _MainShellState extends State<MainShell> {
       }
       isNavExpanded = false;
     });
+  }
+
+  Widget _buildDraggableNavItem(
+    int index,
+    double itemWidth,
+    ColorScheme scheme,
+  ) {
+    final dest = _allDestinations[index];
+
+    return LongPressDraggable<int>(
+      data: index,
+      feedback: Material(
+        elevation: 12,
+        borderRadius: BorderRadius.circular(24),
+        color: scheme.surfaceContainerHigh,
+        child: Container(
+          width: itemWidth * 1.1,
+          height: 75,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: scheme.primary.withValues(alpha: 0.5),
+              width: 2,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                (dest.selectedIcon as Icon).icon,
+                size: 28,
+                color: scheme.primary,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                dest.label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: scheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.3,
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Container(
+            width: itemWidth,
+            height: 65,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: navItem(dest, index, isReordering: true),
+          ),
+        ),
+      ),
+      onDragStarted: () {
+        HapticFeedback.mediumImpact();
+      },
+      child: DragTarget<int>(
+        onWillAcceptWithDetails: (details) => details.data != index,
+        onAcceptWithDetails: (details) {
+          final oldIndex = details.data;
+          final newIndex = index;
+          if (oldIndex == newIndex) return;
+          HapticFeedback.selectionClick();
+          setState(() {
+            final item = _allDestinations.removeAt(oldIndex);
+            _allDestinations.insert(newIndex, item);
+
+            if (currentIndex == oldIndex) {
+              currentIndex = newIndex;
+            } else if (oldIndex < newIndex &&
+                currentIndex > oldIndex &&
+                currentIndex <= newIndex) {
+              currentIndex--;
+            } else if (oldIndex > newIndex &&
+                currentIndex < oldIndex &&
+                currentIndex >= newIndex) {
+              currentIndex++;
+            }
+
+            _swappedSecondaryIndex = null;
+            _currentDisplayIndex = _getDisplayIndex(currentIndex);
+          });
+          _saveNavOrder();
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isHovered = candidateData.isNotEmpty;
+          return Padding(
+            padding: const EdgeInsets.all(6.0),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              width: itemWidth,
+              height: 65,
+              decoration: BoxDecoration(
+                color: isHovered
+                    ? scheme.primaryContainer
+                    : scheme.tertiaryContainer.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(16),
+                border: isHovered
+                    ? Border.all(color: scheme.primary, width: 1.5)
+                    : null,
+              ),
+              child: navItem(dest, index, isReordering: true),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget reorderToggleButton() {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(32),
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          _setReordering(true);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          height: 65,
+          width: 86,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(40),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.5),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.reorder_rounded,
+                size: 22,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Reorder",
+                style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
