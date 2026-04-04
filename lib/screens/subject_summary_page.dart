@@ -912,8 +912,12 @@ class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
   }
 
   void _toggleMenu() {
+    if (_controller.isAnimating) return; // Prevent rapid click stacking
+    
     if (_isOpen) {
-      _controller.reverse().then((_) => _removeOverlay());
+      _controller.reverse().then((_) {
+        if (mounted && !_isOpen) _removeOverlay();
+      });
     } else {
       _showOverlay();
       _controller.forward();
@@ -927,6 +931,7 @@ class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
   }
 
   void _showOverlay() {
+    _removeOverlay(); // Safety: Ensure any previous overlay is gone
     _overlayEntry = _createOverlayEntry();
     Overlay.of(context).insert(_overlayEntry!);
   }
