@@ -1080,12 +1080,12 @@ class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
               HapticFeedback.mediumImpact();
               onTap();
             },
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(24),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.15),
@@ -1098,14 +1098,14 @@ class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, color: textColor, size: 28),
-                  const SizedBox(width: 16),
+                  Icon(icon, color: textColor, size: 22),
+                  const SizedBox(width: 12),
                   Text(
                     label,
                     style: TextStyle(
                       color: textColor,
                       fontWeight: FontWeight.w900,
-                      fontSize: 18,
+                      fontSize: 16,
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -1133,7 +1133,7 @@ class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           margin: EdgeInsets.only(bottom: widget.isLast ? 16 : 8),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: _isOpen
                 ? scheme.surfaceContainerHighest
@@ -1167,7 +1167,7 @@ class _AttendanceSpeedDialState extends State<AttendanceSpeedDial>
               child: Icon(
                 _isOpen ? Icons.add : widget.statusIcon,
                 color: _isOpen ? scheme.primary : widget.statusColor,
-                size: 32,
+                size: 24,
                 shadows: _isOpen
                     ? []
                     : [
