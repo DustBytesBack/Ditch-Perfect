@@ -424,7 +424,6 @@ class TimetablePage extends StatelessWidget {
                     },
                     child: const Text("Back"),
                   ),
-                  const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text("Cancel"),
