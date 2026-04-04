@@ -132,11 +132,11 @@ void main() {
 /// Performs all async initialization (Firebase, Hive, Providers).
 /// Returns the list of providers once ready.
 Future<List<SingleChildWidget>> _initializeApp() async {
+  // Ensure Firebase is fully initialized before proceeding.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Only block on Hive initialization — it's extremely fast (<100ms).
   await DatabaseService.init();
-
-  // Start Firebase initialization in the background — don't block the UI.
-  Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final attendanceProvider = AttendanceProvider();
   attendanceProvider.loadAllAttendance();

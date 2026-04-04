@@ -78,9 +78,9 @@ class _SlidableTileState extends State<SlidableTile>
     if (!widget.enabled) return;
 
     final velocity = details.primaryVelocity ?? 0;
-    final threshold = widget.actionWidth * 0.7; // Increased threshold
+    final threshold = widget.actionWidth * 0.4; // Lowered threshold for easier activation
 
-    if (velocity.abs() > 400) {
+    if (velocity.abs() > 300) { // More sensitive fling trigger
       // Fling trigger
       if (velocity > 0 && widget.leftAction != null) {
         HapticFeedback.heavyImpact();
@@ -107,8 +107,8 @@ class _SlidableTileState extends State<SlidableTile>
     final simulation = SpringSimulation(
       const SpringDescription(
         mass: 1.0,
-        stiffness: 180.0,
-        damping: 22.0,
+        stiffness: 220.0, // Peppier snap
+        damping: 18.0, // Less damping for more "life"
       ),
       _dragExtent,
       target,
