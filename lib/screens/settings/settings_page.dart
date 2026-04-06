@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../services/database_service.dart';
-import '../providers/theme_provider.dart';
-import '../providers/settings_provider.dart';
-import '../providers/subject_provider.dart';
-import '../providers/timetable_provider.dart';
-import '../providers/attendance_provider.dart';
-import '../utils/update_checker.dart';
-import '../services/backup_service.dart';
-import '../widgets/wavy_progress_indicator.dart';
-import '../widgets/edit_username_dialog.dart';
+import '../../services/database_service.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/subject_provider.dart';
+import '../../providers/timetable_provider.dart';
+import '../../providers/attendance_provider.dart';
+import '../../utils/update_checker.dart';
+import '../../services/backup_service.dart';
+import '../../widgets/wavy_progress_indicator.dart';
+import '../../widgets/edit_username_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../login/login_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -823,10 +824,55 @@ class _SettingsPageState extends State<SettingsPage> {
                                       as String?) ??
                                   "Not set",
                             ),
-                            onTap: () async {
+                          onTap: () async {
                               HapticFeedback.lightImpact();
                               await EditUsernameDialog.show(context);
                               if (mounted) setState(() {});
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Login / Account Tile
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isAbsolute
+                                ? scheme.surfaceContainerHigh
+                                : scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: isAbsolute
+                                  ? scheme.primary.withValues(alpha: 0.2)
+                                  : scheme.primary.withValues(alpha: 0.1),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.login_rounded,
+                              color: scheme.onSecondaryContainer,
+                            ),
+                            title: const Text(
+                              "Account (Cloud Sync)",
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text("Sign in to sync your data"),
+                            trailing: Icon(
+                              Icons.chevron_right_rounded,
+                              color: scheme.onSecondaryContainer.withValues(alpha: 0.5),
+                            ),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const LoginPage()),
+                              );
                             },
                           ),
                         ),

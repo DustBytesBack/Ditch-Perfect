@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/timetable_provider.dart';
-import '../providers/attendance_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/subject_provider.dart';
-import '../models/attendance.dart';
-import '../utils/holiday_utils.dart';
-import '../widgets/day_timetable.dart';
+import '../../providers/timetable_provider.dart';
+import '../../providers/attendance_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/subject_provider.dart';
+import '../../models/attendance.dart';
+import '../../utils/holiday_utils.dart';
+import '../../widgets/day_timetable.dart';
 
 enum BulkAction { present, absent, cancelled, clear }
 

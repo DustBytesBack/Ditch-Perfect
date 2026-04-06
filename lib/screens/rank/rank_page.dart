@@ -4,11 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../utils/ranking_utils.dart';
-import '../services/database_service.dart';
-import '../providers/theme_provider.dart';
-import '../widgets/wavy_progress_indicator.dart';
-import '../widgets/edit_username_dialog.dart';
+import '../../utils/ranking_utils.dart';
+import '../../services/database_service.dart';
+import '../../providers/theme_provider.dart';
+import '../../widgets/wavy_progress_indicator.dart';
+import '../../widgets/edit_username_dialog.dart';
 
 class RankPage extends StatefulWidget {
   const RankPage({super.key});

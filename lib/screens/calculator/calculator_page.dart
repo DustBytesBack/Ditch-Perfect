@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/attendance_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/settings_provider.dart';
-import '../providers/subject_provider.dart';
-import '../utils/attendance_utils.dart';
+import '../../providers/attendance_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/subject_provider.dart';
+import '../../utils/attendance_utils.dart';
 
 class AttendanceCalculatorPage extends StatefulWidget {
   const AttendanceCalculatorPage({super.key});

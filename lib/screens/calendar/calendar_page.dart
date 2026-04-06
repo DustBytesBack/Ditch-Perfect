@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../models/attendance.dart';
-import '../utils/calendar_stats.dart';
-import '../providers/timetable_provider.dart';
-import '../providers/attendance_provider.dart';
-import '../utils/holiday_utils.dart';
-import '../providers/theme_provider.dart';
-import 'day_details_page.dart';
+import '../../models/attendance.dart';
+import '../../utils/calendar_stats.dart';
+import '../../providers/timetable_provider.dart';
+import '../../providers/attendance_provider.dart';
+import '../../utils/holiday_utils.dart';
+import '../../providers/theme_provider.dart';
+import 'day_schedule_page.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});

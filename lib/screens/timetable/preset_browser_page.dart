@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../services/firestore_service.dart';
-import '../providers/subject_provider.dart';
-import '../providers/timetable_provider.dart';
-import '../providers/theme_provider.dart';
+import '../../services/firestore_service.dart';
+import '../../providers/subject_provider.dart';
+import '../../providers/timetable_provider.dart';
+import '../../providers/theme_provider.dart';
 // import '../models/subject.dart';
 // import 'package:uuid/uuid.dart';
 

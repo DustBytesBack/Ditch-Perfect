@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/timetable_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/subject_provider.dart';
+import '../../providers/timetable_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/subject_provider.dart';
 import 'timetable_editor_page.dart';
 import 'package:intl/intl.dart';
-import '../services/firestore_service.dart';
+import '../../services/firestore_service.dart';
 import 'preset_browser_page.dart';
-import '../widgets/slidable_tile.dart';
+import '../../widgets/slidable_tile.dart';
 
 const dayNames = {
   "mon": "Monday",

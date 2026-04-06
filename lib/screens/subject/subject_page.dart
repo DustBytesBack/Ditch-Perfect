@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'subject_summary_page.dart';
-import '../providers/settings_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/subject_provider.dart';
-import '../providers/attendance_provider.dart';
-import '../utils/attendance_utils.dart';
-import '../models/subject.dart';
-import '../widgets/slidable_tile.dart';
+import 'summary_page.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/subject_provider.dart';
+import '../../providers/attendance_provider.dart';
+import '../../utils/attendance_utils.dart';
+import '../../models/subject.dart';
+import '../../widgets/slidable_tile.dart';
 
 class SubjectPage extends StatefulWidget {
   const SubjectPage({super.key});

@@ -4,10 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../models/subject.dart';
-import '../models/attendance.dart';
-import '../providers/attendance_provider.dart';
-import '../providers/theme_provider.dart';
+import '../../models/subject.dart';
+import '../../models/attendance.dart';
+import '../../providers/attendance_provider.dart';
+import '../../providers/theme_provider.dart';
 
 enum SortOption { dateNewest, dateOldest, status }
 
