@@ -10,9 +10,9 @@
 
 ## 📸 Screenshots
 
-| Home | Calendar | Subjects | Settings |
-| :---: | :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/ff110a8c-b7cf-42d8-9746-3f72f6d60367" width="220" /> | <img src="https://github.com/user-attachments/assets/7f2c1ec1-e885-4636-a4b0-2206b07feb90" width="220" /> | <img src="https://github.com/user-attachments/assets/066f82d4-cec7-4331-aa32-dd2d34d0948a" width="220" /> | <img src="https://github.com/user-attachments/assets/44214749-a8bc-41aa-ad14-625850efd2a4" width="220" /> |
+| Home | Calendar | Subjects | Settings | Calculator | Summary |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| <img width="1080" height="2301" alt="Screenshot_20260407-111752" src="https://github.com/user-attachments/assets/d27c879d-de92-4cb4-9e34-9f90b360bbea" /> | <img width="1080" height="2306" alt="Screenshot_20260407-111759" src="https://github.com/user-attachments/assets/bc934162-0400-42fa-b594-6b9edc634d2d" /> | <img width="1080" height="2296" alt="Screenshot_20260407-111806" src="https://github.com/user-attachments/assets/97e21760-f364-4e2e-ab11-86fca62573f3" /> | <img width="1080" height="2309" alt="Screenshot_20260407-111837" src="https://github.com/user-attachments/assets/74bbd3d8-1b9d-436d-a966-ce1aea522a6c" /> | <img width="1080" height="2299" alt="Screenshot_20260407-111845" src="https://github.com/user-attachments/assets/6018918a-8ceb-4574-a048-08936808e530" /> | <img width="1080" height="2305" alt="Screenshot_20260407-111914" src="https://github.com/user-attachments/assets/40bb2ce1-72b1-45c5-b08c-cc0d0d32ece0" /> |
 
 ---
 
