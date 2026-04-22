@@ -19,12 +19,23 @@ class SubjectPage extends StatefulWidget {
 }
 
 class _SubjectPageState extends State<SubjectPage> {
+  static bool _sessionHintShown = false;
+  bool _showHint = false;
   String? _selectedSubjectId;
 
   static const List<(String, String)> _attendanceInputModes = [
     ('total', 'I know total classes'),
     ('attended', 'I know attended classes'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_sessionHintShown) {
+      _sessionHintShown = true;
+      _showHint = true;
+    }
+  }
 
   int canBunk(int attended, int total, double minPercent) {
     if (total == 0) return 0;
@@ -1025,13 +1036,20 @@ class _SubjectPageState extends State<SubjectPage> {
                     ),
 
                     child: ListView.builder(
-                      itemCount: subjects.length + 1,
+                      itemCount: subjects.length + (_showHint ? 2 : 1),
                       itemBuilder: (context, index) {
-                        if (index == subjects.length) {
-                          return const SizedBox(height: 90);
+                        if (_showHint) {
+                          if (index == 0) return _buildHintBanner(context);
+                          if (index == subjects.length + 1) {
+                            return const SizedBox(height: 90);
+                          }
+                        } else {
+                          if (index == subjects.length) {
+                            return const SizedBox(height: 90);
+                          }
                         }
 
-                        final subject = subjects[index];
+                        final subject = subjects[_showHint ? index - 1 : index];
 
                         final stats = attendanceProvider.getStatsForSubject(
                           subject.id,
@@ -1449,6 +1467,59 @@ class _SubjectPageState extends State<SubjectPage> {
               height: MediaQuery.of(context).padding.bottom + 12,
               color: isAbsolute ? scheme.surfaceContainer : scheme.surface,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHintBanner(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isAbsolute = context.read<ThemeProvider>().absoluteMode;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color:
+            isAbsolute
+                ? scheme.surfaceContainerHigh
+                : scheme.primaryContainer.withValues(alpha: .5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.primary.withValues(alpha: .15)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.tips_and_updates_outlined, color: scheme.primary),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Pro Tip",
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Tap or longpress any subject for more options",
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => setState(() => _showHint = false),
+            icon: const Icon(Icons.close, size: 18),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
