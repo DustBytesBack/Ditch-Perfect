@@ -832,50 +832,50 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        // const SizedBox(height: 12),
 
                         // Login / Account Tile
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isAbsolute
-                                ? scheme.surfaceContainerHigh
-                                : scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: isAbsolute
-                                  ? scheme.primary.withValues(alpha: 0.2)
-                                  : scheme.primary.withValues(alpha: 0.1),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(
-                              Icons.login_rounded,
-                              color: scheme.onSecondaryContainer,
-                            ),
-                            title: const Text(
-                              "Account (Cloud Sync)",
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: const Text("Sign in to sync your data"),
-                            trailing: Icon(
-                              Icons.chevron_right_rounded,
-                              color: scheme.onSecondaryContainer.withValues(alpha: 0.5),
-                            ),
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const LoginPage()),
-                              );
-                            },
-                          ),
-                        ),
+                        // Container(
+                        //   padding: const EdgeInsets.symmetric(
+                        //     horizontal: 24,
+                        //     vertical: 8,
+                        //   ),
+                        //   decoration: BoxDecoration(
+                        //     color: isAbsolute
+                        //         ? scheme.surfaceContainerHigh
+                        //         : scheme.secondaryContainer,
+                        //     borderRadius: BorderRadius.circular(30),
+                        //     border: Border.all(
+                        //       color: isAbsolute
+                        //           ? scheme.primary.withValues(alpha: 0.2)
+                        //           : scheme.primary.withValues(alpha: 0.1),
+                        //       width: 1.5,
+                        //     ),
+                        //   ),
+                        //   child: ListTile(
+                        //     contentPadding: EdgeInsets.zero,
+                        //     leading: Icon(
+                        //       Icons.login_rounded,
+                        //       color: scheme.onSecondaryContainer,
+                        //     ),
+                        //     title: const Text(
+                        //       "Account (Cloud Sync)",
+                        //       style: TextStyle(fontWeight: FontWeight.w600),
+                        //     ),
+                        //     subtitle: const Text("Sign in to sync your data"),
+                        //     trailing: Icon(
+                        //       Icons.chevron_right_rounded,
+                        //       color: scheme.onSecondaryContainer.withValues(alpha: 0.5),
+                        //     ),
+                        //     onTap: () {
+                        //       HapticFeedback.lightImpact();
+                        //       Navigator.push(
+                        //         context,
+                        //         MaterialPageRoute(builder: (context) => const LoginPage()),
+                        //       );
+                        //     },
+                        //   ),
+                        // ),
 
                         const SizedBox(height: 16),
 

@@ -58,6 +58,7 @@ class RankingUtils {
 
     final subjectsBox = DatabaseService.subjectsBox;
     final attendanceBox = DatabaseService.attendanceBox;
+    final baselinesBox = DatabaseService.attendanceBaselinesBox;
 
     final subjects = subjectsBox.values.cast<Subject>().toList();
     final allAttendance = attendanceBox.values.cast<Attendance>().toList();
@@ -66,10 +67,21 @@ class RankingUtils {
 
     final subjectsSummary = subjects.map((subject) {
       final stats = calculateStats(subject.id, allAttendance);
+
+      // Add baseline data (manual edits) if it exists
+      final baselineRaw = baselinesBox.get(subject.id);
+      int baselineAttended = 0;
+      int baselineTotal = 0;
+
+      if (baselineRaw is Map) {
+        baselineAttended = (baselineRaw['attended'] as num?)?.toInt() ?? 0;
+        baselineTotal = (baselineRaw['total'] as num?)?.toInt() ?? 0;
+      }
+
       return {
         'subjectName': subject.name,
-        'totalClasses': stats.total,
-        'attendedClasses': stats.attended,
+        'totalClasses': stats.total + baselineTotal,
+        'attendedClasses': stats.attended + baselineAttended,
       };
     }).toList();
 
