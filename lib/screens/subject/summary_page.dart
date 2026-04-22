@@ -8,6 +8,7 @@ import '../../models/subject.dart';
 import '../../models/attendance.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/subject_provider.dart';
 
 enum SortOption { dateNewest, dateOldest, status }
 
@@ -28,6 +29,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     AttendanceStatus.cancelled,
   };
   final Set<String> _collapsedMonths = {};
+  bool _isSwitcherOpen = false;
 
   void _showSortOptions(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -210,6 +212,97 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
     );
   }
 
+  void _showSubjectSwitcher(BuildContext context) async {
+    final scheme = Theme.of(context).colorScheme;
+    final subjects = context.read<SubjectProvider>().subjects;
+
+    setState(() => _isSwitcherOpen = true);
+
+    // Minor delay to show the "expressive" button animation before switching context
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    if (!context.mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Switch Subject",
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: subjects.length,
+                    itemBuilder: (context, index) {
+                      final s = subjects[index];
+                      final isSelected = s.id == widget.subject.id;
+                      return _optionTile(
+                        context: context,
+                        label: s.name,
+                        icon: isSelected
+                            ? Icons.check_circle
+                            : Icons.book_outlined,
+                        isSelected: isSelected,
+                        closeOnTap: false,
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (!isSelected) {
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        SubjectSummaryPage(subject: s),
+                                transitionsBuilder: (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  );
+                                },
+                              ),
+                            );
+                          }
+                        },
+                        isFirst: index == 0,
+                        isLast: index == subjects.length - 1,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (mounted) {
+      setState(() => _isSwitcherOpen = false);
+    }
+  }
+
+
   Widget _optionTile({
     required BuildContext context,
     required String label,
@@ -356,28 +449,95 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      // Title Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 56,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isAbsolute
-                              ? scheme.surfaceContainerHigh
-                              : scheme.surface,
-                          borderRadius: BorderRadius.circular(40),
-                          border: isAbsolute
-                              ? Border.all(color: scheme.outlineVariant)
-                              : null,
-                        ),
-                        child: Text(
-                          widget.subject.shortName,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: scheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      // Expressive Segmented Title Button
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          _showSubjectSwitcher(context);
+                        },
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: IntrinsicHeight(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Content Segment
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeInOutCubic,
+                                  decoration: BoxDecoration(
+                                    color: isAbsolute
+                                        ? scheme.surfaceContainerHigh
+                                        : scheme.surface,
+                                    borderRadius: BorderRadius.horizontal(
+                                      left: const Radius.circular(40),
+                                      right: Radius.circular(
+                                        _isSwitcherOpen ? 40 : 10,
+                                      ),
+                                    ),
+                                    border: isAbsolute
+                                        ? Border.all(
+                                          color: scheme.outlineVariant,
+                                        )
+                                        : null,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 16,
+                                  ),
+                                  child: Text(
+                                    widget.subject.shortName,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          color: scheme.onSurface,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                // Dropdown Segment (The one that morphs and spins)
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeOutBack,
+                                  decoration: BoxDecoration(
+                                    color: _isSwitcherOpen
+                                        ? scheme.primary
+                                        : (isAbsolute
+                                            ? scheme.surfaceContainerHigh
+                                            : scheme.surface),
+                                    borderRadius: BorderRadius.circular(
+                                      _isSwitcherOpen ? 40 : 10,
+                                    ).copyWith(
+                                      topRight: const Radius.circular(40),
+                                      bottomRight: const Radius.circular(40),
+                                    ),
+                                    border: isAbsolute
+                                        ? Border.all(
+                                          color: scheme.outlineVariant,
+                                        )
+                                        : null,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: AnimatedRotation(
+                                    turns: _isSwitcherOpen ? 0.5 : 0.0,
+                                    duration: const Duration(milliseconds: 500),
+                                    curve: Curves.easeOutBack,
+                                    child: Icon(
+                                      Icons.expand_more_rounded,
+                                      color: _isSwitcherOpen
+                                          ? scheme.onPrimary
+                                          : scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                       const Spacer(),
