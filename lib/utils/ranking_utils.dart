@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../services/database_service.dart';
 import '../models/subject.dart';
 import '../models/attendance.dart';
@@ -55,6 +56,12 @@ class RankingUtils {
     if (username == null || username.isEmpty) return;
 
     final uid = getOrCreateUid();
+    
+    String appVersion = "0.0.0-unknown";
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      appVersion = packageInfo.version;
+    } catch (_) {}
 
     final subjectsBox = DatabaseService.subjectsBox;
     final attendanceBox = DatabaseService.attendanceBox;
@@ -90,6 +97,7 @@ class RankingUtils {
       'username': username,
       'timestamp': FieldValue.serverTimestamp(),
       'subjects': subjectsSummary,
+      'appVersion': appVersion,
     };
 
     // Use .set() with the UID as document ID to overwrite on each sync.

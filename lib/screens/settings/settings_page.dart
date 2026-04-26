@@ -13,7 +13,6 @@ import '../../services/backup_service.dart';
 import '../../widgets/wavy_progress_indicator.dart';
 import '../../widgets/edit_username_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../login/login_page.dart';
 import 'custom_license_page.dart';
 
 class SettingsPage extends StatefulWidget {
