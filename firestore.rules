@@ -2,18 +2,60 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to upload their ranking data snapshot
+    
+    // Helper function to check ownership
+    function isOwner(res) {
+      return request.auth != null && res.data.createdBy == request.auth.uid;
+    }
+
+    // 1. Rankings & Weekly Rankings (Client Uploads)
     match /rankings/{document=**} {
-      allow create: if true;
-      allow get, list: if true;
-      allow update: if true;
+      allow create, get, list, update: if true;
+      allow delete: if false;
+    }
+
+    match /weekly_rankings/{document=**} {
+      allow create, get, list, update: if true;
       allow delete: if false;
     }
     
-    // Allow users to read the leaderboard
+    // 2. Leaderboards (Read-only for Clients)
     match /leaderboard/{document=**} {
       allow read: if true;
       allow write: if false;
+    }
+
+    match /weekly_leaderboards/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // 3. Timetables (Enhanced with Ownership)
+    match /timetables/{uni} {
+      allow read: if true;
+      allow write: if request.auth != null;
+
+      match /semesters/{sem} {
+        allow read: if true;
+        allow write: if request.auth != null;
+
+        match /branches/{branch} {
+          allow read: if true;
+          allow write: if request.auth != null;
+
+          match /batches/{batch} {
+            allow read: if true;
+            allow create: if request.auth != null;
+            // Only allow the original creator to update or delete their preset
+            allow update, delete: if isOwner(resource);
+          }
+        }
+      }
+    }
+
+    // 4. Collection Group Queries (Required for "Manage Presets")
+    match /{path=**}/batches/{batch} {
+      allow read: if request.auth != null && resource.data.createdBy == request.auth.uid;
     }
   }
 }
