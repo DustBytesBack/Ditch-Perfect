@@ -932,8 +932,9 @@ class _RankPageState extends State<RankPage> {
         if (userUid != null) {
           final liveRank = liveRanks[userUid];
           if (liveRank != null) {
-            if (liveRank < officialRank) trend = 1;
-            else if (liveRank > officialRank) trend = -1;
+            if (liveRank < officialRank) {
+              trend = 1;
+            } else if (liveRank > officialRank) trend = -1;
             else trend = 0;
           }
         }

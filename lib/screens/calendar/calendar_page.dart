@@ -397,6 +397,20 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                               );
                             },
+                            onDayLongPressed: (selected, focused) {
+                              HapticFeedback.mediumImpact();
+                              setState(() {
+                                if (!isMultiSelectMode) {
+                                  isMultiSelectMode = true;
+                                  selectedDates.clear();
+                                }
+                                final normalized = _normalizeDate(selected);
+                                if (!selectedDates.contains(normalized)) {
+                                  selectedDates.add(normalized);
+                                }
+                                focusedDay = focused;
+                              });
+                            },
                             onPageChanged: (focused) {
                               setState(() {
                                 focusedDay = focused;
@@ -450,17 +464,32 @@ class _CalendarPageState extends State<CalendarPage> {
                                   timetable,
                                 );
 
+                                final selected = _isDateSelected(day);
+
+                                final Border todayBorder;
+                                if (isMultiSelectMode) {
+                                  todayBorder = selected
+                                      ? Border.all(
+                                          color: scheme.primary,
+                                          width: 2.5,
+                                        )
+                                      : Border.all(
+                                          color: scheme.onSurfaceVariant,
+                                          width: 1.5,
+                                        );
+                                } else {
+                                  todayBorder = Border.all(
+                                    color: scheme.primary,
+                                    width: 2.5,
+                                  );
+                                }
+
                                 return Container(
                                   margin: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
                                     color: color,
                                     shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: _isDateSelected(day)
-                                          ? scheme.tertiary
-                                          : scheme.primary,
-                                      width: 2.5,
-                                    ),
+                                    border: todayBorder,
                                     boxShadow: isAbsolute
                                         ? [
                                             BoxShadow(
