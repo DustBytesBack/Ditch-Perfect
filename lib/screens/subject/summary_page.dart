@@ -215,6 +215,7 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
   void _showSubjectSwitcher(BuildContext context) async {
     final scheme = Theme.of(context).colorScheme;
     final subjects = context.read<SubjectProvider>().subjects;
+    final isAbsolute = context.read<ThemeProvider>().absoluteMode;
 
     setState(() => _isSwitcherOpen = true);
 
@@ -225,76 +226,136 @@ class _SubjectSummaryPageState extends State<SubjectSummaryPage> {
 
     await showModalBottomSheet(
       context: context,
-      showDragHandle: true,
-      backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Switch Subject",
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: subjects.length,
-                    itemBuilder: (context, index) {
-                      final s = subjects[index];
-                      final isSelected = s.id == widget.subject.id;
-                      return _optionTile(
-                        context: context,
-                        label: s.name,
-                        icon: isSelected
-                            ? Icons.check_circle
-                            : Icons.book_outlined,
-                        isSelected: isSelected,
-                        closeOnTap: false,
-                        onTap: () {
-                          Navigator.pop(context);
-                          if (!isSelected) {
-                            Navigator.pushReplacement(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        SubjectSummaryPage(subject: s),
-                                transitionsBuilder: (
-                                  context,
-                                  animation,
-                                  secondaryAnimation,
-                                  child,
-                                ) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: child,
-                                  );
-                                },
-                              ),
-                            );
-                          }
-                        },
-                        isFirst: index == 0,
-                        isLast: index == subjects.length - 1,
-                      );
-                    },
-                  ),
-                ),
-              ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: isAbsolute ? scheme.surfaceContainerHigh : scheme.surface,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: const EdgeInsets.fromLTRB(40, 12, 40, 48),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-        );
-      },
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Switch Subject",
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: scheme.onSurface,
+                  fontSize: 28,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: subjects.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final s = subjects[index];
+                  final isSelected = s.id == widget.subject.id;
+
+                  return InkWell(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.pop(context);
+                      if (!isSelected) {
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    SubjectSummaryPage(subject: s),
+                            transitionsBuilder: (
+                              context,
+                              animation,
+                              secondaryAnimation,
+                              child,
+                            ) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                          ),
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? scheme.primaryContainer
+                            : (isAbsolute
+                                ? scheme.surfaceContainer
+                                : scheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color:
+                              isSelected ? scheme.primary : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.book_rounded
+                                : Icons.book_outlined,
+                            color: isSelected
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              s.name,
+                              style: TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
+                                fontSize: 18,
+                                color: isSelected
+                                    ? scheme.onPrimaryContainer
+                                    : scheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(
+                              Icons.check_circle_rounded,
+                              color: scheme.primary,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
 
     if (mounted) {

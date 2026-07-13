@@ -946,29 +946,32 @@ class TimetablePage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             margin: const EdgeInsets.symmetric(vertical: 2),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              title: Text(
-                                "${meta['university'] ?? 'Unknown Uni'}",
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "${meta['semester']} • ${meta['branch']} • ${meta['batch']}",
-                                    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Uploaded: $dateStr",
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: scheme.primary.withValues(alpha: 0.7),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                title: Text(
+                                  "${meta['university'] ?? 'Unknown Uni'}",
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "${meta['semester']} • ${meta['branch']} • ${meta['batch']}",
+                                      style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Uploaded: $dateStr",
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: scheme.primary.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

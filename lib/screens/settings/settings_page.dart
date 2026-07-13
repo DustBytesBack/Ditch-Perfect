@@ -810,26 +810,29 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                   ],
                           ),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(
-                              Icons.person_outline,
-                              color: scheme.onSecondaryContainer,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                Icons.person_outline,
+                                color: scheme.onSecondaryContainer,
+                              ),
+                              title: const Text(
+                                "Display Name",
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: Text(
+                                (DatabaseService.settingsBox.get("username")
+                                        as String?) ??
+                                    "Not set",
+                              ),
+                            onTap: () async {
+                                HapticFeedback.lightImpact();
+                                await EditUsernameDialog.show(context);
+                                if (mounted) setState(() {});
+                              },
                             ),
-                            title: const Text(
-                              "Display Name",
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: Text(
-                              (DatabaseService.settingsBox.get("username")
-                                      as String?) ??
-                                  "Not set",
-                            ),
-                          onTap: () async {
-                              HapticFeedback.lightImpact();
-                              await EditUsernameDialog.show(context);
-                              if (mounted) setState(() {});
-                            },
                           ),
                         ),
 
@@ -1314,13 +1317,16 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ],
                           ),
 
-                          child: ListTile(
-                            leading: const Icon(Icons.system_update),
-                            title: const Text("Check for Updates"),
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              checkForUpdateManual(context);
-                            },
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              leading: const Icon(Icons.system_update),
+                              title: const Text("Check for Updates"),
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                checkForUpdateManual(context);
+                              },
+                            ),
                           ),
                         ),
 
@@ -1355,13 +1361,16 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ],
                           ),
 
-                          child: ListTile(
-                            leading: const Icon(Icons.article_outlined),
-                            title: const Text("Release Notes"),
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              showReleaseNotesDialog(context);
-                            },
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              leading: const Icon(Icons.article_outlined),
+                              title: const Text("Release Notes"),
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                showReleaseNotesDialog(context);
+                              },
+                            ),
                           ),
                         ),
 
@@ -1414,26 +1423,29 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
 
-                          child: ListTile(
-                            leading: Icon(
-                              Icons.delete_forever,
-                              color: scheme.onErrorContainer,
-                            ),
-                            title: Text(
-                              "Delete All Data",
-                              style: TextStyle(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              leading: Icon(
+                                Icons.delete_forever,
                                 color: scheme.onErrorContainer,
-                                fontWeight: FontWeight.w600,
                               ),
+                              title: Text(
+                                "Delete All Data",
+                                style: TextStyle(
+                                  color: scheme.onErrorContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                "Clear all subjects, timetable and attendance",
+                                style: TextStyle(color: scheme.onErrorContainer),
+                              ),
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                showDeleteAllDialog(context);
+                              },
                             ),
-                            subtitle: Text(
-                              "Clear all subjects, timetable and attendance",
-                              style: TextStyle(color: scheme.onErrorContainer),
-                            ),
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              showDeleteAllDialog(context);
-                            },
                           ),
                         ),
                         const SizedBox(height: 90),
